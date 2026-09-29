@@ -10,11 +10,12 @@ const included = [
   '.gitattributes', '.gitignore', '.npmrc', 'package.json', 'package-lock.json',
   'index.html', 'tsconfig.json', 'tsconfig.host.json', 'tsconfig.test.json',
   'vite.config.ts', 'electron-builder.cjs', 'provider-capabilities.v1.json',
-  'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
+  'README.md', 'README.en.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
   'Ediro.vbs', '启动 Ediro.cmd', '启动 Ediro.ps1',
   '启动浏览器验证.cmd', '启动浏览器验证.ps1',
   'docs/Windows发布与数据目录.md', 'docs/单文件工程_v1.md',
   'docs/RELEASE_NOTES_v0.1.0.md',
+  'docs/screenshots',
 ];
 await mkdir(path.join(root, '.local'), {recursive: true});
 const stage = await mkdtemp(path.join(root, '.local', 'public-source-'));
