@@ -1,6 +1,6 @@
 {
   "name": "ediro",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "GPL-3.0-only",
   "private": true,
   "description": "Ediro · 面向电商视觉设计的 AI 图像工作台",

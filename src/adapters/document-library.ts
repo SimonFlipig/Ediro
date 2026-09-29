@@ -1,5 +1,5 @@
 import {readFile,mkdir,stat,lstat,realpath,writeFile,unlink} from 'node:fs/promises';
-import {randomBytes} from 'node:crypto';
+import {randomBytes,createHash} from 'node:crypto';
 import path from 'node:path';
 import {z} from 'zod';
 import {atomicJson} from './atomic-json.js';
@@ -7,9 +7,18 @@ import {DocumentRepository} from './document-repository.js';
 import {projectSummary} from '../core/project-summary.js';
 import type {ProjectRecord} from '../shared/api.js';
 import type {Project} from '../core/domain.js';
+import {MAX_STORED_IMAGE_BYTES} from '../core/image-limits.js';
 
 const summarySchema=z.object({title:z.string(),updated_at:z.string(),cover_asset_id:z.string().optional(),result_count:z.number(),status:z.enum(['running','draft','failed','saved','empty'])});
-const recordsSchema=z.array(z.object({id:z.string().regex(/^file-[a-f0-9]{12}$/),filename:z.string(),title:z.string(),summary:summarySchema.optional()}));
+const outputIndexSchema=z.object({stamp:z.string(),outputs:z.array(z.object({asset_id:z.string(),name:z.string(),sha256:z.string(),export_names:z.array(z.string()).optional()}))});
+const recordsSchema=z.array(z.object({id:z.string().regex(/^file-[a-f0-9]{12}$/),filename:z.string(),title:z.string(),summary:summarySchema.optional(),output_index:outputIndexSchema.optional()}));
+export interface DocumentOutputMatch {record_id:string;filename:string;title:string;asset_id:string;name:string;sha256:string}
+const hash=(bytes:Buffer)=>createHash('sha256').update(bytes).digest('hex');
+async function imageHash(filename:string){
+  const info=await stat(filename);
+  if(!info.isFile()||info.size>MAX_STORED_IMAGE_BYTES||! /\.(png|jpe?g|webp)$/i.test(filename))throw new Error('请选择有效的生成图片。');
+  return hash(await readFile(filename));
+}
 export class DocumentLibrary {
   readonly cacheRoot:string;
   private records:z.infer<typeof recordsSchema>=[];
@@ -26,6 +35,8 @@ export class DocumentLibrary {
     if(!entry){entry={id:'file-'+randomBytes(6).toString('hex'),filename:await realpath(repo.filename),title};this.records.push(entry);}else entry.title=title;
     project??=await repo.load();entry.summary=projectSummary(project);
     await this.cacheCover(entry,repo,project);
+    const previous=this.opened.get(entry.id);
+    if(previous&&previous!==repo)await previous.close();
     this.opened.set(entry.id,repo);await this.save();return entry.id;
   }
   async openFile(filename:string){
@@ -36,6 +47,52 @@ export class DocumentLibrary {
     const project=await repo.load();return {id:await this.register(repo,project.name,project),repo};
   }
   async forId(id:string){const entry=this.records.find(r=>r.id===id);if(!entry)throw new Error('工程记录不存在。');return (await this.openFile(entry.filename)).repo;}
+  private async indexOutputs(entry:z.infer<typeof recordsSchema>[number]){
+    const info=await stat(entry.filename),stamp=`${info.mtimeMs}:${info.ctimeMs}:${info.size}`;
+    if(entry.output_index?.stamp===stamp)return;
+    const opened=this.opened.get(entry.id),repo=opened??await DocumentRepository.open(entry.filename,this.cacheRoot);
+    try{
+      const project=await repo.load(),outputs:z.infer<typeof outputIndexSchema>['outputs']=[];
+      for(const asset of project.assets.filter(a=>a.kind==='output'&&!a.removed_result&&!a.hidden_from_results&&project.jobs.some(j=>j.output_asset_ids.includes(a.asset_id)))){
+        const sha256=hash(await repo.readAsset(asset));
+        const previous=entry.output_index?.outputs.find(o=>o.asset_id===asset.asset_id&&o.sha256===sha256);
+        outputs.push({asset_id:asset.asset_id,name:asset.name,sha256,...(previous?.export_names?{export_names:previous.export_names}:{})});
+      }
+      entry.output_index={stamp,outputs};
+    }finally{if(!opened)await repo.close();}
+  }
+  async recordExport(repo:DocumentRepository,project:Project,assetId:string,filename:string){
+    const id=await this.register(repo,project.name,project),entry=this.records.find(r=>r.id===id)!;
+    await this.indexOutputs(entry);
+    const output=entry.output_index!.outputs.find(o=>o.asset_id===assetId);if(!output)return;
+    if(await imageHash(filename)!==output.sha256)throw new Error('导出图片已改变，未登记恢复来源。');
+    output.export_names=[...new Set([...(output.export_names??[]),path.basename(filename)])];await this.save();
+  }
+  async findOutputs(filename:string,hidden=new Set<string>()):Promise<DocumentOutputMatch[]>{
+    const sha256=await imageHash(filename),matches:DocumentOutputMatch[]=[],named:DocumentOutputMatch[]=[];
+    for(const entry of this.records){
+      if(hidden.has(entry.id))continue;
+      try{await this.indexOutputs(entry);}catch{/* Missing/unreadable sources cannot restore an image; do not trust a stale index. */continue;}
+      for(const output of entry.output_index!.outputs.filter(o=>o.sha256===sha256)){
+        const match={record_id:entry.id,filename:entry.filename,title:entry.title,asset_id:output.asset_id,name:output.name,sha256};matches.push(match);
+        if(output.name===path.basename(filename)||output.export_names?.includes(path.basename(filename)))named.push(match);
+      }
+    }
+    await this.save();return named.length?named:matches;
+  }
+  async recoverOutput(match:DocumentOutputMatch,image:string,target:string){
+    const source=await this.forId(match.record_id),project=await source.load();
+    const asset=project.assets.find(a=>a.asset_id===match.asset_id&&a.kind==='output'&&!a.removed_result&&!a.hidden_from_results);
+    const job=project.jobs.find(j=>j.output_asset_ids.includes(match.asset_id));
+    if(!asset||!job||hash(await source.readAsset(asset))!==match.sha256||await imageHash(image)!==match.sha256)throw new Error('图片或来源工程已改变，请重新选择恢复。');
+    project.recipe=structuredClone(job.mask_edit?.main_recipe_snapshot??job.recipe_snapshot);
+    if(job.mask_edit){
+      const draft=structuredClone(job.mask_edit.draft),variant=job.mask_edit.variants.find(v=>v.asset_id===asset.asset_id);
+      if(variant){draft.mode=variant.mode;draft.feather=variant.feather;if(variant.composite_strokes)draft.strokes=structuredClone(variant.composite_strokes);}
+      project.mask_drafts=[draft];
+    }
+    return DocumentRepository.saveAs(source,project,target,this.cacheRoot);
+  }
   async trashTarget(id:string){
     const entry=this.records.find(r=>r.id===id);if(!entry)throw new Error('工程记录不存在。');
     const filename=entry.filename;

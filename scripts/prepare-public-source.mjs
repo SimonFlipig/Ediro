@@ -14,7 +14,7 @@ const included = [
   'Ediro.vbs', '启动 Ediro.cmd', '启动 Ediro.ps1',
   '启动浏览器验证.cmd', '启动浏览器验证.ps1',
   'docs/Windows发布与数据目录.md', 'docs/单文件工程_v1.md',
-  'docs/RELEASE_NOTES_v0.1.0.md',
+  ...(await readdir(path.join(root, 'docs'))).filter(name => /^RELEASE_NOTES_v\d+\.\d+\.\d+\.md$/.test(name)).sort().map(name => `docs/${name}`),
   'docs/screenshots',
 ];
 await mkdir(path.join(root, '.local'), {recursive: true});

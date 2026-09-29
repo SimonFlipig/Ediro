@@ -15,7 +15,7 @@ export function selectWorkflowModel(recipe:Recipe,model:ModelConfig,previous?:Mo
   if(previous){remembered[modelIdentity(previous)]=structuredClone(recipe.core_parameters);channels[modelIdentity(previous)]=previous.model_config_id;}
   const parameters=remembered[modelIdentity(model)]??snapshotParameters(model.defaults,model);
   channels[modelIdentity(model)]=model.model_config_id;
-  return {...recipe,model_config_id:model.model_config_id,model_channels:channels,model_parameters:remembered,core_parameters:structuredClone(parameters)};
+  return {...recipe,model_config_id:model.model_config_id,model_preset_id:model.preset_id,model_channels:channels,model_parameters:remembered,core_parameters:structuredClone(parameters)};
 }
 // Preserve all entry IDs, credentials and conflicting legacy defaults. The UI asks
 // which legacy values should become shared; migration never silently chooses them.

@@ -7,7 +7,9 @@ import { ModuleRegistry } from './modules.js';
 
 // One pure planning entry for preview, queueing and understanding tasks.
 export function planExecution(input:Recipe,assets:Pick<Asset,'asset_id'|'width'|'height'>[],model:ModelConfig,registry=new ModuleRegistry(),preparedChain?:CompiledChain,strategies=defaultInputStrategies){
+  if(input.model_preset_id&&input.model_preset_id!==model.preset_id)throw new Error('历史配方与此接入的模型预设不一致，请重新选择模型。');
   const recipe=registry.resolveRecipe(input);
+  if(model.preset_id)recipe.model_preset_id=model.preset_id;
   recipe.core_parameters=normalizeParameters(recipe.core_parameters,model);
   const contract=contractFor(model);
   if(model.purpose!=='understanding'&&recipe.core_parameters.resolution?.mode==='default'&&contract.tiers.length){

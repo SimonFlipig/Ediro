@@ -45,7 +45,7 @@ const projectSchema = z.object({
     chain_snapshot: z.object({format_version:z.literal(2).optional(),prompt_config:promptConfigSchema.optional(), blocks: z.array(blockSchema), mode: z.enum(['text_to_image','reference_generation']) }),
     execution_plan:planSummarySchema.optional(),
     output_geometry:outputGeometrySchema.optional(),
-    model_snapshot: z.object({ model_config_id: idSchema, title: z.string(), provider: z.string(), model: z.string(), adapter_id: z.string(), revision: z.number(), kind: z.enum(['mock','local','cloud']),images_compatibility:modelConfigSchema.shape.images_compatibility,gemini_compatibility:modelConfigSchema.shape.gemini_compatibility }),
+    model_snapshot: z.object({ model_config_id: idSchema, preset_id: z.string().optional(), title: z.string(), provider: z.string(), model: z.string(), adapter_id: z.string(), revision: z.number(), kind: z.enum(['mock','local','cloud']),images_compatibility:modelConfigSchema.shape.images_compatibility,gemini_compatibility:modelConfigSchema.shape.gemini_compatibility }),
     adapted_input: z.object({ kind: z.enum(['native_blocks','separated_inputs']), blocks: z.array(blockSchema).optional(), prompt: z.string().optional(), image_asset_ids: z.array(idSchema).optional(), adjustments: z.array(z.string()) }),
     output_asset_ids: z.array(idSchema),
     recoverable_result:z.boolean().optional(),
@@ -290,7 +290,7 @@ export class ProjectRepository {
     await mkdir(this.directory,{recursive:true});if((await readdir(this.directory)).length)throw new Error('恢复产出需要空的工作目录，不会覆盖已有记录。');
     if(!path.isAbsolute(filename)||!/\.(png|jpe?g|webp)$/i.test(filename))throw new Error('请选择生成图片。');
     const jsonFile=await this.findOutputRecord(filename);
-    if(!jsonFile)throw new Error('没有找到这张图片的恢复记录，请保留 Project 目录或打开项目包。');
+    if(!jsonFile)throw new Error('没有找到这张图片的恢复记录，请先打开来源 .ediro 工程后重试，或保留旧工程的 Project 目录。');
     if((await stat(jsonFile)).size>20*1024*1024)throw new Error('产出记录过大。');
     const record=outputRecordSchema.parse(JSON.parse(await readFile(jsonFile,'utf8')));
     const project=record.project;

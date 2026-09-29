@@ -57,6 +57,7 @@ export const recipeSchema = z.object({
   schema_version: z.literal(1),
   modules: z.array(moduleSchema).min(1).max(40),
   model_config_id: idSchema,
+  model_preset_id: z.string().optional(),
   core_parameters: parametersSchema,
   model_parameters: z.record(z.string(),parametersSchema).optional(),
   model_channels: z.record(z.string(),idSchema).optional(),
@@ -191,7 +192,7 @@ export interface Job {
   recipe_snapshot: Recipe;
   chain_snapshot: CompiledChain;
   // Non-sensitive resolved config: credentials/endpoint are not UI history.
-  model_snapshot: Pick<ModelConfig, 'model_config_id' | 'title' | 'provider' | 'model' | 'adapter_id' | 'revision' | 'kind' | 'images_compatibility' | 'gemini_compatibility'>;
+  model_snapshot: Pick<ModelConfig, 'model_config_id' | 'preset_id' | 'title' | 'provider' | 'model' | 'adapter_id' | 'revision' | 'kind' | 'images_compatibility' | 'gemini_compatibility'>;
   adapted_input: AdaptedInput;
   output_asset_ids: string[];
 }

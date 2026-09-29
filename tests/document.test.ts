@@ -8,6 +8,7 @@ import {createHash,randomBytes,randomUUID} from 'node:crypto';
 import sharp from 'sharp';
 import {DocumentRepository} from '../src/adapters/document-repository.js';
 import {DocumentLibrary} from '../src/adapters/document-library.js';
+import {inspectDocumentTarget,sameDocumentFile} from '../src/adapters/document-save-target.js';
 import {ProjectRepository,projectFilename} from '../src/adapters/project-repository.js';
 import {Workspace} from '../src/core/workspace.js';
 import {ModelLibrary,seedModels} from '../src/core/models.js';
@@ -31,6 +32,44 @@ async function image(base:string){const filename=path.join(base,'source.png');co
 async function settle(w:Workspace){for(let i=0;i<200;i++){if(await w.serial(async()=>w.project!.jobs.every(j=>['succeeded','failed','cancelled'].includes(j.status))))return;await pause(20);}throw Error('任务等待超时');}
 const digest=(bytes:Buffer)=>createHash('sha256').update(bytes).digest('hex');
 const capture=(body:ModelInput['body']):ModelInput=>({version:1,adapter_id:'fixture',captured_at:'2026-09-24T00:00:00Z',route:'/fixture',body});
+
+test('导出统一命名，改名移动后从本机索引恢复对应版本到新工程，原工程和历史不变',async()=>{
+  const {base,repo,w}=await fixture(),library=new DocumentLibrary(path.join(base,'runtime'));await library.initialize();
+  const reference=await image(base);await w.importFiles([reference.filename],w.project!.recipe.modules[0].module_id);
+  await w.serial(()=>w.enqueue(false));await settle(w);
+  const output=w.project!.assets.find(a=>a.kind==='output')!;
+  assert.match(output.name,/^Ediro_\d{8}_\d{6}_[a-zA-Z0-9]+\.png$/);
+  const first=structuredClone(w.project!.jobs[0]);
+  const next=structuredClone(w.project!.recipe);next.modules.at(-1)!.user_instruction='后来修改';await w.saveRecipe(next);
+  await w.serial(()=>w.enqueue(false));await settle(w);
+  const original=await readFile(repo.filename),history=structuredClone(w.project!.jobs);
+  const exported=path.join(base,output.name);await repo.export(output,exported);await library.recordExport(repo,w.project!,output.asset_id,exported);
+  const moved=path.join(base,'改名后.png');await rename(exported,moved);
+  await library.releaseExcept(undefined);
+  const reopened=new DocumentLibrary(path.join(base,'runtime'));await reopened.initialize();
+  const matches=await reopened.findOutputs(moved);assert.equal(matches.length,1);assert.equal(matches[0].asset_id,output.asset_id);
+  const restored=await reopened.recoverOutput(matches[0],moved,path.join(base,'restored.ediro')),project=await restored.load();
+  assert.notEqual(project.project_id,w.project!.project_id);assert.deepEqual(project.recipe,first.recipe_snapshot);assert.deepEqual(project.jobs,history);
+  for(const asset of project.assets)assert.ok((await restored.readAsset(asset)).length);
+  assert.deepEqual(await readFile(repo.filename),original);
+  await restored.close();await reopened.releaseExcept(undefined);
+});
+
+test('已导出但无索引的旧图片可补认；重名不同内容不误认，多来源不猜测，来源消失拒绝恢复',async()=>{
+  const {base,repo,w}=await fixture(),runtime=path.join(base,'runtime'),library=new DocumentLibrary(runtime);await library.initialize();
+  const recipe=structuredClone(w.project!.recipe);recipe.modules.at(-1)!.user_instruction='模拟恢复结果';await w.saveRecipe(recipe);
+  await w.serial(()=>w.enqueue(false));await settle(w);
+  const output=w.project!.assets.find(a=>a.kind==='output')!;output.name='生成结果-old.png';await w.persist();
+  const exported=path.join(base,output.name);await repo.export(output,exported);await library.register(repo,w.project!.name,w.project!);
+  const matches=await library.findOutputs(exported);assert.equal(matches.length,1);
+  const second=await DocumentRepository.saveAs(repo,w.project!,path.join(base,'second.ediro'),library.cacheRoot);await library.register(second,'副本');
+  assert.equal((await library.findOutputs(exported)).length,2);
+  const bytes=await readFile(exported);await writeFile(exported,(await image(base)).bytes);assert.deepEqual(await library.findOutputs(exported),[]);
+  await assert.rejects(()=>library.recoverOutput(matches[0],exported,path.join(base,'bad.ediro')),/已改变/);
+  await writeFile(exported,bytes);await library.releaseExcept(undefined);await rename(repo.filename,repo.filename+'.moved');
+  const remaining=await library.findOutputs(exported);assert.equal(remaining.length,1);assert.equal(remaining[0].filename,second.filename);
+  await rename(second.filename,second.filename+'.moved');assert.deepEqual(await library.findOutputs(exported),[]);
+});
 
 test('单张大图编码超过 8 MB 时保存与另存为不耗尽调用栈，重开逐字节一致',async()=>{
   const {base,filename,cache,repo,w}=await fixture();
@@ -145,6 +184,67 @@ test('只修改参数不重写图片条目；另存为新身份并保留源工�
   copied.name='副本编辑';await copy.save(copied);assert.equal((await repo.load()).name,'单文件测试');
   await assert.rejects(()=>DocumentRepository.saveAs(repo,p,copy.filename,cache),/已存在/);
   await copy.close();await repo.close();
+});
+
+test('确认覆盖另存为：替换已存在工程，保留来源，刷新同路径缓存并能继续原位保存',async t=>{
+  const {base,repo,w}=await fixture(),library=new DocumentLibrary(path.join(base,'runtime'));await library.initialize();
+  t.after(()=>library.releaseExcept(undefined));t.after(()=>repo.close());
+  const source=await image(base);await w.importFiles([source.filename]);
+  const target=await DocumentRepository.saveAs(repo,w.project!,path.join(base,'target.ediro'),library.cacheRoot);
+  const old=await target.load();old.name='要被覆盖的工程';await target.save(old);const record=await library.register(target,old.name,old);
+  const original=await readFile(repo.filename),project=structuredClone(w.project!);project.name='覆盖后的工程';
+  project.recipe.modules[0].user_instruction='包含当前未保存编辑';
+  const replacement=await DocumentRepository.saveAs(repo,project,target.filename,library.cacheRoot,{overwrite:await inspectDocumentTarget(target.filename)});
+  t.after(()=>replacement.close());
+  const saved=await replacement.load();assert.equal(saved.name,project.name);assert.equal(saved.recipe.modules[0].user_instruction,'包含当前未保存编辑');
+  assert.notEqual(saved.project_id,old.project_id);assert.notEqual(saved.project_id,project.project_id);
+  assert.deepEqual(await replacement.readAsset(saved.assets[0]),source.bytes);assert.deepEqual(await readFile(repo.filename),original);
+  assert.equal(await library.register(replacement,saved.name,saved),record);assert.equal((await library.openFile(target.filename)).repo,replacement);
+  saved.name='覆盖后继续编辑';await replacement.save(saved);await library.releaseExcept(undefined);
+  const reopened=await DocumentRepository.open(target.filename,library.cacheRoot);t.after(()=>reopened.close());assert.equal((await reopened.load()).name,'覆盖后继续编辑');
+});
+
+test('另存为当前文件等同普通保存，保留工程身份、仓库和格式',async t=>{
+  const {repo,w,cache,filename}=await fixture();t.after(()=>repo.close());
+  const project=structuredClone(w.project!),id=project.project_id;project.name='同路径保存';
+  assert.equal(await sameDocumentFile(filename,path.join(path.dirname(filename),'.',path.basename(filename))),true);
+  const returned=await DocumentRepository.saveAs(repo,project,process.platform==='win32'?filename.toUpperCase():filename,cache);
+  assert.equal(returned,repo);assert.equal((await repo.load()).project_id,id);assert.equal((await repo.load()).name,'同路径保存');assert.equal(repo.storageVersion,2);
+});
+
+test('另存为准备失败保留目标原文，未确认的已有目标仍然拒绝覆盖',async t=>{
+  const {base,repo,w,cache}=await fixture();t.after(()=>repo.close());const source=await image(base);await w.importFiles([source.filename]);
+  const filename=path.join(base,'existing.ediro'),original=Buffer.from('existing bytes');await writeFile(filename,original);
+  await assert.rejects(()=>DocumentRepository.saveAs(repo,w.project!,filename,cache),/已存在/);
+  const overwrite=await inspectDocumentTarget(filename);await unlink(await repo.resolveAssetPath(w.project!.assets[0],false));
+  await assert.rejects(()=>DocumentRepository.saveAs(repo,w.project!,filename,cache,{overwrite}));
+  assert.deepEqual(await readFile(filename),original);assert.equal((await readdir(base)).some(name=>name.endsWith('.tmp')),false);
+});
+
+test('确认之后目标变更或消失，暂存期间出现新同名文件，都不覆盖新状态',async t=>{
+  const {base,repo,w,cache}=await fixture();t.after(()=>repo.close());const filename=path.join(base,'target.ediro');await writeFile(filename,'old');
+  const overwrite=await inspectDocumentTarget(filename);await writeFile(filename,'changed before staging');
+  await assert.rejects(()=>DocumentRepository.saveAs(repo,w.project!,filename,cache,{overwrite}),/发生变化/);
+  assert.equal(await readFile(filename,'utf8'),'changed before staging');
+  const current=await inspectDocumentTarget(filename),pack=repo.packageProject.bind(repo);
+  repo.packageProject=async(...args)=>{await pack(...args);await writeFile(filename,'changed during staging');};
+  await assert.rejects(()=>DocumentRepository.saveAs(repo,w.project!,filename,cache,{overwrite:current}),/发生变化/);
+  assert.equal(await readFile(filename,'utf8'),'changed during staging');
+  await unlink(filename);
+  await assert.rejects(()=>DocumentRepository.saveAs(repo,w.project!,filename,cache,{overwrite:current}),/发生变化/);
+  await assert.rejects(()=>DocumentRepository.saveAs(repo,w.project!,filename,cache),/已存在/);
+  assert.equal(await readFile(filename,'utf8'),'changed during staging');
+  assert.equal((await readdir(base)).some(name=>name.endsWith('.tmp')),false);
+});
+
+test('Windows 目标被 SQLite 占用导致替换失败时，保留完整旧工程', {skip:process.platform!=='win32'},async t=>{
+  const {base,repo,w,cache}=await fixture();t.after(()=>repo.close());
+  const target=await DocumentRepository.saveAs(repo,w.project!,path.join(base,'busy.ediro'),cache);await target.close();
+  const original=await readFile(target.filename),overwrite=await inspectDocumentTarget(target.filename);
+  const lock=new DatabaseSync(target.filename);t.after(()=>lock.close());lock.exec('BEGIN');lock.prepare('SELECT * FROM document').get();
+  await assert.rejects(()=>DocumentRepository.saveAs(repo,w.project!,target.filename,cache,{overwrite}),/EPERM|EBUSY|EACCES/);
+  assert.deepEqual(await readFile(target.filename),original);assert.equal((await readdir(base)).some(name=>name.endsWith('.tmp')),false);
+  lock.exec('ROLLBACK');
 });
 
 test('再次打开复用已验证缓存；缓存损坏或缺失从工程重建',async()=>{

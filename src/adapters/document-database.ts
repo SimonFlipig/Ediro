@@ -8,7 +8,8 @@ const {DatabaseSync}=require('node:sqlite');
 const fs=require('node:fs');
 const path=require('node:path');
 const {createHash,randomUUID}=require('node:crypto');
-const {filename,cache}=workerData;
+let {filename}=workerData;
+const {cache}=workerData;
 const APP_ID=0x45444952;
 const allowed=/^(ediro\.project\.json|assets\/[a-zA-Z0-9_-]+\.(png|jpeg|jpg|webp)|model-inputs\/[a-zA-Z0-9_-]+\.json|pending-results\/[a-zA-Z0-9_-]+\/(result\.json|\d+\.(png|jpeg|webp)))$/;
 let revision,identity,version=2,documentStamp,signatures=new Map();
@@ -120,9 +121,15 @@ function scan(dir=cache,prefix=''){
   }
   return found;
 }
-parentPort.on('message',({id,action,optionalPaths=[]})=>{
+parentPort.on('message',({id,action,optionalPaths=[],destination})=>{
   let db;
   try{
+    if(action==='relocate'){
+      // The fully validated staged file is about to be atomically published.
+      // No I/O here: retain its identity/revision, and invalidate only the cache hint.
+      filename=destination;documentStamp=undefined;
+      parentPort.postMessage({id,value:revision,version});return;
+    }
     if(action==='cache'){
       // Only a performance hint. The document identity, revision, file stamp
       // and every expanded file's stamp must all match before it is reused.
@@ -212,9 +219,9 @@ export class DocumentDatabase {
     this.worker.unref();
   }
   private fail(error:Error){this.failure=error;for(const p of this.pending.values())p.reject(error);this.pending.clear();}
-  run(action:'create'|'load'|'commit'|'cache',optionalPaths:string[]=[]):Promise<number>{
+  run(action:'create'|'load'|'commit'|'cache'|'relocate',optionalPaths:string[]=[],destination?:string):Promise<number>{
     if(this.failure)return Promise.reject(this.failure);
-    return new Promise((resolve,reject)=>{const id=++this.sequence;this.pending.set(id,{resolve,reject});this.worker.ref();this.worker.postMessage({id,action,optionalPaths});});
+    return new Promise((resolve,reject)=>{const id=++this.sequence;this.pending.set(id,{resolve,reject});this.worker.ref();this.worker.postMessage({id,action,optionalPaths,destination});});
   }
   async close(){await this.worker.terminate();}
 }

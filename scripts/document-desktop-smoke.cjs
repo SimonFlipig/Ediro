@@ -63,9 +63,28 @@ app.whenReady().then(async()=>{
   const screenshot=path.join(testRoot,'工程界面.png');await writeFile(screenshot,(await win.webContents.capturePage()).toPNG());
   const ui=await win.webContents.executeJavaScript(`({footer:document.querySelector('.app-status').textContent,heading:document.querySelector('.project-heading').textContent,body:document.body.innerText,overflow:document.documentElement.scrollWidth>innerWidth})`);
   assert.ok(ui.footer.includes(destination));assert.ok(ui.heading.includes('已保存'));assert.ok(ui.body.includes('另存为…'));assert.equal(ui.overflow,false);
+  // Saving to the current filename must not fork its identity or register a new entry.
+  const sameRepository=controller.workspace.repository;
+  dialog.showSaveDialog=async(_window,options)=>{assert.ok(options.properties.includes('showOverwriteConfirmation'));return {canceled:false,filePath:destination};};
+  const same=await controller.execute({type:'project:package'});assert.ok(same.ok,same.error);assert.equal(controller.workspace.repository,sameRepository);assert.equal(same.state.project.project_id,projectId);assert.equal(same.state.project_record_id,id);
+  const {DocumentRepository}=await import('../dist-host/adapters/document-repository.js');
+  const replaceFile=path.join(testRoot,'覆盖目标.ediro'),targetProject=structuredClone(controller.workspace.project);targetProject.name='旧目标内容';
+  const oldTarget=await DocumentRepository.saveAs(sameRepository,targetProject,replaceFile,controller.documents.cacheRoot);
+  const targetRecord=await controller.documents.register(oldTarget,targetProject.name);
+  const targetBefore=await readFile(replaceFile),sourceBefore=await readFile(destination);
+  // The native dialog's overwrite cancellation returns without changing either file.
+  dialog.showSaveDialog=async()=>({canceled:true,filePath:replaceFile});const cancelled=await controller.execute({type:'project:package'});
+  assert.ok(cancelled.cancelled);assert.equal(controller.workspace.repository,sameRepository);assert.deepEqual(await readFile(replaceFile),targetBefore);assert.deepEqual(await readFile(destination),sourceBefore);
+  const overwriteRecipe=structuredClone(controller.workspace.project.recipe);overwriteRecipe.modules[0].user_instruction='另存覆盖中的当前修改';await controller.workspace.saveRecipe(overwriteRecipe);
+  dialog.showSaveDialog=async()=>({canceled:false,filePath:replaceFile});const replaced=await controller.execute({type:'project:package'});
+  assert.ok(replaced.ok,replaced.error);assert.equal(replaced.state.project_location,replaceFile);assert.equal(replaced.state.project_record_id,targetRecord);
+  assert.notEqual(replaced.state.project.project_id,projectId);assert.equal(replaced.state.project.recipe.modules[0].user_instruction,'另存覆盖中的当前修改');assert.deepEqual(await readFile(destination),sourceBefore);
+  assert.equal((await controller.documents.openFile(replaceFile)).repo,controller.workspace.repository);
+  await controller.openProjectFile(destination);assert.equal(controller.workspace.project.project_id,projectId);
+  await controller.openProjectFile(replaceFile);assert.equal(controller.workspace.project.recipe.modules[0].user_instruction,'另存覆盖中的当前修改');
   await controller.shutdown();win.destroy();
   const reloaded=await DesktopController.create(path.join(testRoot,'.local/runtime'),()=>({isDestroyed:()=>true}));assert.equal((await reloaded.view()).project_format,'draft');await reloaded.openProjectFile(destination);assert.equal((await reloaded.view()).project_location,destination);assert.equal(reloaded.workspace.project.project_id,projectId);
   const restored=await reloaded.execute({type:'job:model-input',task_id:taskId});assert.ok(restored.ok,restored.error);assert.deepEqual(restored.model_input,captured.model_input);await reloaded.shutdown();
-  const report={passed:true,node:process.versions.node,electron:process.versions.electron,largeImage,testRoot,screenshot,checks:['focused-input-close','save-failure-blocks-close','mock-generation','legacy-storage-hint','save-as-dedup-upgrade','unchanged-legacy-source','project-cover','save-as-switch','drag-open','reopen-same-record','reject-mixed-drop','single-file-location','restart','exact-request-roundtrip']};
+  const report={passed:true,node:process.versions.node,electron:process.versions.electron,largeImage,testRoot,screenshot,checks:['focused-input-close','save-failure-blocks-close','mock-generation','legacy-storage-hint','save-as-dedup-upgrade','unchanged-legacy-source','project-cover','save-as-switch','drag-open','reopen-same-record','reject-mixed-drop','single-file-location','same-path-save','cancel-overwrite','overwrite-and-switch','replaced-cache-refresh','restart','exact-request-roundtrip']};
   await writeFile(path.join(artifacts,'document-desktop-report.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.exit(0);
 }).catch(async error=>{await writeFile(path.join(artifacts,'document-desktop-report.json'),JSON.stringify({passed:false,error:error.stack,testRoot},null,2));console.error(error);app.exit(1);});

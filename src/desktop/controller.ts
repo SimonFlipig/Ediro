@@ -21,9 +21,11 @@ import type { ApiResponse, WorkspaceView } from '../shared/api.js';
 import { EncryptedSecretStore } from './secret-store.js';
 import { ModelTests,modelTestSchema,type ModelTestRecord } from '../core/model-tests.js';
 import {ProjectLibrary} from '../adapters/project-library.js';
-import {DocumentLibrary} from '../adapters/document-library.js';
+import {DocumentLibrary,type DocumentOutputMatch} from '../adapters/document-library.js';
 import {DocumentRepository} from '../adapters/document-repository.js';
 import {DraftRepository} from '../adapters/draft-repository.js';
+import {outputFilename} from '../core/output-name.js';
+import {inspectDocumentTarget,sameDocumentFile} from '../adapters/document-save-target.js';
 
 export class DesktopController {
   private showMessage:(options:import('electron').MessageBoxOptions)=>Promise<{response:number}>;
@@ -162,6 +164,7 @@ export class DesktopController {
       }
       return await this.workspace.serial(async () => {
         const w = this.window();
+        let selected_asset_id:string|undefined;
         switch (command.type) {
           case 'mask:save-composite':await this.workspace.saveCompositeMask(command.project_id,command.task_id,command.strokes);break;
           case 'mask:save-draft':await this.workspace.saveMaskDraft(command.project_id,command.draft);break;
@@ -232,7 +235,7 @@ export class DesktopController {
           case 'output:folder':await mkdir(this.outputDirectory,{recursive:true});{const error=await shell.openPath(this.outputDirectory);if(error)throw new Error(error);}break;
           case 'output:open':{
             const selected=await dialog.showOpenDialog(w,{title:'从产出恢复工作',defaultPath:this.outputDirectory,properties:['openFile'],filters:[{name:'Ediro 生成图片',extensions:['png','jpeg','jpg','webp']}]});
-            if(selected.canceled)return {ok:true,cancelled:true};await this.recover(selected.filePaths[0]);break;
+            if(selected.canceled)return {ok:true,cancelled:true};selected_asset_id=await this.recover(selected.filePaths[0]);if(!selected_asset_id)return {ok:true,cancelled:true};break;
           }
           case 'state': break;
           case 'project:save':await this.workspace.flush();break;
@@ -256,7 +259,7 @@ export class DesktopController {
           case 'module:copy': await this.workspace.copyModule(command.module_id); break;
           case 'module:reference-type': await this.workspace.changeReferenceType(command.module_id,command.reference_type); break;
           case 'module:tool': await this.workspace.saveToolReference(command.module_id,Buffer.from(command.png_base64,'base64'),command.state,command.instruction); break;
-          case 'assets:drop': await this.importOrRecover(command.paths,command.module_id); break;
+          case 'assets:drop': selected_asset_id=await this.importOrRecover(command.paths,command.module_id); break;
           case 'asset:relink': {
             const selected = await dialog.showOpenDialog(w,{title:'重新定位同一份源图片',properties:['openFile'],filters:[{name:'图片',extensions:['png','jpg','jpeg','webp']}]});
             if(selected.canceled)return {ok:true,cancelled:true};
@@ -265,20 +268,27 @@ export class DesktopController {
           case 'project:package': {
             this.workspace.assertSwitchable();
             const name=this.workspace.requireProject().name.replace(/[<>:"/\\|?*\x00-\x1f]/g,'_');
-            const selected=await dialog.showSaveDialog(w,{title:'工程另存为 · 保存后切换到新工程',defaultPath:`${name}.ediro`,filters:[{name:'Ediro 工程',extensions:['ediro']}]});
+            const selected=await dialog.showSaveDialog(w,{title:'工程另存为 · 保存后切换到目标工程',defaultPath:`${name}.ediro`,filters:[{name:'Ediro 工程',extensions:['ediro']}],properties:['showOverwriteConfirmation']});
             if(selected.canceled||!selected.filePath)return {ok:true,cancelled:true};
+            const source=this.workspace.repository as ProjectRepository;
+            if(source instanceof DocumentRepository&&await sameDocumentFile(source.filename,selected.filePath)){
+              await this.workspace.persist();await this.rememberWorkspace();break;
+            }
+            // A successful native Save dialog includes confirmation for an
+            // existing target. Capture it now and reject later intervening writes.
+            const overwrite=await inspectDocumentTarget(selected.filePath);
             // Save As also rescues in-memory edits if the old document is unwritable.
-            const repo=await DocumentRepository.saveAs(this.workspace.repository as ProjectRepository,this.workspace.requireProject(),selected.filePath,this.documents.cacheRoot);
+            const repo=await DocumentRepository.saveAs(source,this.workspace.requireProject(),selected.filePath,this.documents.cacheRoot,{overwrite});
             this.workspace.acceptSavedCopy();await this.workspace.open(repo);await this.rememberWorkspace();this.token=newId('session');
             await this.workspace.onChange();
-            const saved=await this.showMessage({message:'保存成功',detail:`已另存为并切换到新工程。\n${repo.filename}`,buttons:['打开目录','知道了'],defaultId:1,cancelId:1});
+            const saved=await this.showMessage({message:'保存成功',detail:`${overwrite?'已覆盖保存并切换到目标工程。':'已另存为并切换到新工程。'}\n${repo.filename}`,buttons:['打开目录','知道了'],defaultId:1,cancelId:1});
             if(saved.response===0)shell.showItemInFolder(repo.filename);break;
           }
           case 'assets:import': {
             this.workspace.requireProject();
             const selected = await dialog.showOpenDialog(w, { title: '导入参考图片 · 保持选择顺序', properties: ['openFile', 'multiSelections'], filters: [{ name: '图片', extensions: ['png','jpg','jpeg','webp'] }] });
             if (selected.canceled) return { ok: true, cancelled: true };
-            await this.importOrRecover(selected.filePaths, command.module_id); break;
+            selected_asset_id=await this.importOrRecover(selected.filePaths, command.module_id); break;
           }
           case 'model:update': await this.workspace.models.update(command.model_config_id, { title: command.title, endpoint: command.endpoint, enabled: command.enabled }, command.secret); break;
           case 'job:retry':await this.workspace.retry(command.project_id,command.task_id);break;
@@ -290,16 +300,20 @@ export class DesktopController {
             const p = this.workspace.requireProject(), asset = p.assets.find(a => a.asset_id === command.asset_id);
             if (!asset) throw new Error('素材不存在。');
             const ext = asset.mime_type.split('/')[1];
-            const selected = await dialog.showSaveDialog(w, { title: '导出图片', defaultPath: path.join(this.outputDirectory,asset.name), filters: [{ name: '图片', extensions: [ext] }] });
+            const selected = await dialog.showSaveDialog(w, { title: '导出图片', defaultPath: path.join(this.outputDirectory,asset.kind==='output'?outputFilename(asset):asset.name), filters: [{ name: '图片', extensions: [ext] }] });
             if (selected.canceled || !selected.filePath) return { ok: true, cancelled: true };
             const resolved = path.resolve(selected.filePath);
             const projectRoot = path.resolve(this.workspace.repository!.directory);
             if (resolved === projectRoot || resolved.startsWith(`${projectRoot}${path.sep}`)) throw new Error('请导出到项目目录之外，避免覆盖工程数据。');
-            await (this.workspace.repository as ProjectRepository).export(asset, selected.filePath); break;
+            await this.workspace.flush();
+            const repository=this.workspace.repository as ProjectRepository;
+            await repository.export(asset, selected.filePath);
+            if(repository instanceof DocumentRepository&&asset.kind==='output')await this.documents.recordExport(repository,p,asset.asset_id,selected.filePath);
+            break;
           }
         }
         if(this.needsRegistration)await this.rememberWorkspace();
-        return { ok: true, state: await this.view() };
+        return { ok: true, state: await this.view(),...(selected_asset_id?{selected_asset_id}:{}) };
       });
     } catch (e) {
       // Never stringify command payloads: they may contain a transient API Key.
@@ -307,10 +321,24 @@ export class DesktopController {
       return { ok: false, error: message };
     }
   }
-  private async recover(filename:string){
-    if(this.workspace.requireProject().jobs.some(j=>['queued','preparing','running','post_processing'].includes(j.status)))throw new Error('请等当前任务完成再恢复工作。');
+  private async recover(filename:string,known?:DocumentOutputMatch[]):Promise<string|undefined>{
+    this.workspace.assertSwitchable();await this.workspace.flush();
+    const matches=known??await this.documents.findOutputs(filename,this.hiddenRecords);
+    if(matches.length){
+      let selected=matches[0];
+      if(matches.length>1){
+        const choice=await this.showMessage({type:'question',message:'找到多个来源版本，请选择要恢复的版本',buttons:['取消',...matches.map(m=>`${m.title} · ${m.name} · ${m.filename}`)],cancelId:0,defaultId:0});
+        if(!choice.response)return;selected=matches[choice.response-1];if(!selected)return;
+      }
+      const target=path.join(this.projects.directory,`恢复工程_${newId('file').slice(5)}.ediro`);
+      const repo=await this.documents.recoverOutput(selected,filename,target);
+      try{await this.workspace.open(repo);await this.workspace.restoreResult(this.workspace.requireProject().project_id,selected.asset_id);await this.workspace.flush();}
+      catch(error){if(this.workspace.repository!==repo)await repo.close();throw error;}
+      await this.rememberWorkspace();this.token=newId('session');return selected.asset_id;
+    }
     const directory=await this.projects.createDirectory(),repository=this.repository(directory);
-    await repository.recoverOutput(path.resolve(filename));await this.workspace.open(repository);await this.rememberWorkspace();this.token=newId('session');
+    const project=await repository.recoverOutput(path.resolve(filename));await this.workspace.open(repository);await this.rememberWorkspace();this.token=newId('session');
+    return project.jobs[0]?.output_asset_ids.find(id=>project.assets.some(a=>a.asset_id===id&&a.location.type==='external'&&path.resolve(a.location.path)===path.resolve(filename)))??project.jobs[0]?.output_asset_ids[0];
   }
   private async importOrRecover(paths:string[],moduleId?:string){
     if(paths.some(filename=>path.extname(filename).toLowerCase()==='.ediro')){
@@ -318,8 +346,10 @@ export class DesktopController {
       await this.openProjectFile(paths[0]);return;
     }
     if(!moduleId&&paths.length===1){
-      const sidecar=!!await (this.workspace.repository as ProjectRepository).findOutputRecord(paths[0]);
-      if(sidecar){const choice=await this.showMessage({type:'question',buttons:['取消','仅作为素材','恢复工作'],defaultId:1,cancelId:0,message:'这图片包含 Ediro 产出记录',detail:'恢复工作会打开生成这一版时的输入链与参数；仅作为素材则加入当前工作。'});if(choice.response===0)return;if(choice.response===2){await this.recover(paths[0]);return;}}
+      await this.workspace.flush();
+      const matches=await this.documents.findOutputs(paths[0],this.hiddenRecords);
+      const sidecar=matches.length||await this.projects.records.find(paths[0])||await (this.workspace.repository as ProjectRepository).findOutputRecord(paths[0]);
+      if(sidecar){const choice=await this.showMessage({type:'question',buttons:['取消','仅作为素材','恢复工作'],defaultId:1,cancelId:0,message:'找到这张图片的 Ediro 产出记录',detail:'恢复工作会在新工程中打开这一版的参数和创作模块；仅作为素材则加入当前工作。'});if(choice.response===0)return;if(choice.response===2)return this.recover(paths[0],matches);}
     }
     await this.workspace.importFiles(paths,moduleId);
   }

@@ -5,6 +5,7 @@ import type { ProjectStorePort, CloudExecutionPort, ExecutionResult } from './po
 import { normalizeParameters } from './generation-parameters.js';
 import { planExecution } from './execution-plan.js';
 import { selectWorkflowModel,snapshotParameters } from './model-settings.js';
+import {bindHistoricalRecipe,historicalPreset} from './historical-model.js';
 import { modelIdentity } from '../protocols/model-catalog.js';
 import { maskDraftSchema,maskStrokesSchema,sameMaskStrokes,currentMaskFeather,MASK_FEATHER_VERSION,type MaskDraft,type MaskMode,type MaskPixelsPort,type MaskStroke } from './mask.js';
 import {maskGuidance,planMaskRequest} from './mask-request.js';
@@ -49,7 +50,7 @@ export class Workspace {
     this.assertSwitchable();
     await this.flush();
     const project = await repository.load();
-    project.recipe = this.registry.resolveRecipe(project.recipe);
+    project.recipe = await this.restoreRecipeBinding(this.registry.resolveRecipe(project.recipe),project.jobs);
     let recovered = false;
     project.jobs.forEach(j => {
       if (['queued','preparing','running','post_processing'].includes(j.status)) {
@@ -89,9 +90,13 @@ export class Workspace {
       if (!d.accepts_images && m.asset_ids.length) throw new Error('提示词模块只支持文本。');
       m.asset_ids.forEach(id => { if (!p.assets.some(a => a.asset_id === id)) throw new Error('引用的素材不存在。'); });
     }
-    const selected=this.models.resolve(next.model_config_id);
-    next.core_parameters=normalizeParameters(next.core_parameters,selected);
-    next.model_parameters={...next.model_parameters,[modelIdentity(selected)]:structuredClone(next.core_parameters)};
+    let selected:ModelConfig|undefined;
+    try{selected=this.models.resolve(next.model_config_id);}catch(error){if(next.model_config_id!==p.recipe.model_config_id)throw error;}
+    if(selected&&(!next.model_preset_id||next.model_preset_id===selected.preset_id)){
+      next.core_parameters=normalizeParameters(next.core_parameters,selected);
+      if(selected.preset_id)next.model_preset_id=selected.preset_id;else delete next.model_preset_id;
+      next.model_parameters={...next.model_parameters,[modelIdentity(selected)]:structuredClone(next.core_parameters)};
+    }
     const previous = p.recipe;
     p.recipe = this.registry.resolveRecipe(next);
     try { await this.persist(false); } catch (e) { p.recipe = previous; throw e; }
@@ -100,7 +105,10 @@ export class Workspace {
     const recipe=this.requireProject().recipe;
     if(this.models.resolve(id).purpose==='understanding')throw new Error('工作台请选择生图模型。');
     let previous:ModelConfig|undefined;try{previous=this.models.resolve(recipe.model_config_id);}catch{/* removed channel */}
-    await this.saveRecipe(selectWorkflowModel(recipe,this.models.resolve(id),previous));
+    const selected=this.models.resolve(id),preset=historicalPreset(recipe,this.requireProject().jobs);
+    const next=selectWorkflowModel(recipe,selected,previous);
+    if(!previous&&preset&&preset===selected.preset_id)next.core_parameters=structuredClone(recipe.core_parameters);
+    await this.saveRecipe(next);
   }
   async resetParameters(){const recipe=structuredClone(this.requireProject().recipe),model=this.models.resolve(recipe.model_config_id);recipe.core_parameters=snapshotParameters(model.defaults,model);await this.saveRecipe(recipe);}
   async hideMaterial(assetId: string) {
@@ -190,9 +198,9 @@ export class Workspace {
     const {recipe:resolvedRecipe,chain,adapted,geometry:output_geometry}=plan;
     if (!chain.blocks.some(b => b.type === 'text' && b.text.trim())) throw new Error('请填写生成提示词。');
     if (adapted.adjustments.length && !allowDegradation) throw new Error('需要确认接口降级后才能运行。');
-    const { model_config_id, title, provider, model: actualModel, adapter_id, revision, kind,images_compatibility,gemini_compatibility } = model;
+    const { model_config_id, title, provider, model: actualModel, adapter_id, revision, kind,preset_id,images_compatibility,gemini_compatibility } = model;
     const job: Job = { task_id: newId('task'), status: 'queued', stage: '等待执行', progress: 0, created_at: new Date().toISOString(),
-      execution_plan:plan.summary, recipe_snapshot: resolvedRecipe, chain_snapshot: structuredClone(chain),output_geometry, model_snapshot: { model_config_id, title, provider, model: actualModel, adapter_id, revision, kind,...(images_compatibility?{images_compatibility:structuredClone(images_compatibility)}:{}),...(gemini_compatibility?{gemini_compatibility:structuredClone(gemini_compatibility)}:{}) }, adapted_input: adapted, output_asset_ids: [] };
+      execution_plan:plan.summary, recipe_snapshot: resolvedRecipe, chain_snapshot: structuredClone(chain),output_geometry, model_snapshot: { model_config_id, title, provider, model: actualModel, adapter_id, revision, kind,...(preset_id?{preset_id}:{}),...(images_compatibility?{images_compatibility:structuredClone(images_compatibility)}:{}),...(gemini_compatibility?{gemini_compatibility:structuredClone(gemini_compatibility)}:{}) }, adapted_input: adapted, output_asset_ids: [] };
     p.jobs.push(job); this.configs.set(job.task_id, structuredClone(model));
     try { await this.persist(); } catch (e) { p.jobs.pop(); this.configs.delete(job.task_id); throw e; }
     queueMicrotask(() => void this.pump().catch(async () => { /* Job failures are recorded by pump. */ }));
@@ -249,10 +257,10 @@ export class Workspace {
       {type:'text',text:maskGuidance.instruction(draft.instruction),...origin},
     ]:[{type:'image',asset_id:requestSource.asset_id,...origin},{type:'text',text:draft.instruction,...origin}];
     const adapted:Job['adapted_input']=strategy==='interleaved'?{kind:'native_blocks',blocks:structuredClone(blocks),adjustments:[]}:{kind:'separated_inputs',image_asset_ids:[requestSource.asset_id,...(guide?[guide.asset_id]:[])],prompt:blocks.filter(b=>b.type==='text').map(b=>b.text).join('\n\n'),adjustments:[]};
-    const {model_config_id,title,provider,model:actualModel,adapter_id,revision,kind,images_compatibility,gemini_compatibility}=model;
+    const {model_config_id,title,provider,model:actualModel,adapter_id,revision,kind,preset_id,images_compatibility,gemini_compatibility}=model;
     const job:Job={task_id:newId('task'),status:'queued',stage:'等待局部编辑',progress:0,created_at:new Date().toISOString(),
       recipe_snapshot:recipe,chain_snapshot:{blocks,mode:'reference_generation'},adapted_input:adapted,
-      model_snapshot:{model_config_id,title,provider,model:actualModel,adapter_id,revision,kind,images_compatibility,gemini_compatibility},output_asset_ids:[],
+      model_snapshot:{model_config_id,title,provider,model:actualModel,adapter_id,revision,kind,...(preset_id?{preset_id}:{}),images_compatibility,gemini_compatibility},output_asset_ids:[],
       mask_edit:{main_recipe_snapshot:structuredClone(p.recipe),draft:structuredClone(draft),method,source_snapshot_id:source.asset_id,mask_asset_id:mask.asset_id,...(crop?{crop,request_source_id:requestSource.asset_id}:{}),...(guide?{guide_asset_id:guide.asset_id}:{}),parent_revision_id:p.revisions.find(r=>r.asset_id===original.asset_id)?.revision_id,raw_asset_ids:[],variants:[]},
       execution_plan:{version:1,operation:method==='guided'?'guidedMaskEdit':'nativeMaskEdit',requested_strategy:strategy,actual_strategy:strategy,contract,model_revision:revision,adapter_version:model.adapter_version??1,diagnostics:[]},
       output_geometry:plan.geometry,
@@ -319,6 +327,10 @@ export class Workspace {
     job.status = 'cancelled'; job.stage = '已取消'; job.finished_at = new Date().toISOString();
     this.configs.delete(id); await this.persist();
   }
+  private async restoreRecipeBinding(recipe:Recipe,jobs:Job[]){
+    const preset=historicalPreset(recipe,jobs),preferred=preset?this.project?.recipe.model_channels?.[preset]:undefined;
+    return bindHistoricalRecipe(recipe,jobs,await this.models.list(),[preferred,this.models.defaultModel()]);
+  }
   async restoreResult(projectId:string,assetId:string) {
     const p=this.requireProject();
     if(p.project_id!==projectId)throw new Error('工作记录已切换，请重新选择结果版本。');
@@ -326,18 +338,18 @@ export class Workspace {
     const job=p.jobs.find(j=>j.output_asset_ids.includes(assetId));
     if(!asset||!job)throw new Error('该结果没有可恢复的生成记录。');
     const recipe=this.registry.resolveRecipe(job.mask_edit?.main_recipe_snapshot??job.recipe_snapshot);
-    this.models.resolve(recipe.model_config_id);
+    const restored=await this.restoreRecipeBinding(recipe,[...p.jobs,job]);
     // Switch current work only. Historical task and variant snapshots stay intact.
-    await this.commitRecipe(recipe);
+    await this.commitRecipe(restored);
   }
   async restore(id: string) {
     const p = this.requireProject(), job = p.jobs.find(j => j.task_id === id);
     if (!job) throw new Error('历史任务不存在。');
     if(job.mask_edit){await this.saveMaskDraft(p.project_id,job.mask_edit.draft);return;}
     const recipe = structuredClone(job.recipe_snapshot);
-    this.models.resolve(recipe.model_config_id);
+    const restored=await this.restoreRecipeBinding(recipe,[...p.jobs,job]);
     // Reusing a historical recipe creates current work; the job stays immutable.
-    await this.commitRecipe(this.registry.resolveRecipe(recipe));
+    await this.commitRecipe(this.registry.resolveRecipe(restored));
   }
   async recoverResult(id:string){
     this.assertSwitchable();const job=this.requireProject().jobs.find(j=>j.task_id===id);if(!job||job.status!=='failed')throw new Error('只能恢复保存失败或中断的任务产物。');

@@ -1,0 +1,32 @@
+import { useRef,useState } from 'react';
+import { newId } from '../core/domain.js';
+import type { PublicConnection } from '../core/model-library.js';
+import type { ApiResponse,Command,WorkspaceView } from '../shared/api.js';
+import { identifyPreset,modelCatalog,modelFromPreset } from '../protocols/model-catalog.js';
+
+export function ModelEnrollment({connection,view,save,probe,busy,onWorkingChange,onClose,onChooseConnection,onNewConnection,onEnrolled}:{connection:PublicConnection;view:WorkspaceView;save:(c:Command)=>Promise<boolean>;probe:(c:Command)=>Promise<ApiResponse>;busy:boolean;onWorkingChange:(busy:boolean)=>void;onClose:()=>void;onChooseConnection:(connection:PublicConnection)=>void;onNewConnection:()=>void;onEnrolled:(ids:string[])=>void}){
+  const adapter=connection.adapter_id??view.models.find(m=>m.connection_id===connection.connection_id)?.adapter_id??'gemini-generate-content';
+  const [mode,setMode]=useState<'remote'|'manual'>('remote'),[models,setModels]=useState<string[]>([]),[loaded,setLoaded]=useState(false),[query,setQuery]=useState(''),[manual,setManual]=useState(''),[choices,setChoices]=useState<Record<string,string>>({}),[picked,setPicked]=useState<string[]>([]),[working,setWorking]=useState(false),[message,setMessage]=useState(''),[added,setAdded]=useState<string[]>([]);
+  const running=useRef(false),completed=useRef<string[]>([]);
+  const locked=busy||working,available=modelCatalog.filter(p=>p.config.adapter_id===adapter);
+  const exists=(id:string)=>added.includes(id)||view.models.some(m=>m.connection_id===connection.connection_id&&m.model===id&&m.adapter_id===adapter);
+  const presetFor=(id:string)=>{const match=identifyPreset(id);return choices[id]??(match?.config.adapter_id===adapter?match.id:'');};
+  const work=async(action:()=>Promise<void>)=>{if(running.current)return;running.current=true;setWorking(true);onWorkingChange(true);try{await action();}catch(error){setMessage(error instanceof Error?error.message:'操作未完成，请重试。');}finally{running.current=false;setWorking(false);onWorkingChange(false);}};
+  const fetchModels=()=>work(async()=>{setMessage('正在读取模型列表…');const result=await probe({type:'connection:probe',connection_id:connection.connection_id,adapter_id:adapter});if(result.ok){setModels([...new Set(result.discovered_models??[])]);setLoaded(true);setMessage(result.discovered_models?.length?'已获取模型名称，尚未验证实际调用。':'平台没有返回模型，可以手动添加。');}else setMessage(result.error??'读取失败，可以重试或手动添加。');});
+  const enroll=(ids:string[])=>work(async()=>{const candidates=ids.filter(id=>!exists(id)&&available.some(p=>p.id===presetFor(id)));if(!candidates.length)return;setMessage('正在添加模型…');for(const id of candidates){const preset=presetFor(id),{endpoint:_,executable:__,revision:___,...model}=modelFromPreset(preset,newId('model'),connection.connection_id,id);if(!await save({type:'model:save',model:{...model,purpose:available.find(p=>p.id===preset)!.purpose,capability_source:'documented'}})){setMessage('本次添加未全部完成。已成功的模型会保留，可重试剩余模型。');return;}completed.current.push(model.model_config_id);setAdded(list=>[...list,id]);setPicked(list=>list.filter(item=>item!==id));}onEnrolled(completed.current);});
+  const presetSelect=(id:string)=><select aria-label={`${id} 模型预设`} disabled={exists(id)||locked} value={presetFor(id)} onChange={e=>{setChoices(c=>({...c,[id]:e.target.value}));if(!e.target.value)setPicked(list=>list.filter(item=>item!==id));}}><option value="">选择对应预设</option>{available.map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select>;
+  return <div className="settings-flow-content settings-enrollment">
+    <button className="settings-back" disabled={locked} onClick={onClose}>← 返回模型库</button>
+    <div className="settings-library-heading"><div><span className="settings-eyebrow">ADD TO YOUR LIBRARY</span><h2>添加模型</h2><p>确认对应预设，把常用模型放进你的工具箱。</p></div></div>
+    <div className="settings-enrollment-platform"><label>添加到平台<select aria-label="添加到平台" disabled={locked} value={connection.connection_id} onChange={e=>{const c=view.connections?.find(c=>c.connection_id===e.target.value);if(c)onChooseConnection(c);}}>{view.connections?.map(c=><option key={c.connection_id} value={c.connection_id}>{c.title}{!c.enabled?'（已停用）':!c.has_credential?'（待配置密钥）':''}</option>)}</select></label><button disabled={locked} onClick={onNewConnection}>＋ 新平台</button></div>
+    <div className="settings-tabs" aria-label="添加方式"><button disabled={locked} aria-pressed={mode==='remote'} onClick={()=>setMode('remote')}>从平台列表选择</button><button disabled={locked} aria-pressed={mode==='manual'} onClick={()=>setMode('manual')}>手动添加</button></div>
+    {mode==='remote'?<>
+      <div className="settings-model-toolbar"><input disabled={locked} aria-label="筛选模型" placeholder="搜索平台模型 ID" value={query} onChange={e=>setQuery(e.target.value)}/><button disabled={locked} onClick={()=>void fetchModels()}>{working?'正在处理…':loaded?'刷新列表':'获取模型列表'}</button></div>
+      <p className="settings-hint">获取列表不会发起生图。平台别名需要选择其实际对应的预设。</p>
+      <div className="discovery-list">{models.filter(id=>id.toLowerCase().includes(query.toLowerCase())).map(id=><div className="discovery-row" key={id}><label className="settings-check"><input type="checkbox" aria-label={`选择 ${id}`} disabled={locked||exists(id)||!presetFor(id)} checked={picked.includes(id)} onChange={e=>setPicked(list=>e.target.checked?[...list,id]:list.filter(item=>item!==id))}/><span><b>{id}</b><small>{exists(id)?'已在模型库':presetFor(id)?'已匹配预设':'未识别 · 请指定预设'}</small></span></label>{presetSelect(id)}</div>)}</div>
+      {!models.length&&<div className="settings-empty">{loaded?'没有可显示的模型，也可以切换到手动添加。':'读取平台提供的模型列表，或切换到手动添加。'}</div>}
+    </>:<div className="manual-model"><label>平台模型 ID<input disabled={locked} autoFocus value={manual} onChange={e=>setManual(e.target.value)} maxLength={100} placeholder="渠道提供的完整模型名称"/></label>{manual.trim()&&<label>对应模型预设{presetSelect(manual.trim())}</label>}<p className="settings-hint">预设决定可用参数与能力，模型 ID 可以使用平台别名。</p>{exists(manual.trim())&&<p className="settings-notice">这个模型已在当前平台的模型库中。</p>}</div>}
+    <p role="status" className="settings-hint">{message}</p>
+    <div className="settings-savebar"><span>{mode==='remote'?`已选择 ${picked.length} 个模型`:'添加后可在右侧调整默认参数'}</span><button className="primary" disabled={locked||(mode==='remote'?!picked.length:!manual.trim()||!presetFor(manual.trim())||exists(manual.trim()))} onClick={()=>void enroll(mode==='remote'?picked:[manual.trim()])}>添加到模型库</button></div>
+  </div>;
+}
