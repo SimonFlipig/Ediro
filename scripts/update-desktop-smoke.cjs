@@ -1,0 +1,65 @@
+// Local HTTP fixture + real electron-updater + real preload/UI. Never install.
+const {app, BrowserWindow, ipcMain}=require('electron');
+const {NsisUpdater}=require('electron-updater');
+const {ElectronHttpExecutor}=require('electron-updater/out/electronHttpExecutor.js');
+const {createServer}=require('node:http');
+const {createHash}=require('node:crypto');
+const {mkdir,mkdtemp,writeFile}=require('node:fs/promises');
+const path=require('node:path');
+const assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'..');
+let server, directory;
+app.on('window-all-closed',()=>{});
+const timer=setTimeout(()=>{console.error('Update smoke timed out');app.exit(1);},60000);
+app.whenReady().then(async()=>{
+  await mkdir(path.join(root,'.local'),{recursive:true});
+  directory=await mkdtemp(path.join(root,'.local','update-desktop-'));
+  app.setPath('userData',path.join(directory,'electron'));
+  const {UpdateService}=await import('../dist-host/desktop/update-service.js');
+  const {configureUpdateDriver,bindUpdateIpc}=await import('../dist-host/desktop/updates.js');
+  const {DesktopController}=await import('../dist-host/desktop/controller.js');
+  const bytes=Buffer.from('This is synthetic update test data, never an executable.');
+  const digest=createHash('sha512').update(bytes).digest('base64');
+  let corrupt=true,downloads=0,installRequests=0;
+  server=createServer((req,res)=>{
+    if(req.url.startsWith('/latest.yml')) {res.end(`version: 0.1.1\nfiles:\n  - url: Ediro-0.1.1-windows-x64-setup.exe\n    sha512: ${digest}\n    size: ${bytes.length}\npath: Ediro-0.1.1-windows-x64-setup.exe\nsha512: ${digest}\nreleaseDate: '2026-09-29T00:00:00.000Z'\n`);return;}
+    if(req.url.startsWith('/Ediro-0.1.1-windows-x64-setup.exe')){downloads++;const body=corrupt?Buffer.alloc(bytes.length,88):bytes;res.writeHead(200,{'Content-Length':body.length});res.end(body);return;}
+    res.writeHead(404);res.end();
+  });
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  const config=path.join(directory,'app-update.yml');
+  await writeFile(config,`provider: generic\nurl: http://127.0.0.1:${server.address().port}\nupdaterCacheDirName: ediro-test-updater\n`);
+  const driver=new NsisUpdater(undefined,{version:'0.1.0',name:'Ediro Update Test',isPackaged:true,appUpdateConfigPath:config,userDataPath:path.join(directory,'user'),baseCachePath:path.join(directory,'cache'),whenReady:()=>Promise.resolve(),quit:()=>{throw new Error('Unexpected quit');},relaunch:()=>{throw new Error('Unexpected relaunch');},onQuit:()=>{throw new Error('Automatic installation must be disabled');}});
+  driver.httpExecutor=new ElectronHttpExecutor();
+  configureUpdateDriver(driver);driver.disableDifferentialDownload=true;
+  assert.equal(driver.autoDownload,false);assert.equal(driver.autoInstallOnAppQuit,false);assert.equal(driver.allowDowngrade,false);assert.equal(driver.allowPrerelease,false);
+  driver.quitAndInstall=()=>{throw new Error('Test data must never execute');};
+  const window=new BrowserWindow({width:1400,height:920,show:false,webPreferences:{preload:path.join(root,'dist-host/desktop/preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false}});
+  const errors=[];window.webContents.on('preload-error',(_e,_file,error)=>errors.push(error.message));
+  const controller=await DesktopController.create(path.join(directory,'runtime'),()=>window,{projectRoot:path.join(directory,'projects'),deferStartup:true,showMessage:async()=>({response:0})});
+  ipcMain.handle('ediro:command',(_event,command)=>controller.execute(command));
+  const service=new UpdateService('installed','0.1.0',driver,state=>window.webContents.send('ediro:update-state',state),()=>{installRequests++;throw new Error('模拟：生成任务仍在运行');},async()=>{});
+  bindUpdateIpc(window,service);
+  await window.loadFile(path.join(root,'dist/index.html'));
+  const evaluate=code=>window.webContents.executeJavaScript(code);
+  const waitFor=async code=>{for(let i=0;i<100;i++){if(await evaluate(code))return;await new Promise(r=>setTimeout(r,50));}throw new Error('UI timeout: '+code);};
+  await waitFor("Boolean(document.querySelector('.top-actions button[title=\"检查 GitHub 发布版本\"]'))");
+  await evaluate("document.querySelector('.top-actions button[title=\"检查 GitHub 发布版本\"]').click()");
+  await waitFor("document.querySelector('.app-dialog')?.textContent.includes('当前版本 0.1.0')");
+  await evaluate("[...document.querySelectorAll('.app-dialog button')].find(b=>b.textContent==='检查更新').click()");
+  await waitFor("document.querySelector('.app-dialog')?.textContent.includes('新版本 0.1.1')");
+  assert.equal(downloads,0);
+  const failed=await evaluate("window.ediro.updates.command('download')");assert.equal(failed.state.status,'error');assert.equal(driver.installerPath,null);
+  corrupt=false;
+  await evaluate("window.ediro.updates.command('check')");
+  const success=await evaluate("window.ediro.updates.command('download')");assert.equal(success.state.status,'downloaded');assert.ok(driver.installerPath.startsWith(directory));
+  await waitFor("document.querySelector('.app-dialog')?.textContent.includes('保存并重启升级')");
+  await evaluate("new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))");
+  await new Promise(resolve=>setTimeout(resolve,150));
+  await writeFile(path.join(directory,'update-ready.png'),(await window.webContents.capturePage()).toPNG());
+  const blocked=await evaluate("window.ediro.updates.command('install')");assert.equal(blocked.ok,false);assert.equal(blocked.state.status,'downloaded');assert.equal(installRequests,1);
+  assert.deepEqual(errors,[]);
+  await controller.shutdown();window.destroy();server.close();clearTimeout(timer);
+  await writeFile(path.join(directory,'report.json'),JSON.stringify({ok:true,realUpdater:true,loopbackOnly:true,checksumRejected:true,validDownload:true,automaticDownload:false,automaticInstall:false,preloadAndUI:true,blockedRestart:true,installerExecuted:false},null,2));
+  console.log('Update smoke passed: '+directory);app.exit(0);
+}).catch(async error=>{console.error(error);if(directory)await writeFile(path.join(directory,'error.txt'),error.stack??String(error));server?.close();clearTimeout(timer);app.exit(1);});

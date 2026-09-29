@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.host.json",
+  "compilerOptions": { "rootDir": ".", "outDir": ".local/test-build" },
+  "include": ["src/core", "src/adapters", "src/shared", "tests"]
+}

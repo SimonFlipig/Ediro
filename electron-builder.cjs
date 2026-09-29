@@ -1,0 +1,31 @@
+/** @type {import('electron-builder').Configuration} */
+module.exports = {
+  appId: 'io.github.simonflipig.ediro',
+  productName: 'Ediro',
+  electronDist: 'node_modules/electron/dist',
+  directories: { output: '.local/release-build', buildResources: 'build' },
+  files: ['dist/**/*', 'dist-host/**/*', 'package.json', 'LICENSE', 'THIRD_PARTY_NOTICES.md', '!**/*.map'],
+  asar: true,
+  asarUnpack: ['node_modules/sharp/**/*', 'node_modules/@img/**/*'],
+  npmRebuild: false,
+  win: {
+    icon: '.local/release-icon.ico',
+    target: [{ target: 'nsis', arch: ['x64'] }],
+    artifactName: 'Ediro-${version}-windows-${arch}-setup.${ext}',
+    signAndEditExecutable: true,
+  },
+  nsis: {
+    oneClick: false,
+    perMachine: false,
+    allowElevation: true,
+    include: 'build/installer.nsh',
+    allowToChangeInstallationDirectory: true,
+    createDesktopShortcut: true,
+    createStartMenuShortcut: true,
+    runAfterFinish: false,
+    deleteAppDataOnUninstall: false,
+    installerLanguages: ['zh_CN', 'en_US'],
+    license: 'LICENSE',
+  },
+  publish: { provider: 'github', owner: 'SimonFlipig', repo: 'Ediro', private: false, releaseType: 'release', vPrefixedTagName: true },
+};

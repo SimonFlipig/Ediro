@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", "lib": ["ES2022", "DOM"], "module": "NodeNext",
+    "moduleResolution": "NodeNext", "strict": true, "skipLibCheck": true,
+    "esModuleInterop": true, "rootDir": "src", "outDir": "dist-host",
+    "types": ["node"]
+  },
+  "include": ["src/core", "src/shared", "src/adapters", "src/desktop"]
+}

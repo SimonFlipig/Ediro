@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "documentVersion": "1.0.0",
+  "verifiedAt": "2026-09-15",
+  "providers": {
+    "google:gemini-3-pro-image": {
+      "displayName": "Nano Banana Pro",
+      "model": {
+        "alias": "gemini-3-pro-image",
+        "snapshot": null,
+        "inputTokenLimit": 65536,
+        "outputTokenLimit": 32768
+      },
+      "operations": {
+        "generate": true,
+        "referenceEdit": true,
+        "nativeMaskEdit": false,
+        "multiTurnEdit": true,
+        "outpaintByPrompt": true
+      },
+      "output": {
+        "aspectRatios": ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"],
+        "resolutionTiers": ["1K", "2K", "4K"],
+        "arbitraryDimensions": false,
+        "mimeTypesDocumentedInGuide": ["image/png", "image/jpeg"],
+        "mimeTypesInCurrentOpenApiEnum": ["image/jpeg"],
+        "transparentBackground": false,
+        "compressionControl": false,
+        "reliableCountControl": false
+      },
+      "references": {
+        "maxTotal": 14,
+        "conservativeHighFidelity": 5,
+        "documentedObjectHighFidelity": 6,
+        "documentedCharacterConsistency": 5,
+        "documentedStyleReferences": 3,
+        "rolesAreApplicationMetadata": true
+      },
+      "controls": {
+        "stream": true,
+        "store": true,
+        "background": true,
+        "previousInteractionId": true,
+        "systemInstruction": true,
+        "googleWebSearch": true,
+        "googleImageSearch": false,
+        "thinkingAlwaysOn": true,
+        "thinkingCanBeDisabled": false,
+        "seedFieldExistsButImageReproducibilityNotGuaranteed": true
+      },
+      "input": {
+        "imageMimeTypes": ["image/png", "image/jpeg", "image/webp", "image/heic", "image/heif", "image/gif", "image/bmp", "image/tiff"],
+        "inlineRequestBytesConservative": 20971520,
+        "fileApiMaxFileBytes": 2147483648,
+        "fileApiProjectBytes": 21474836480,
+        "fileApiRetentionHours": 48
+      },
+      "unsupportedStableControls": [
+        "mask",
+        "negative_prompt",
+        "transparent_background",
+        "quality_enum",
+        "output_compression",
+        "sampler",
+        "steps",
+        "cfg_scale",
+        "denoise_strength",
+        "lora",
+        "controlnet"
+      ],
+      "flags": {
+        "runtimeProbeOutputPng": true,
+        "runtimeProbeServiceTier": true,
+        "officialReferenceCountConflict": true
+      }
+    },
+    "openai:gpt-image-2": {
+      "displayName": "GPT-Image-2",
+      "model": {
+        "alias": "gpt-image-2",
+        "snapshot": "gpt-image-2-2026-04-21"
+      },
+      "operations": {
+        "generate": true,
+        "referenceEdit": true,
+        "nativeMaskEdit": true,
+        "multiTurnEditViaResponses": true,
+        "outpaintByMask": true
+      },
+      "prompt": {
+        "minCharsEdit": 1,
+        "maxChars": 32000
+      },
+      "output": {
+        "standardSizes": ["1024x1024", "1536x1024", "1024x1536"],
+        "arbitraryDimensions": true,
+        "dimensionMultiple": 16,
+        "minAspectRatio": 0.3333333333,
+        "maxAspectRatio": 3,
+        "maxEdgePixels": 3840,
+        "minTotalPixels": 655360,
+        "maxTotalPixels": 8294400,
+        "experimentalAbove": "2560x1440",
+        "qualities": ["auto", "low", "medium", "high"],
+        "formats": ["png", "jpeg", "webp"],
+        "compressionMin": 0,
+        "compressionMax": 100,
+        "compressionDefault": 100,
+        "compressionFormats": ["jpeg", "webp"],
+        "backgrounds": ["auto", "opaque", "transparent"],
+        "transparentBackgroundPreview": true,
+        "transparentFormats": ["png", "webp"],
+        "returnsBase64Only": true,
+        "countMin": 1,
+        "countMax": 10
+      },
+      "edit": {
+        "maxReferenceImages": 16,
+        "inputFidelity": "always-high-do-not-send-parameter",
+        "maskRequiredAlpha": true,
+        "maskAndBaseSameFormat": true,
+        "maskAndBaseSameDimensions": true,
+        "maskAndBaseMaxBytesExclusive": 52428800
+      },
+      "controls": {
+        "moderation": ["auto", "low"],
+        "stream": true,
+        "partialImagesMin": 0,
+        "partialImagesMax": 3,
+        "userIdentifier": true,
+        "seed": false
+      },
+      "unsupportedStableControls": [
+        "seed",
+        "negative_prompt",
+        "style",
+        "xhigh",
+        "max_quality",
+        "sampler",
+        "steps",
+        "cfg_scale",
+        "denoise_strength",
+        "lora",
+        "controlnet",
+        "response_format_url"
+      ]
+    }
+  }
+}

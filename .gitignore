@@ -1,0 +1,12 @@
+node_modules/
+dist/
+dist-host/
+.local/
+output/
+Project/
+input/
+*.log
+*.tsbuildinfo
+.env
+.env.*
+!.env.example

@@ -1,0 +1,42 @@
+{
+  "name": "ediro",
+  "version": "0.1.0",
+  "license": "GPL-3.0-only",
+  "private": true,
+  "description": "Ediro · 面向电商视觉设计的 AI 图像工作台",
+  "author": "Ediro contributors",
+  "homepage": "https://github.com/SimonFlipig/Ediro",
+  "type": "module",
+  "main": "dist-host/desktop/entry.js",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.host.json",
+    "build": "node scripts/build-state.mjs --begin && npm run typecheck && vite build && tsc -p tsconfig.host.json && node scripts/preload.mjs && node scripts/build-state.mjs --record",
+    "package:win": "npm run build && node scripts/package-windows.mjs",
+    "start": "electron .",
+    "preview:check": "node scripts/preview.mjs",
+    "test": "node scripts/test.mjs",
+    "check": "npm run typecheck && npm test && npm run build"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.9",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "sharp": "0.35.4",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "electron": "44.4.1",
+    "electron-builder": "26.15.3",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3",
+    "vite": "8.3.0"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "revision": "my-tuning-001",
+  "module_header": "{module}:",
+  "image_label": "{image}",
+  "image_separator": ", ",
+  "intra_module_separator": "\n",
+  "inter_module_separator": "\n\n",
+  "modules": {
+    "prompt": { "header": false },
+    "image_text": { "header": false },
+    "subject": {
+      "model_name": "subject",
+      "native_instruction": "保持这些图片中主体的结构、颜色和比例。",
+      "numbered_instruction": "保持 {images} 中主体的结构、颜色和比例。"
+    }
+  }
+}
