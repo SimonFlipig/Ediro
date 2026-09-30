@@ -42,11 +42,13 @@ export function prepareModuleInference(recipe:Recipe,moduleId:string,draft:strin
   ];
   if(!textOnly)for(const image of images){blocks.push({type:'text',...meta,text:image.image_name??'参考图片'},image);}
   snapshot.model_config_id=model.model_config_id;snapshot.core_parameters=structuredClone(model.defaults);
+  // This is a separate understanding task, not a replay of the generation model.
+  if(model.preset_id)snapshot.model_preset_id=model.preset_id;else delete snapshot.model_preset_id;
   const chain={...source,blocks,mode:blocks.some(b=>b.type==='image')?'reference_generation' as const:'text_to_image' as const};
   const plan=planExecution(snapshot,[],model,registry,chain);
   const job:Job={task_id:newId('inference'),created_at:new Date().toISOString(),status:'running',stage:task.action_label,progress:0,
     recipe_snapshot:plan.recipe,chain_snapshot:chain,adapted_input:plan.adapted,execution_plan:plan.summary,
-    model_snapshot:{model_config_id:model.model_config_id,title:model.title,provider:model.provider,model:model.model,adapter_id:model.adapter_id,revision:model.revision,kind:model.kind},output_asset_ids:[]};
+    model_snapshot:{model_config_id:model.model_config_id,preset_id:model.preset_id,title:model.title,provider:model.provider,model:model.model,adapter_id:model.adapter_id,revision:model.revision,kind:model.kind},output_asset_ids:[]};
   return {job,images_sent:textOnly?0:images.length,text_only:textOnly,original_text:draft,model_title:model.title};
 }
 

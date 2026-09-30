@@ -9,6 +9,7 @@ import {GeminiGenerator} from '../src/adapters/gemini-generator.js';
 import {compileRecipe} from '../src/core/compiler.js';
 import {commandSchema} from '../src/shared/commands.js';
 import {inferenceInputError} from '../src/core/module-inference-tasks.js';
+import {modelFromPreset} from '../src/protocols/model-catalog.js';
 
 function fixture(){
   const registry=new ModuleRegistry(),subject=registry.create('subject'),neutral=registry.create('image_text'),prompt=registry.create('prompt'),disabled=registry.create('style');
@@ -17,6 +18,22 @@ function fixture(){
   const model={...seedModels()[2],purpose:'understanding' as const,enabled:true,executable:true,model:'gemini-understanding',capabilities:{...seedModels()[2].capabilities,operations:['understand']}};
   return {registry,subject,neutral,prompt,recipe,model};
 }
+
+test('带生图预设的配方可用不同预设或无预设的理解模型，任务快照不污染原配方',()=>{
+  for(const preset of ['gemini-3-1-pro',undefined]){
+    const f=fixture();f.recipe.model_preset_id='nano-banana-pro';
+    f.recipe.model_channels={'nano-banana-pro':f.recipe.model_config_id};
+    const before=structuredClone(f.recipe),model={...modelFromPreset('gemini-3-1-pro','model_understanding','connection_test','custom-alias'),executable:true,preset_id:preset};
+    for(const [moduleId,draft] of [[f.subject.module_id,''],[f.prompt.module_id,'优化这段描述']]){
+      const prepared=prepareModuleInference(f.recipe,moduleId,draft,model,f.registry);
+      assert.equal(prepared.job.recipe_snapshot.model_config_id,model.model_config_id);
+      assert.equal(prepared.job.recipe_snapshot.model_preset_id,preset);
+      assert.equal(prepared.job.model_snapshot.preset_id,preset);
+      assert.equal(prepared.job.execution_plan?.operation,'understand');
+      assert.deepEqual(f.recipe,before);
+    }
+  }
+});
 test('优化冻结未保存草稿和启用约束，图片按全局编号排列，不修改原配方',()=>{
   const f=fixture(),before=JSON.stringify(f.recipe),p=prepareModuleInference(f.recipe,f.prompt.module_id,'新的草稿',f.model,f.registry);
   const blocks=p.job.adapted_input.blocks!,text=blocks.filter(b=>b.type==='text').map(b=>b.text).join('\n');
