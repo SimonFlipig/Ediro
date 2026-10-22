@@ -1,5 +1,14 @@
 !include LogicLib.nsh
 !include FileFunc.nsh
+!include "${BUILD_RESOURCES_DIR}\shell-integration.nsh"
+
+; package-windows.mjs generates and verifies this immutable template mirror.
+; Fail closed if packaging bypasses preparation; never fall back to WinShell.
+!define EDIRO_NSIS_TEMPLATE_DIRECTORY "$%EDIRO_NSIS_TEMPLATE_DIRECTORY%"
+!if "${EDIRO_NSIS_TEMPLATE_DIRECTORY}" == ""
+  !error "Prepare the Ediro NSIS template with scripts/prepare-nsis-template.mjs before compiling."
+!endif
+!cd "${EDIRO_NSIS_TEMPLATE_DIRECTORY}"
 
 !ifndef BUILD_UNINSTALLER
   LangString EdiroDirectoryHelp 2052 "请选择当前权限可写的安装目录。默认目录无需管理员权限；如需安装到 Program Files，请返回并选择为所有用户安装，再允许 Windows 权限请求。无法写入的目录不能继续安装。"

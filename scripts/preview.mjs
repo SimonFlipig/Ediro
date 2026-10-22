@@ -5,6 +5,7 @@ import { readFile, mkdir, mkdtemp } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { ZodError } from 'zod';
+import sharp from 'sharp';
 import { Workspace } from '../dist-host/core/workspace.js';
 import { ModelLibrary, seedModels } from '../dist-host/core/models.js';
 import { ProjectRepository } from '../dist-host/adapters/project-repository.js';
@@ -13,10 +14,19 @@ import { MaskPixels } from '../dist-host/adapters/mask-pixels.js';
 import { MockGenerator } from '../dist-host/adapters/mock-generator.js';
 import { GeminiGenerator } from '../dist-host/adapters/gemini-generator.js';
 import { ImagesGenerator } from '../dist-host/adapters/images-generator.js';
+import { ChatCompletionsAdapter } from '../dist-host/adapters/chat-completions.js';
 import { mockDescription } from '../dist-host/core/model-library.js';
 import { planExecution } from '../dist-host/core/execution-plan.js';
 import { prepareModuleInference,executeModuleInference } from '../dist-host/core/module-inference.js';
+import { getAutoPromptState } from '../dist-host/core/auto-prompt.js';
 import { commandSchema } from '../dist-host/shared/commands.js';
+import { loadModuleSettings,saveModuleSettings } from '../dist-host/adapters/module-settings-repository.js';
+import { loadPromptSettings,savePromptCustomizations } from '../dist-host/adapters/prompt-config-repository.js';
+import { ModuleRegistry } from '../dist-host/core/modules.js';
+import { loadGenerationTimings } from '../dist-host/adapters/generation-timing-repository.js';
+import { ReferencePreprocessor } from '../dist-host/adapters/reference-preprocessor.js';
+import { resizeReferenceImage } from '../dist-host/adapters/reference-image.js';
+import { localImageModelStatus } from '../dist-host/adapters/local-image-models.js';
 import { modelCatalog } from '../dist-host/protocols/model-catalog.js';
 import { createPreviewFixtures } from './preview-fixtures.mjs';
 
@@ -24,19 +34,26 @@ const port=Number(process.env.EDIRO_PREVIEW_PORT??5191);if(!Number.isInteger(por
 const origin=`http://127.0.0.1:${port}`,token=randomUUID();
 const pages=new Set();
 let closeTimer,stopping=false;
+const referencePreviews=new Map();
 async function shutdown(){
   if(stopping)return;stopping=true;clearTimeout(closeTimer);
+  for(const preview of referencePreviews.values())preview.abort();
   const deadline=setTimeout(()=>process.exit(1),5000);
   for(const page of pages)page.end();
-  try{await workspace.shutdown();server.close();server.closeAllConnections();clearTimeout(deadline);console.log('验证界面已关闭，后台进程退出。');}
+  try{await workspace.shutdown();await preprocessing.close();server.close();server.closeAllConnections();clearTimeout(deadline);console.log('验证界面已关闭，后台进程退出。');}
   catch(error){console.error(error);process.exit(1);}
 }
 const guidedPreview={...seedModels()[0],model_config_id:'model_preview_guided_mask',title:'模拟黑白区域图编辑 · 不调用云端',adapter_id:'mock-guided-mask',generation_contract:seedModels()[2].generation_contract,defaults:seedModels()[2].defaults,capabilities:{...seedModels()[2].capabilities,operations:['generate','referenceEdit','guidedMaskEdit']}};
 const guidedPreviewAdapter={...mockDescription,adapter_id:'mock-guided-mask',title:'模拟黑白区域图编辑',generation_contract:guidedPreview.generation_contract,operations:guidedPreview.capabilities.operations};
-const modelLibrary=new ModelLibrary([...seedModels(),guidedPreview,{...seedModels()[0],model_config_id:'model_preview_understanding',title:'模拟理解模型 · 不调用云端',purpose:'understanding',capabilities:{...seedModels()[0].capabilities,operations:['understand']}},{...seedModels()[0],model_config_id:'model_preview_text_only',title:'模拟纯文字模型 · 不调用云端',purpose:'understanding',capabilities:{...seedModels()[0].capabilities,max_images:0,operations:['understand']}}],async()=>{}, {has:async()=>false,set:async()=>{throw new Error('浏览器验证宿主禁止保存凭据。');}},[guidedPreviewAdapter,{...mockDescription,purposes:['generation','understanding'],operations:['generate','nativeMaskEdit','understand']},{...new GeminiGenerator().description,installed:false},
-{...new ImagesGenerator().description,installed:false},
+const modelLibrary=new ModelLibrary([...seedModels(),guidedPreview,{...seedModels()[0],model_config_id:'model_preview_understanding',title:'模拟理解模型 · 不调用云端',purpose:'understanding',capabilities:{...seedModels()[0].capabilities,operations:['understand']}},{...seedModels()[0],model_config_id:'model_preview_text_only',title:'模拟纯文字模型 · 不调用云端',purpose:'understanding',capabilities:{...seedModels()[0].capabilities,max_images:0,operations:['understand']}}],async()=>{}, {has:async()=>false,set:async()=>{throw new Error('浏览器验证宿主禁止保存凭据。');}},[guidedPreviewAdapter,{...mockDescription,purposes:['generation','understanding'],operations:['generate','nativeMaskEdit','understand']},new GeminiGenerator().description,
+new ImagesGenerator().description,new ChatCompletionsAdapter().description,
 {adapter_id:'local-pending',version:1,title:'本地引擎 · 待选型',kind:'local',installed:false,purposes:['generation'],requires_credential:false,supports_probe:false,interleaving:['native'],operations:[],parameters:[]}]);
-const workspace=new Workspace(modelLibrary,new MockGenerator(350),undefined,new MaskPixels());
+const moduleSettingsDirectory=path.resolve('.local/preview-storage/runtime');
+const preprocessing=new ReferencePreprocessor(moduleSettingsDirectory),mock=new MockGenerator(350);
+let promptSettings=await loadPromptSettings(moduleSettingsDirectory);
+const workspace=new Workspace(modelLibrary,{execute:(context,signal,progress)=>mock.execute({...context,preprocessReferenceImage:(bytes,settings)=>preprocessing.process(bytes,settings,signal)},signal,progress)},new ModuleRegistry(undefined,promptSettings.config,promptSettings.customizations.roles),new MaskPixels());
+workspace.moduleSettings=await loadModuleSettings(moduleSettingsDirectory);
+workspace.generationTimings=await loadGenerationTimings(moduleSettingsDirectory);
 let projectFile;
 try { projectFile=(await readFile('.local/preview-v2-project-path.txt','utf8')).trim(); }
 catch(e) { if(e.code!=='ENOENT')throw e;projectFile=await createPreviewFixtures(); }
@@ -58,7 +75,7 @@ async function view(){
   const project=workspace.project?structuredClone(workspace.project):null;
   let chain=null,adaptation=null,adaptation_error;
   if(project)try{const plan=planExecution(project.recipe,project.assets,workspace.models.resolve(project.recipe.model_config_id),workspace.registry);chain=plan.chain;adaptation=plan.adapted;}catch(e){adaptation_error=e.message;}
-  return {project,models:await modelLibrary.list(),connections:await modelLibrary.connections(),adapters:modelLibrary.adapters,assignments:modelLibrary.snapshot().assignments,module_definitions:workspace.registry.list(),chain,adaptation,adaptation_error,project_location:workspace.repository.directory,
+  return {project,prompt_config:structuredClone(workspace.registry.promptConfig),prompt_customizations:structuredClone(promptSettings.customizations),auto_prompt:project?getAutoPromptState(project.recipe,workspace.registry,workspace.moduleSettings,project.assets):undefined,generation_timings:structuredClone(Object.fromEntries(workspace.generationTimingByTask)),reference_models:await localImageModelStatus(moduleSettingsDirectory),module_settings:structuredClone(workspace.moduleSettings),models:await modelLibrary.list(),connections:await modelLibrary.connections(),adapters:modelLibrary.adapters,assignments:modelLibrary.snapshot().assignments,module_definitions:workspace.registry.list(),chain,adaptation,adaptation_error,project_location:workspace.repository.directory,
     recent_workspaces:(await projectLibrary.list(hiddenRecords)).map(record=>({...record,preview_url:record.cover_asset_id?`/preview-project-cover/${record.id}/${record.cover_asset_id}`:undefined})),
     assets:await Promise.all((project?.assets??[]).map(async a=>({...a,source_status:await workspace.repository.sourceStatus(a),preview_url:`/preview-assets/${a.asset_id}?thumbnail=1`,original_url:`/preview-assets/${a.asset_id}`})))};
 }
@@ -81,8 +98,37 @@ const server=http.createServer(async(request,response)=>{
       if(request.headers['x-ediro-preview']!==token){json(response,403,{ok:false,error:'Preview session required'});return;}
       const chunks=[];let size=0;for await(const chunk of request){size+=chunk.length;if(size>4*1024*1024)throw new Error('验证请求过大。');chunks.push(chunk);}
       const command=commandSchema.parse(JSON.parse(Buffer.concat(chunks).toString('utf8')));
+      if(command.type==='reference:cancel-preview'){referencePreviews.get(command.request_id)?.abort();json(response,200,{ok:true});return;}
+      if(['project:create','workspace:resume','workspace:remove'].includes(command.type))for(const preview of referencePreviews.values())preview.abort();
+      if(command.type==='reference-model:prepare')throw new Error('浏览器验证宿主不下载模型；请在桌面版模块设置中准备资源。');
+      if(command.type==='reference:preview'){
+        if(referencePreviews.has(command.request_id))throw new Error('预览请求编号重复，请重新预览。');
+        const preview=new AbortController();referencePreviews.set(command.request_id,preview);
+        try{
+        const input=await workspace.serial(async()=>{
+          if(preview.signal.aborted)throw new Error('预览已取消。');
+          const project=workspace.requireProject();if(project.project_id!==command.project_id)throw new Error('工作记录已切换。');
+          const asset=project.assets.find(asset=>asset.asset_id===command.asset_id);
+          const module=project.recipe.modules.find(module=>(!command.module_id||module.module_id===command.module_id)&&module.reference_type===command.reference_type&&module.asset_ids.includes(command.asset_id));
+          if(!asset||!module)throw new Error('模块参考图不存在。');
+          return {bytes:await workspace.repository.readAsset(asset),settings:structuredClone(command.settings??module.reference_settings??workspace.moduleSettings[command.reference_type])};
+        });
+        const processed=await preprocessing.process(await resizeReferenceImage(input.bytes,input.settings.max_edge),input.settings,preview.signal);
+        const {format}=await sharp(processed).metadata();
+        if(preview.signal.aborted)throw new Error('预览已取消。');
+        json(response,200,{ok:true,reference_preview:`data:image/${format};base64,${processed.toString('base64')}`});return;
+        }finally{if(referencePreviews.get(command.request_id)===preview)referencePreviews.delete(command.request_id);}
+      }
       const result=await workspace.serial(async()=>{
         switch(command.type){
+          case 'prompt-customizations:save':{
+            promptSettings=await savePromptCustomizations(moduleSettingsDirectory,command.customizations);
+            workspace.registry=new ModuleRegistry(undefined,promptSettings.config,promptSettings.customizations.roles);
+            if(workspace.project)workspace.project.recipe=workspace.registry.resolveRecipe(workspace.project.recipe);
+            break;
+          }
+          case 'prompt-customizations:import':case 'prompt-customizations:export':throw new Error('请在桌面版中导入或导出指令文件。');
+          case 'module-settings:save':workspace.moduleSettings=await saveModuleSettings(moduleSettingsDirectory,command.settings);break;
           case 'mask:save-composite':await workspace.saveCompositeMask(command.project_id,command.task_id,command.strokes);break;
           case 'mask:save-draft':await workspace.saveMaskDraft(command.project_id,command.draft);break;
           case 'mask:preview':return {ok:true,mask_preview:await workspace.previewMask(command.project_id,command.task_id,command.mode,command.feather,command.composite_strokes)};
@@ -91,9 +137,13 @@ const server=http.createServer(async(request,response)=>{
           case 'module:infer':{
             if(!['model_preview_understanding','model_preview_text_only'].includes(command.model_config_id))throw new Error('验证界面仅支持模拟推理，不调用云端。');
             const project=workspace.requireProject();if(project.project_id!==command.project_id)throw new Error('工作记录已切换。');
-            const model=await modelLibrary.execution(command.model_config_id),plan=prepareModuleInference(project.recipe,command.module_id,command.text,model,workspace.registry,command.allow_text_only);
+            const automatic=command.automatic?getAutoPromptState(project.recipe,workspace.registry,workspace.moduleSettings,project.assets):undefined;
+            if(command.automatic&&automatic?.module_id!==command.module_id)throw new Error('请先为此提示词模块开启自动提示词。');
+            const model=await modelLibrary.execution(command.model_config_id),plan=prepareModuleInference(project.recipe,command.module_id,command.text,model,workspace.registry,command.allow_text_only,workspace.moduleSettings,{automatic:command.automatic,promptRole:command.prompt_role});
             const suggestion=await executeModuleInference({execute:async()=>({images:[],text:[command.text,'这是用于验证采用与保存流程的模拟建议，未分析真实图片。'].filter(Boolean).join('\n')})},{model,job:plan.job,readImage:async()=>{throw new Error('模拟推理不读取图片。');},resolveCredential:async()=>{throw new Error('模拟推理不读取凭据。');}},plan,new AbortController().signal);
-            suggestion.model_title='模拟建议 · 未调用真实模型';return {ok:true,suggestion};
+            suggestion.model_title='模拟建议 · 未调用真实模型';
+            if(automatic){const next=structuredClone(project.recipe),target=next.modules.find(m=>m.module_id===automatic.module_id);target.user_instruction=suggestion.text;target.auto_prompt_input_key=automatic.input_key;await workspace.saveRecipe(next);return {ok:true,suggestion,state:await view()};}
+            return {ok:true,suggestion};
           }
           case 'module:cancel-inference':return {ok:true};
           case 'job:model-input':{
@@ -108,6 +158,7 @@ const server=http.createServer(async(request,response)=>{
           case 'model:assign':if(command.purpose==='generation'&&modelLibrary.resolve(command.model_config_id).kind!=='mock')throw new Error('浏览器验证默认生图只能选择模拟引擎。');await modelLibrary.assign(command.purpose,command.model_config_id);break;
           case 'job:recover-result':await workspace.recoverResult(command.task_id);break;
           case 'state':break;
+          case 'project:save':await workspace.flush();break;
           case 'project:create':{const directory=await projectLibrary.createDirectory();await workspace.create(projectLibrary.repository(directory),command.name);break;}
           case 'workspace:resume':{if(hiddenRecords.has(command.id))throw new Error('验证记录不存在');await workspace.open(projectLibrary.forId(command.id));break;}
           case 'workspace:rename':{await projectLibrary.rename(command.id,command.name);if(path.basename(workspace.repository.directory)===command.id)workspace.project.name=command.name;break;}
@@ -126,6 +177,8 @@ const server=http.createServer(async(request,response)=>{
           case 'job:retry':await workspace.retry(command.project_id,command.task_id);break;
           case 'job:cancel':await workspace.cancel(command.task_id);break;
           case 'job:restore':await workspace.restore(command.task_id);break;
+          case 'job:restore-recipe':await workspace.restoreTaskRecipe(command.project_id,command.task_id);break;
+          case 'job:hide-result':await workspace.hideTaskResult(command.project_id,command.task_id);break;
           case 'result:restore':await workspace.restoreResult(command.project_id,command.asset_id);break;
           default:throw new Error('此功能需在桌面验证；浏览器宿主不开放凭据配置或任意文件写入。');
         }

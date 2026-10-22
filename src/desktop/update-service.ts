@@ -57,7 +57,8 @@ export class UpdateService {
       if (!['state','check','download','install','release'].includes(action as string)) throw new Error('无效的更新操作。');
       if (action === 'state') return {ok: true, state: this.snapshot()};
       if (action === 'release') {
-        const url = this.state.version ? `${releasesUrl}/tag/v${this.state.version}` : releasesUrl;
+        const version=this.state.version??this.state.currentVersion;
+        const url = /^\d+\.\d+\.\d+$/.test(version) ? `${releasesUrl}/tag/v${version}` : releasesUrl;
         await this.openRelease(url);
       } else if (!this.driver) throw new Error('源码开发版不自动更新，请使用发布版。');
       else if (action === 'check') {

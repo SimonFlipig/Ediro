@@ -1,0 +1,91 @@
+{
+  "version": "44.4.1",
+  "platform": "win32-x64",
+  "officialUrl": "https://github.com/electron/electron/releases/download/v44.4.1/electron-v44.4.1-win32-x64.zip",
+  "sha256": "34bc07977d6c43b6514b956a5f2e3292255daa3838a49e6110f3fe19ffafb83f",
+  "bytes": 158290103,
+  "officialSha256Matched": true,
+  "runtimeFilesMatchArchive": true,
+  "items": [
+    {
+      "name": "chrome_100_percent.pak",
+      "bytes": 719654,
+      "sha256": "ab7c4b7b6cb8832a31d44b95ec50ce52294f49422a3bdde4e21968eca2930cbe"
+    },
+    {
+      "name": "chrome_200_percent.pak",
+      "bytes": 1269017,
+      "sha256": "30fa4a6e27c9ff2fb0f939f01158477e621a67d86e9ecb84cf11b3947db8eb9d"
+    },
+    {
+      "name": "d3dcompiler_47.dll",
+      "bytes": 4741488,
+      "sha256": "a05f99734f7c4822fefc12b367af21fd0976ed6608752fb1e1e80b6ece7ecbbb"
+    },
+    {
+      "name": "dxcompiler.dll",
+      "bytes": 25745408,
+      "sha256": "6ba07a6328acf0bb171ced166114d11400387eeb5606dc2f2df60d1d7245a0b5"
+    },
+    {
+      "name": "dxil.dll",
+      "bytes": 1509760,
+      "sha256": "77e039c905030a641e53658a008b74e90635a5ea9b6b79eabd0f2003bdfca59a"
+    },
+    {
+      "name": "electron.exe",
+      "bytes": 246324736,
+      "sha256": "4e069955705384d0b711bedf5611b7c0bc91ff8c84fc199879d29fc4910f9bab"
+    },
+    {
+      "name": "ffmpeg.dll",
+      "bytes": 3113472,
+      "sha256": "743347fb9517549543512e6eefb47edddd1f69faea74da988be31df01032e8d5"
+    },
+    {
+      "name": "icudtl.dat",
+      "bytes": 10876560,
+      "sha256": "9f48c7f9c7c94d516a14870707e910ab94d75ae640ff6842c4af53276cd26ebe"
+    },
+    {
+      "name": "LICENSE",
+      "bytes": 1096,
+      "sha256": "5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d"
+    },
+    {
+      "name": "LICENSES.chromium.html",
+      "bytes": 20472830,
+      "sha256": "7b328b8c7463ac9bfc7dc648c751533517c8441a0b5b21047d6c0b2620e60d70"
+    },
+    {
+      "name": "resources.pak",
+      "bytes": 12435445,
+      "sha256": "3d8c36b2ec7099a27fe00763e5af28319643ba65c1b48b85eb6a7caaae034ba6"
+    },
+    {
+      "name": "snapshot_blob.bin",
+      "bytes": 368768,
+      "sha256": "fd9efe1e3d3cbba6f970cd8df66a18922375c113b0eae7243ec549b61d5ea592"
+    },
+    {
+      "name": "v8_context_snapshot.bin",
+      "bytes": 742200,
+      "sha256": "be17cfa86dacbfd31a2939eabd9d7c0aa49f9942a44ec79f557a9111b3b1af64"
+    },
+    {
+      "name": "version",
+      "bytes": 6,
+      "sha256": "2d409bb8fc4403bbed37bb64e1e6b5d1dcf361ad74929ef9a0e26a281b7ffdd4"
+    },
+    {
+      "name": "vk_swiftshader.dll",
+      "bytes": 5520384,
+      "sha256": "bcb1c2f4f7e332620e6f95f6b2b7a14d8c9c80643378921773b84ce05199b1c5"
+    },
+    {
+      "name": "vulkan-1.dll",
+      "bytes": 939008,
+      "sha256": "d1498c4364df5faf241add3ad65fb6a5288bb148e23121d68d32bb7e8f10d9d3"
+    }
+  ]
+}

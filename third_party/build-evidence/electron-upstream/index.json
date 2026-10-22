@@ -1,0 +1,305 @@
+[
+  {
+    "file": ".gn",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/.gn?format=TEXT",
+    "sourcePath": "src/.gn",
+    "bytes": 8325,
+    "sha256": "b17d58c4d7d648fab31108af33e71a4dc6725667bc2df665a9ae8456683eba64"
+  },
+  {
+    "file": "LICENSE",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/LICENSE?format=TEXT",
+    "sourcePath": "src/LICENSE",
+    "bytes": 1536,
+    "sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b"
+  },
+  {
+    "file": "BUILD.gn",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/BUILD.gn?format=TEXT",
+    "sourcePath": "src/BUILD.gn",
+    "bytes": 54887,
+    "sha256": "3a975bdf5a09d3b652920bdd27cb68a0be8e51a5706b2710715f566c50f6b10c"
+  },
+  {
+    "file": "third_party__blink__DEPS",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/third_party/blink/DEPS?format=TEXT",
+    "sourcePath": "src/third_party/blink/DEPS",
+    "bytes": 867,
+    "sha256": "62c34c5a56659174359f81e75bd49e96145f82cd99c6dc1d5f35c2402184e94b"
+  },
+  {
+    "file": "third_party__blink__README.md",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/third_party/blink/README.md?format=TEXT",
+    "sourcePath": "src/third_party/blink/README.md",
+    "bytes": 787,
+    "sha256": "d9a2d79204c5de9441dfde80ea4be0d36c9bf0032d3782ab223356639ea4ed8d"
+  },
+  {
+    "file": "third_party__blink__LICENSE_FOR_ABOUT_CREDITS",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/third_party/blink/LICENSE_FOR_ABOUT_CREDITS?format=TEXT",
+    "sourcePath": "src/third_party/blink/LICENSE_FOR_ABOUT_CREDITS",
+    "bytes": 51483,
+    "sha256": "a661d10f8f194b1963a75bb4d308f17b078cc064624313a556902d89705f6876"
+  },
+  {
+    "file": "third_party__rust__chromium_crates_io__Cargo.toml",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/third_party/rust/chromium_crates_io/Cargo.toml?format=TEXT",
+    "sourcePath": "src/third_party/rust/chromium_crates_io/Cargo.toml",
+    "bytes": 4529,
+    "sha256": "5a8e0f8077bbe0b9914b5dbe7d9eb61d6f80404a60754b3d5a03479f328fa8db"
+  },
+  {
+    "file": "third_party__liblouis__BUILD.gn",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/third_party/liblouis/BUILD.gn?format=TEXT",
+    "sourcePath": "src/third_party/liblouis/BUILD.gn",
+    "bytes": 1235,
+    "sha256": "80f17df487ad2f99ecf9ef405859af63cde0e30cce004c3a1b3524e35efd6217"
+  },
+  {
+    "file": "third_party__rust__chromium_crates_io__Cargo.lock",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/third_party/rust/chromium_crates_io/Cargo.lock?format=TEXT",
+    "sourcePath": "src/third_party/rust/chromium_crates_io/Cargo.lock",
+    "bytes": 50172,
+    "sha256": "04f2391ae7255b1ec5a4f39b752cf515e8160a8e6b2945ad086c634c71870644"
+  },
+  {
+    "file": "third_party__screen-ai__BUILD.gn",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/third_party/screen-ai/BUILD.gn?format=TEXT",
+    "sourcePath": "src/third_party/screen-ai/BUILD.gn",
+    "bytes": 421,
+    "sha256": "9ed475a07d316f152d7ed0e081ef44c283f8515a8e0cd3222fd8c849891c67fe"
+  },
+  {
+    "file": "third_party__screen-ai__README.chromium",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/third_party/screen-ai/README.chromium?format=TEXT",
+    "sourcePath": "src/third_party/screen-ai/README.chromium",
+    "bytes": 1543,
+    "sha256": "9512f3a60b0b1cafe5241bc146acc6d87a2538b73627775e839239cb04000088"
+  },
+  {
+    "file": "services__device__usb__BUILD.gn",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/services/device/usb/BUILD.gn?format=TEXT",
+    "sourcePath": "src/services/device/usb/BUILD.gn",
+    "bytes": 5590,
+    "sha256": "a4169f48ee3f9e711b24aec89843490ad37756e0643892dc471c047f42da917d"
+  },
+  {
+    "file": ".gitmodules",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/.gitmodules?format=TEXT",
+    "sourcePath": "src/.gitmodules",
+    "bytes": 49449,
+    "sha256": "645b9ccee1f69f909f5e79a04c29a3c509df0e11254fd75a60a4365042ca8ff5"
+  },
+  {
+    "file": "third_party__libusb__README.chromium",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/third_party/libusb/README.chromium?format=TEXT",
+    "sourcePath": "src/third_party/libusb/README.chromium",
+    "bytes": 1777,
+    "sha256": "ec04b7bda0dc981d9afaf8cda17d57c16741eeeb11c70e17cd8b52fa3607d994"
+  },
+  {
+    "file": "build__config__linux__BUILD.gn",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/build/config/linux/BUILD.gn?format=TEXT",
+    "sourcePath": "src/build/config/linux/BUILD.gn",
+    "bytes": 1981,
+    "sha256": "fe86c86eb5e8319df95d82baa51ccfbbf242afc017e1f843592053a8566aedf1"
+  },
+  {
+    "file": "ui__base__ime__linux__BUILD.gn",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/ui/base/ime/linux/BUILD.gn?format=TEXT",
+    "sourcePath": "src/ui/base/ime/linux/BUILD.gn",
+    "bytes": 956,
+    "sha256": "1b20551547f4b17b8667938d4d16b9c632fd66a5cace2d590627e3d3ab5efaa5"
+  },
+  {
+    "file": "media__capture__video__linux__BUILD.gn",
+    "url": "https://chromium.googlesource.com/chromium/src/+/152.0.7977.78/media/capture/video/linux/BUILD.gn?format=TEXT",
+    "sourcePath": "src/media/capture/video/linux/BUILD.gn",
+    "bytes": 3257,
+    "sha256": "96d3e7928d15e67a3d5ab060c2861f3a6a2630e7a95220fbc9a0a2f332d38878"
+  },
+  {
+    "file": "electron__DEPS",
+    "archive": "electron-44.4.1.tar.gz",
+    "member": "electron-44.4.1/DEPS",
+    "url": "https://github.com/electron/electron/archive/refs/tags/v44.4.1.tar.gz",
+    "sha256": "93b0e36fc4dbd9e3b6565311a34d5385388124e14e6b719381045575b4960946",
+    "bytes": 8471
+  },
+  {
+    "file": "electron__build__args__release.gn",
+    "archive": "electron-44.4.1.tar.gz",
+    "member": "electron-44.4.1/build/args/release.gn",
+    "url": "https://github.com/electron/electron/archive/refs/tags/v44.4.1.tar.gz",
+    "sha256": "b4490cee911e0ed136a6d095c69a7914cb3f4aa2d5517e3f987a2b5f45d3cd56",
+    "bytes": 902
+  },
+  {
+    "file": "electron__build__args__all.gn",
+    "archive": "electron-44.4.1.tar.gz",
+    "member": "electron-44.4.1/build/args/all.gn",
+    "url": "https://github.com/electron/electron/archive/refs/tags/v44.4.1.tar.gz",
+    "sha256": "5ef3dcead9ec7d5a5b556d7db92ab6a40166801913298702250a455fd244388d",
+    "bytes": 3900
+  },
+  {
+    "file": "electron__patches__config.json",
+    "archive": "electron-44.4.1.tar.gz",
+    "member": "electron-44.4.1/patches/config.json",
+    "url": "https://github.com/electron/electron/archive/refs/tags/v44.4.1.tar.gz",
+    "sha256": "42fa82e274fbfaf69ba7ccbcba4f74d7ba44bb4c7f54d6e941300fb29bc72861",
+    "bytes": 1503
+  },
+  {
+    "file": "electron__docs__development__build-instructions-gn.md",
+    "archive": "electron-44.4.1.tar.gz",
+    "member": "electron-44.4.1/docs/development/build-instructions-gn.md",
+    "url": "https://github.com/electron/electron/archive/refs/tags/v44.4.1.tar.gz",
+    "sha256": "8f32a0b64d1ccf87b474fd8f9455b853a45278cb7a95c45a768ef153e4ffa97c",
+    "bytes": 14271
+  },
+  {
+    "file": "electron__docs__development__build-instructions-windows.md",
+    "archive": "electron-44.4.1.tar.gz",
+    "member": "electron-44.4.1/docs/development/build-instructions-windows.md",
+    "url": "https://github.com/electron/electron/archive/refs/tags/v44.4.1.tar.gz",
+    "sha256": "c07dd277561988411a9d00a2ecc649c26c5be207ab6d9ce09bb212ba44d2c5c9",
+    "bytes": 6140
+  },
+  {
+    "file": "electron__docs__development__patches.md",
+    "archive": "electron-44.4.1.tar.gz",
+    "member": "electron-44.4.1/docs/development/patches.md",
+    "url": "https://github.com/electron/electron/archive/refs/tags/v44.4.1.tar.gz",
+    "sha256": "f8db8bd8dd13ef4acacaa3f04b9ff1761ace09dd049912bbd9170e48d806f86f",
+    "bytes": 6861
+  },
+  {
+    "file": "electron__patches__ffmpeg__.patches",
+    "archive": "electron-44.4.1.tar.gz",
+    "member": "electron-44.4.1/patches/ffmpeg/.patches",
+    "url": "https://github.com/electron/electron/archive/refs/tags/v44.4.1.tar.gz",
+    "sha256": "eb2ff86699f3aa0f6ac1b484a8c8a117a3149465273699e136e132024e38e7c6",
+    "bytes": 28
+  },
+  {
+    "file": "chromium-third_party-axe-core__README.chromium",
+    "archive": "chromium-152.0.7977.78-third_party-axe-core.tar.gz",
+    "member": "README.chromium",
+    "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/axe-core.tar.gz",
+    "sha256": "219c2aed1e595963b9fe53191aad3e68e4d19a34f30c36becd797211c9691247",
+    "bytes": 720
+  },
+  {
+    "file": "chromium-third_party-axe-core__LICENSE",
+    "archive": "chromium-152.0.7977.78-third_party-axe-core.tar.gz",
+    "member": "LICENSE",
+    "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/axe-core.tar.gz",
+    "sha256": "af175b9d96ee93c21a036152e1b905b0b95304d4ae8c2c921c7609100ba8df7e",
+    "bytes": 15921
+  },
+  {
+    "file": "chromium-third_party-grpc__README.chromium",
+    "archive": "chromium-152.0.7977.78-third_party-grpc.tar.gz",
+    "member": "README.chromium",
+    "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/grpc.tar.gz",
+    "sha256": "7430bf10fefd618bcf231ad1713f9940daa4e029b9e6079fab4c93245ac20857",
+    "bytes": 1396
+  },
+  {
+    "file": "chromium-third_party-grpc__BUILD.gn",
+    "archive": "chromium-152.0.7977.78-third_party-grpc.tar.gz",
+    "member": "BUILD.gn",
+    "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/grpc.tar.gz",
+    "sha256": "56cba110dc9d1e0e60431f970bd158dd87077bcff54604eed5b1b4367d44d518",
+    "bytes": 186830
+  },
+  {
+    "file": "chromium-third_party-hunspell__README.chromium",
+    "archive": "chromium-152.0.7977.78-third_party-hunspell.tar.gz",
+    "member": "README.chromium",
+    "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/hunspell.tar.gz",
+    "sha256": "2319fa5049dc6c7c38f710f3e34d7992847b1d7395b78166435a758e87d326e8",
+    "bytes": 2754
+  },
+  {
+    "file": "chromium-third_party-hunspell__BUILD.gn",
+    "archive": "chromium-152.0.7977.78-third_party-hunspell.tar.gz",
+    "member": "BUILD.gn",
+    "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/hunspell.tar.gz",
+    "sha256": "94a587572c0a5b41bd4b80ac75b97074d1d77dc1edf83efc2062a3184bddf86f",
+    "bytes": 3464
+  },
+  {
+    "file": "chromium-third_party-hyphenation-patterns__README.chromium",
+    "archive": "chromium-152.0.7977.78-third_party-hyphenation-patterns.tar.gz",
+    "member": "README.chromium",
+    "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/hyphenation-patterns.tar.gz",
+    "sha256": "637327d36f04686758c7d8ae88de3f382aa940c81c5dd346c9283c51e9b0e49e",
+    "bytes": 1152
+  },
+  {
+    "file": "chromium-third_party-hyphenation-patterns__build-hyb.sh",
+    "archive": "chromium-152.0.7977.78-third_party-hyphenation-patterns.tar.gz",
+    "member": "build-hyb.sh",
+    "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/hyphenation-patterns.tar.gz",
+    "sha256": "4a5dde7a2ded07d753db9abc99a68e40f3da33fa05c7b9d301ebac6ce3ddf17f",
+    "bytes": 1430
+  },
+  {
+    "file": "chromium-base-third_party-nspr__README.chromium",
+    "archive": "chromium-152.0.7977.78-base-third_party-nspr.tar.gz",
+    "member": "README.chromium",
+    "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/base/third_party/nspr.tar.gz",
+    "sha256": "a3034c7a0fce7516f961624b22d8cf9cbc70fd323d8c90b131bcfb2d841e1d2d",
+    "bytes": 576
+  },
+  {
+    "file": "chromium-net-third_party-mozilla_security_manager__README.chromium",
+    "archive": "chromium-152.0.7977.78-net-third_party-mozilla_security_manager.tar.gz",
+    "member": "README.chromium",
+    "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/net/third_party/mozilla_security_manager.tar.gz",
+    "sha256": "8f01b4b89bbac7c0f8e83de0ca690867fa256ff88577195f9afa0188f5f7c552",
+    "bytes": 603
+  },
+  {
+    "file": "chromium-net-third_party-mozilla_win__README.chromium",
+    "archive": "chromium-152.0.7977.78-net-third_party-mozilla_win.tar.gz",
+    "member": "README.chromium",
+    "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/net/third_party/mozilla_win.tar.gz",
+    "sha256": "8f005dca02332234b4cff36245efa653e2c402717476e6ae162970d74c66543d",
+    "bytes": 735
+  },
+  {
+    "file": "chromium-third_party-isimpledom__README.chromium",
+    "archive": "chromium-152.0.7977.78-third_party-isimpledom.tar.gz",
+    "member": "README.chromium",
+    "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/isimpledom.tar.gz",
+    "sha256": "91ff8a4e6d5731c0ce51ded27f41903caad861063cfbe895908b1530f3d9c425",
+    "bytes": 987
+  },
+  {
+    "file": "chromium-third_party-isimpledom__BUILD.gn",
+    "archive": "chromium-152.0.7977.78-third_party-isimpledom.tar.gz",
+    "member": "BUILD.gn",
+    "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/isimpledom.tar.gz",
+    "sha256": "959815ac710f1a53593a2a316d21aa8778727714667fd5ed1560171a488ce63c",
+    "bytes": 322
+  },
+  {
+    "file": "dawn__DEPS",
+    "archive": "dawn-ab8827bc57b1.tar.gz",
+    "member": "DEPS",
+    "url": "https://dawn.googlesource.com/dawn/+archive/ab8827bc57b176eeaa89f71324130c02d4d41145.tar.gz",
+    "sha256": "5884fe7e7d4fc1588d82a214096254e0ba1032ba9a6e2e61e5dcff8b4e90315a",
+    "bytes": 37093
+  },
+  {
+    "file": "dawn__third_party__directx-shader-compiler__README.chromium",
+    "archive": "dawn-ab8827bc57b1.tar.gz",
+    "member": "third_party/directx-shader-compiler/README.chromium",
+    "url": "https://dawn.googlesource.com/dawn/+archive/ab8827bc57b176eeaa89f71324130c02d4d41145.tar.gz",
+    "sha256": "2276ffb3cfd19e61f74ee0403a9636e6aa98742898cfd1ce6eb21f5c879be07d",
+    "bytes": 383
+  }
+]

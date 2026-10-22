@@ -6,7 +6,7 @@ A Windows desktop workspace for e-commerce visuals. Combine product, composition
 
 Ediro runs independently and does not require Codex or another workspace application. Real generation requires your own model connection and API key. The free simulation engine lets you explore the workflow; it does not demonstrate real model quality.
 
-[Download the latest release](https://github.com/SimonFlipig/Ediro/releases/latest) · [v0.1.0 release notes (Chinese)](docs/RELEASE_NOTES_v0.1.0.md) · [Report an issue](https://github.com/SimonFlipig/Ediro/issues)
+[Download the latest release](https://github.com/SimonFlipig/Ediro/releases/latest) · [v0.1.3 release notes (Chinese)](docs/RELEASE_NOTES_v0.1.3.md) · [Report an issue](https://github.com/SimonFlipig/Ediro/issues)
 
 ![Ediro workspace with assets, reference modules, image preview, result versions, and generation settings](docs/screenshots/workspace.png)
 
@@ -30,6 +30,8 @@ Both packages include the runtime, so end users do not need Node.js. The current
 5. Select a historical result to restore its creative settings. Enter local editing when needed, and export the finished result as a regular image.
 
 The release includes the author's selected default module prompts. Results still depend on the model, input images, and your instructions; the same prompts do not guarantee identical results across models.
+
+The **核心指令 (Core instructions)** settings page supports custom module and role instructions, restoring defaults, and importing or exporting your overrides. Previews compile only the item being edited and do not display factory instruction text. See the [custom instruction guide (Chinese)](docs/核心指令自定义.md).
 
 ## Feature screenshots
 

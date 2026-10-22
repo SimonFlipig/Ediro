@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { AdapterDescription } from '../core/model-library.js';
 import type { CloudExecutionContext, ExecutionResult } from '../core/ports.js';
 import { captureModelInput } from './capture-model-input.js';
+import { readReferenceImage } from './reference-image.js';
 import { validateGeminiUpload } from '../core/image-limits.js';
 import { geminiProfile } from '../protocols/generation-profiles.js';
 import { normalizeParameters,extensionOptions,validateGenerationParameters } from '../core/generation-parameters.js';
@@ -43,7 +44,8 @@ export class GeminiGenerator {
       let selected=false;for(let i=0;i<gray.length;i+=3){if(gray[i]!==gray[i+1]||gray[i]!==gray[i+2])throw new Error('区域图只能包含黑白灰度，不能包含颜色。');if(gray[i])selected=true;}
       if(!selected)throw new Error('黑白区域图没有允许编辑的白色区域。');
     }
-    for(const block of blocks){if(signal.aborted)throw new Error('任务已取消。');if(block.type==='text')parts.push({text:block.text});else{const bytes=await context.readImage(block.asset_id),meta=await sharp(bytes).metadata();if(!['png','jpeg','webp'].includes(meta.format??''))throw new Error('参考图格式不支持。');const precision=(options.reference_overrides as Record<string,string>|undefined)?.[block.asset_id];parts.push({inlineData:{mimeType:`image/${meta.format}`,data:bytes.toString('base64')},...(precision?{mediaResolution:{level:`MEDIA_RESOLUTION_${precision.toUpperCase()}`}}:{})});}}
+    let imageIndex=0;
+    for(const block of blocks){if(signal.aborted)throw new Error('任务已取消。');if(block.type==='text')parts.push({text:block.text});else{const bytes=await readReferenceImage(context,block.asset_id,imageIndex++),meta=await sharp(bytes).metadata();if(!['png','jpeg','webp'].includes(meta.format??''))throw new Error('参考图格式不支持。');const precision=(options.reference_overrides as Record<string,string>|undefined)?.[block.asset_id];parts.push({inlineData:{mimeType:`image/${meta.format}`,data:bytes.toString('base64')},...(precision?{mediaResolution:{level:`MEDIA_RESOLUTION_${precision.toUpperCase()}`}}:{})});}}
     const geometry=job.output_geometry;
     if(!job.execution_plan&&!understanding&&geometry?.target==='auto'&&geometry.ratio)parts.push({text:`期望输出画面的宽高比为 ${geometry.ratio}。请尽量保持该比例。`});
     const ratio=geometry?geometry.request_ratio:parameters.aspect_ratio==='auto'?undefined:parameters.aspect_ratio;
@@ -54,7 +56,7 @@ export class GeminiGenerator {
     await progress(understanding?'等待模型返回理解结果（无上游百分比）':'等待模型返回图片（无上游百分比）',30);
     const timed=AbortSignal.any([signal,AbortSignal.timeout(180_000)]);
     if(signal.aborted)throw new Error('任务已取消，未发送请求。');
-    const requestUrl=`${geminiRoot(model.endpoint)}/models/${encodeURIComponent(model.model)}:generateContent`;
+    const requestUrl=`${geminiRoot(model.endpoint)}/models/${encodeURIComponent(model.model.replace(/^models\//,''))}:generateContent`;
     await captureModelInput(context,new URL(requestUrl).pathname,body);
     if(signal.aborted)throw new Error('任务已取消，未发送请求。');
     const parsed=responseSchema.safeParse(await this.call(requestUrl,await context.resolveCredential(),body,timed));

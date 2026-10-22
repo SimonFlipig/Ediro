@@ -1,4 +1,4 @@
-import { newId, recipeSchema, type Job, type ModelConfig, type Project, type Recipe } from './domain.js';
+import { newId, recipeSchema, defaultParameters, type Job, type ModelConfig, type Project, type Recipe } from './domain.js';
 import { ModuleRegistry } from './modules.js';
 import { ModelLibrary } from './models.js';
 import type { ProjectStorePort, CloudExecutionPort, ExecutionResult } from './ports.js';
@@ -10,9 +10,16 @@ import { modelIdentity } from '../protocols/model-catalog.js';
 import { maskDraftSchema,maskStrokesSchema,sameMaskStrokes,currentMaskFeather,MASK_FEATHER_VERSION,type MaskDraft,type MaskMode,type MaskPixelsPort,type MaskStroke } from './mask.js';
 import {maskGuidance,planMaskRequest} from './mask-request.js';
 import {validateImagesUpload} from './image-limits.js';
+import { defaultModuleSettings, moduleSettingsSchema, resolveReferenceSettings, type ModuleSettings } from './module-settings.js';
+import { GenerationTimings,type GenerationTiming } from './generation-timing.js';
 
 // Repository and executor are injected ports. No window/UI dependencies.
 export class Workspace {
+  generationTimings=new GenerationTimings();
+  // Runtime feedback is separate from reproducible project/task snapshots.
+  // Only aggregate history is saved, in the application's runtime directory.
+  readonly generationTimingByTask=new Map<string,GenerationTiming>();
+  moduleSettings:ModuleSettings = structuredClone(defaultModuleSettings);
   project: Project | null = null;
   repository: ProjectStorePort | null = null;
   private queue: Promise<unknown> = Promise.resolve();
@@ -23,7 +30,7 @@ export class Workspace {
   private saveTimer?:ReturnType<typeof setTimeout>;
   saveState:'saved'|'pending'|'saving'|'error'='saved';
   saveError?:string;
-  constructor(readonly models: ModelLibrary, private executor: CloudExecutionPort,readonly registry=new ModuleRegistry(),private maskPixels?:MaskPixelsPort,private autosaveDelay=0) {}
+  constructor(readonly models: ModelLibrary, private executor: CloudExecutionPort,public registry=new ModuleRegistry(),private maskPixels?:MaskPixelsPort,private autosaveDelay=0) {}
   serial<T>(operation: () => Promise<T>): Promise<T> {
     const task = this.queue.then(operation);
     this.queue = task.catch(() => undefined);
@@ -40,11 +47,13 @@ export class Workspace {
     this.assertSwitchable();
     await this.flush();
     const now = new Date().toISOString();
+    const defaultId=this.models.defaultModel(),model=defaultId?this.models.resolve(defaultId):undefined;
     const project: Project = { schema_version: 3, project_id: newId('project'), name, created_at: now, updated_at: now,
-      recipe: { recipe_id: newId('recipe'), schema_version: 1, input_strategy:'auto', prompt_config: structuredClone(this.registry.promptConfig), modules: ['subject','composition','style','prompt'].map(type => this.registry.create(type)), model_config_id: this.models.defaultModel(), core_parameters: snapshotParameters(this.models.resolve(this.models.defaultModel()).defaults,this.models.resolve(this.models.defaultModel())) },
+      recipe: { recipe_id: newId('recipe'), schema_version: 1, input_strategy:'auto', prompt_config: structuredClone(this.registry.promptConfig), modules: ['subject','composition','style','prompt'].map(type => this.registry.create(type,this.moduleSettings)), model_config_id: model?.model_config_id??'model_unselected', core_parameters: model?snapshotParameters(model.defaults,model):structuredClone(defaultParameters) },
       assets: [], jobs: [], revisions: [] };
     await repository.create(project);
     this.repository = repository; this.project = project;
+    this.generationTimingByTask.clear();
   }
   async open(repository: ProjectStorePort) {
     this.assertSwitchable();
@@ -62,6 +71,7 @@ export class Workspace {
     }
     if (recovered) await repository.save(project);
     this.repository = repository; this.project = project;
+    this.generationTimingByTask.clear();
   }
   async flush(){if(this.saveState!=='saved')await this.persist();}
   acceptSavedCopy(){clearTimeout(this.saveTimer);this.saveTimer=undefined;this.saveState='saved';this.saveError=undefined;}
@@ -128,14 +138,14 @@ export class Workspace {
     const index = beforeModuleId ? p.recipe.modules.findIndex(m => m.module_id === beforeModuleId) : p.recipe.modules.length;
     if (index < 0) throw new Error('插入位置的模块不存在。');
     const next = structuredClone(p.recipe);
-    next.modules.splice(index, 0, this.registry.create(type)); await this.commitRecipe(next);
+    next.modules.splice(index, 0, this.registry.create(type,this.moduleSettings)); await this.commitRecipe(next);
   }
   async copyModule(id: string) {
     const p = this.requireProject(), index = p.recipe.modules.findIndex(m => m.module_id === id);
     if (index < 0) throw new Error('模块不存在。');
     if (p.recipe.modules.length >= 40) throw new Error('第一阶段最多使用 40 个模块。');
     const next = structuredClone(p.recipe);
-    next.modules.splice(index + 1, 0, this.registry.copy(p.recipe.modules[index])); await this.commitRecipe(next);
+    next.modules.splice(index + 1, 0, this.registry.copy(p.recipe.modules[index],this.moduleSettings)); await this.commitRecipe(next);
   }
   async changeReferenceType(id: string, type: string) {
     const p = this.requireProject(), old = p.recipe.modules.find(m => m.module_id === id);
@@ -146,6 +156,8 @@ export class Workspace {
     const next = structuredClone(p.recipe), module = next.modules.find(m => m.module_id === id)!;
     module.model_name=definition.model_name??definition.type;
     module.reference_type = type; module.reference_id = newId(type); module.base_instruction = definition.base_instruction;
+    const referenceSettings=resolveReferenceSettings({reference_type:type},this.moduleSettings);
+    if(referenceSettings)module.reference_settings=referenceSettings;else delete module.reference_settings;
     if(definition.numbered_instruction)module.numbered_instruction=definition.numbered_instruction;else delete module.numbered_instruction;
     if (module.title === previous.title) module.title = definition.title;
     await this.commitRecipe(next);
@@ -200,7 +212,7 @@ export class Workspace {
     if (adapted.adjustments.length && !allowDegradation) throw new Error('需要确认接口降级后才能运行。');
     const { model_config_id, title, provider, model: actualModel, adapter_id, revision, kind,preset_id,images_compatibility,gemini_compatibility } = model;
     const job: Job = { task_id: newId('task'), status: 'queued', stage: '等待执行', progress: 0, created_at: new Date().toISOString(),
-      execution_plan:plan.summary, recipe_snapshot: resolvedRecipe, chain_snapshot: structuredClone(chain),output_geometry, model_snapshot: { model_config_id, title, provider, model: actualModel, adapter_id, revision, kind,...(preset_id?{preset_id}:{}),...(images_compatibility?{images_compatibility:structuredClone(images_compatibility)}:{}),...(gemini_compatibility?{gemini_compatibility:structuredClone(gemini_compatibility)}:{}) }, adapted_input: adapted, output_asset_ids: [] };
+      module_settings_snapshot:moduleSettingsSchema.parse(this.moduleSettings),execution_plan:plan.summary, recipe_snapshot: resolvedRecipe, chain_snapshot: structuredClone(chain),output_geometry, model_snapshot: { model_config_id, title, provider, model: actualModel, adapter_id, revision, kind,...(preset_id?{preset_id}:{}),...(images_compatibility?{images_compatibility:structuredClone(images_compatibility)}:{}),...(gemini_compatibility?{gemini_compatibility:structuredClone(gemini_compatibility)}:{}) }, adapted_input: adapted, output_asset_ids: [] };
     p.jobs.push(job); this.configs.set(job.task_id, structuredClone(model));
     try { await this.persist(); } catch (e) { p.jobs.pop(); this.configs.delete(job.task_id); throw e; }
     queueMicrotask(() => void this.pump().catch(async () => { /* Job failures are recorded by pump. */ }));
@@ -216,7 +228,7 @@ export class Workspace {
     if(model.revision!==snapshot.revision||model.model!==snapshot.model||model.adapter_id!==snapshot.adapter_id)throw new Error('此任务的模型配置已改变，请复用历史输入并确认模型后重新生成。');
     const job=structuredClone(previous);
     job.task_id=newId('task');job.status='queued';job.stage='等待重试';job.progress=0;job.created_at=new Date().toISOString();job.output_asset_ids=[];
-    delete job.finished_at;delete job.error;delete job.execution_summary;delete job.recoverable_result;
+    delete job.finished_at;delete job.error;delete job.execution_summary;delete job.recoverable_result;delete job.hidden_from_results;
     if(job.mask_edit){job.mask_edit.raw_asset_ids=[];job.mask_edit.variants=[];}
     p.jobs.push(job);this.configs.set(job.task_id,structuredClone(model));
     try{await this.persist();}catch(error){p.jobs.pop();this.configs.delete(job.task_id);throw error;}
@@ -327,6 +339,22 @@ export class Workspace {
     job.status = 'cancelled'; job.stage = '已取消'; job.finished_at = new Date().toISOString();
     this.configs.delete(id); await this.persist();
   }
+  async hideTaskResult(projectId:string,taskId:string) {
+    const project=this.requireProject();
+    if(project.project_id!==projectId)throw new Error('工作记录已切换，请重新选择任务。');
+    const job=project.jobs.find(job=>job.task_id===taskId);
+    if(!job)throw new Error('任务不存在。');
+    if(job.status!=='failed'&&job.status!=='cancelled')throw new Error('只能移除失败或已取消任务的结果占位。');
+    if(job.hidden_from_results)return;
+    const previous=job.hidden_from_results;
+    // Removing a placeholder edits the result list, not its reproducible history.
+    // Pending returns, output assets and downstream references remain recoverable.
+    job.hidden_from_results=true;
+    try{await this.persist();}catch(error){
+      if(previous===undefined)delete job.hidden_from_results;else job.hidden_from_results=previous;
+      throw error;
+    }
+  }
   private async restoreRecipeBinding(recipe:Recipe,jobs:Job[]){
     const preset=historicalPreset(recipe,jobs),preferred=preset?this.project?.recipe.model_channels?.[preset]:undefined;
     return bindHistoricalRecipe(recipe,jobs,await this.models.list(),[preferred,this.models.defaultModel()]);
@@ -340,6 +368,17 @@ export class Workspace {
     const recipe=this.registry.resolveRecipe(job.mask_edit?.main_recipe_snapshot??job.recipe_snapshot);
     const restored=await this.restoreRecipeBinding(recipe,[...p.jobs,job]);
     // Switch current work only. Historical task and variant snapshots stay intact.
+    await this.commitRecipe(restored);
+  }
+  async restoreTaskRecipe(projectId:string,taskId:string) {
+    const p=this.requireProject();
+    if(p.project_id!==projectId)throw new Error('工作记录已切换，请重新选择任务。');
+    const job=p.jobs.find(job=>job.task_id===taskId);
+    if(!job)throw new Error('该任务没有可恢复的生成记录。');
+    const recipe=this.registry.resolveRecipe(job.mask_edit?.main_recipe_snapshot??job.recipe_snapshot);
+    const restored=await this.restoreRecipeBinding(recipe,[...p.jobs,job]);
+    // Task thumbnails restore current work even before an output exists. They
+    // never enqueue a retry or replace a saved local-edit draft.
     await this.commitRecipe(restored);
   }
   async restore(id: string) {
@@ -385,12 +424,15 @@ export class Workspace {
           const model = this.configs.get(job.task_id);
           if (!model) throw new Error('缺少固定的模型执行配置。');
           const controller = new AbortController(); this.active.set(job.task_id, controller);
+          const started=performance.now();
+          const timing=this.generationTimings.begin(model,new Date().toISOString());
+          this.generationTimingByTask.set(job.task_id,timing);
           job.status = 'preparing'; job.stage = '准备输入'; job.progress = 10;
           await this.persist(); await this.onChange();
-          return { job, model, controller, repository: this.repository! };
+          return { job, model, controller, repository: this.repository!,started,timing };
         });
         if (!context) break;
-        const { job, model, controller, repository } = context;
+        const { job, model, controller, repository,started,timing } = context;
         try {
           const allowedImages = new Set(job.chain_snapshot.blocks.filter(b => b.type === 'image').map(b => b.asset_id));
           if(job.mask_edit){allowedImages.add(job.mask_edit.source_snapshot_id);allowedImages.add(job.mask_edit.mask_asset_id);}
@@ -409,6 +451,9 @@ export class Workspace {
           }));
           if(controller.signal.aborted)continue;
           if(!result.images.length)throw new Error('模型没有返回可保存的图片。');
+          // Measure the actual execution, including preparation, but not queueing
+          // or a later manual recovery of already generated images.
+          timing.duration_ms=Math.max(1,Math.round(performance.now()-started));
           job.execution_summary={adapter_version:model.adapter_version??1,capabilities:structuredClone(model.capabilities),...(result.text?{text:result.text}:{}),...(result.request_id?{request_id:result.request_id}:{}),...(result.usage?{usage:result.usage}:{}),fee:'unknown',actual_formats:result.images.map(i=>i.format)};
           await repository.stageResult(job,result);
           job.recoverable_result=true;
@@ -420,9 +465,11 @@ export class Workspace {
           await this.serial(async () => {
             if (job.status === 'cancelled' || controller.signal.aborted) return;
             await this.finishResult(job,repository,result);
+            await this.generationTimings.record(job,timing);
           });
         } catch (error) {
           await this.serial(async () => {
+            if(job.status!=='cancelled'&&!timing.duration_ms)timing.duration_ms=Math.max(1,Math.round(performance.now()-started));
             if (job.status !== 'cancelled') { job.status = 'failed'; job.error = error instanceof Error ? error.message : '任务执行失败'; job.stage = '执行失败'; job.finished_at = new Date().toISOString(); }
             await this.persist(); await this.onChange();
           });

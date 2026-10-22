@@ -71,6 +71,20 @@ test('局部编辑重试使用原蒙版与输入快照，不覆盖后来修改�
   assert.equal(w.project!.assets.length,assetCount+1);await w.shutdown();
 });
 
+test('失败局部编辑的任务缩略图恢复主配方，不改写蒙版草稿或调用模型',async()=>{
+  const {workspace:w,d,calls}=await fixture({execute:async()=>{throw new Error('受控局部编辑失败');}});
+  const projectId=w.project!.project_id;
+  await w.serial(()=>w.enqueueMask(projectId,d));await settle(w);
+  const job=structuredClone(w.project!.jobs[0]);assert.equal(job.status,'failed');assert.deepEqual(job.output_asset_ids,[]);
+  const current=structuredClone(w.project!.recipe);current.modules.reverse();current.modules[0].user_instruction='后续主配方内容';
+  await w.saveRecipe(current);await w.saveMaskDraft(projectId,{...d,instruction:'后续蒙版草稿'});
+  const history=structuredClone(w.project!.jobs),drafts=structuredClone(w.project!.mask_drafts);
+  await w.restoreTaskRecipe(projectId,job.task_id);
+  assert.deepEqual(w.project!.recipe,w.registry.resolveRecipe(job.mask_edit!.main_recipe_snapshot));
+  assert.deepEqual(w.project!.jobs,history);assert.deepEqual(w.project!.mask_drafts,drafts);assert.equal(calls(),1);
+  await w.shutdown();
+});
+
 test('局部编辑优先可用 Nano，未配置或停用时回退，恢复草稿仍保留原模型',()=>{
   const banana={...modelFromPreset('nano-banana-pro','model_banana','connection_banana','gemini-3-pro-image'),executable:true};
   const image={...modelFromPreset('gpt-image-2-5-sunburst','model_image','connection_image','gpt-image-2.5-sunburst'),executable:true};

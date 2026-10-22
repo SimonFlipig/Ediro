@@ -44,7 +44,7 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => { if (window) { window.restore(); window.focus(); } });
   void app.whenReady().then(async () => {
-  window = new BrowserWindow({ width: 1540, height: 1040, minWidth: 1120, minHeight: 800, backgroundColor: '#f6f5f1', title: 'Ediro · 视觉工作台',
+  window = new BrowserWindow({ width: 1775, height: 1050, minWidth: 1120, minHeight: 800, backgroundColor: '#f6f5f1', title: 'Ediro · 视觉工作台',
     ...(process.platform==='win32'?{titleBarStyle:'hidden' as const,titleBarOverlay:{color:'#fffefb',symbolColor:'#465a4c',height:55}}:{}),
     webPreferences: { preload: path.join(root, 'dist-host', 'desktop', 'preload.cjs'), nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true } });
   window.setMenuBarVisibility(false);

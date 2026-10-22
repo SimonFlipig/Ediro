@@ -1,5 +1,6 @@
 import type { Asset, Job, ModelConfig, Project } from './domain.js';
 import type { ModelInput } from './model-input.js';
+import type { ReferenceSettings } from './module-settings.js';
 
 export interface ProjectStorePort {
   readonly transient?:boolean;
@@ -20,6 +21,7 @@ export interface ProjectStorePort {
   loadModelInput(taskId:string):Promise<ModelInput|null>;
 }
 export interface CloudExecutionContext {
+  preprocessReferenceImage?(bytes:Buffer,settings:ReferenceSettings):Promise<Buffer>;
   text_output_limit?:number;
   job: Job;
   model: ModelConfig;

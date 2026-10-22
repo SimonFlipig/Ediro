@@ -1,0 +1,645 @@
+{
+  "candidate": "0.1.3-2026-10-22T08-59-44-637Z",
+  "packages": [
+    {
+      "path": "node_modules/@img/colour/package.json",
+      "name": "@img/colour",
+      "version": "1.1.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/lovell/colour.git"
+      },
+      "files": 4,
+      "licenses": [
+        "node_modules/@img/colour/LICENSE.md"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/@img/sharp-win32-x64/package.json",
+      "name": "@img/sharp-win32-x64",
+      "version": "0.35.4",
+      "license": "Apache-2.0 AND LGPL-3.0-or-later",
+      "author": "Lovell Fuller <npm@lovell.info>",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/lovell/sharp.git",
+        "directory": "npm/win32-x64"
+      },
+      "files": 8,
+      "licenses": [
+        "node_modules/@img/sharp-win32-x64/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/adm-zip/package.json",
+      "name": "adm-zip",
+      "version": "0.6.1",
+      "license": "MIT",
+      "author": "Nasca Iacob <adm-zip@pm.me> (https://github.com/cthackers)",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/cthackers/adm-zip.git"
+      },
+      "files": 21,
+      "licenses": [
+        "node_modules/adm-zip/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/argparse/package.json",
+      "name": "argparse",
+      "version": "2.0.1",
+      "license": "Python-2.0",
+      "repository": "nodeca/argparse",
+      "files": 6,
+      "licenses": [
+        "node_modules/argparse/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/builder-util-runtime/package.json",
+      "name": "builder-util-runtime",
+      "version": "9.7.0",
+      "license": "MIT",
+      "author": "Vladimir Krivosheev",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/electron-userland/electron-builder.git",
+        "directory": "packages/builder-util-runtime"
+      },
+      "files": 17,
+      "licenses": [
+        "node_modules/builder-util-runtime/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/debug/package.json",
+      "name": "debug",
+      "version": "4.4.3",
+      "license": "MIT",
+      "author": "Josh Junon (https://github.com/qix-)",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/debug-js/debug.git"
+      },
+      "files": 7,
+      "licenses": [
+        "node_modules/debug/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/define-data-property/package.json",
+      "name": "define-data-property",
+      "version": "1.1.4",
+      "license": "MIT",
+      "author": "Jordan Harband <ljharb@gmail.com>",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/define-data-property.git"
+      },
+      "files": 5,
+      "licenses": [
+        "node_modules/define-data-property/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/define-properties/package.json",
+      "name": "define-properties",
+      "version": "1.2.1",
+      "license": "MIT",
+      "author": "Jordan Harband <ljharb@gmail.com>",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/ljharb/define-properties.git"
+      },
+      "files": 5,
+      "licenses": [
+        "node_modules/define-properties/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/detect-libc/package.json",
+      "name": "detect-libc",
+      "version": "2.1.2",
+      "license": "Apache-2.0",
+      "author": "Lovell Fuller <npm@lovell.info>",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/lovell/detect-libc.git"
+      },
+      "files": 7,
+      "licenses": [
+        "node_modules/detect-libc/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/electron-updater/node_modules/semver/package.json",
+      "name": "semver",
+      "version": "7.7.4",
+      "license": "ISC",
+      "author": "GitHub Inc.",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/npm/node-semver.git"
+      },
+      "files": 56,
+      "licenses": [
+        "node_modules/electron-updater/node_modules/semver/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/electron-updater/package.json",
+      "name": "electron-updater",
+      "version": "6.8.9",
+      "license": "MIT",
+      "author": "Vladimir Krivosheev",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/electron-userland/electron-builder.git",
+        "directory": "packages/electron-updater"
+      },
+      "files": 38,
+      "licenses": [
+        "node_modules/electron-updater/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/es-define-property/package.json",
+      "name": "es-define-property",
+      "version": "1.0.1",
+      "license": "MIT",
+      "author": "Jordan Harband <ljharb@gmail.com>",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/es-define-property.git"
+      },
+      "files": 5,
+      "licenses": [
+        "node_modules/es-define-property/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/es-errors/package.json",
+      "name": "es-errors",
+      "version": "1.3.0",
+      "license": "MIT",
+      "author": "Jordan Harband <ljharb@gmail.com>",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/es-errors.git"
+      },
+      "files": 10,
+      "licenses": [
+        "node_modules/es-errors/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/escape-string-regexp/package.json",
+      "name": "escape-string-regexp",
+      "version": "4.0.0",
+      "license": "MIT",
+      "author": {
+        "name": "Sindre Sorhus",
+        "email": "sindresorhus@gmail.com",
+        "url": "https://sindresorhus.com"
+      },
+      "repository": "sindresorhus/escape-string-regexp",
+      "files": 3,
+      "licenses": [
+        "node_modules/escape-string-regexp/license"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/fs-extra/package.json",
+      "name": "fs-extra",
+      "version": "10.1.0",
+      "license": "MIT",
+      "author": "JP Richardson <jprichardson@gmail.com>",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/jprichardson/node-fs-extra"
+      },
+      "files": 42,
+      "licenses": [
+        "node_modules/fs-extra/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/global-agent/package.json",
+      "name": "global-agent",
+      "version": "4.1.3",
+      "license": "BSD-3-Clause",
+      "author": {
+        "email": "gajus@gajus.com",
+        "name": "Gajus Kuizinas",
+        "url": "https://gajus.com"
+      },
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/gajus/global-agent"
+      },
+      "files": 29,
+      "licenses": [
+        "node_modules/global-agent/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/globalthis/package.json",
+      "name": "globalthis",
+      "version": "1.0.4",
+      "license": "MIT",
+      "author": "Jordan Harband <ljharb@gmail.com>",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/ljharb/System.global.git"
+      },
+      "files": 9,
+      "licenses": [
+        "node_modules/globalthis/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/gopd/package.json",
+      "name": "gopd",
+      "version": "1.2.0",
+      "license": "MIT",
+      "author": "Jordan Harband <ljharb@gmail.com>",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/gopd.git"
+      },
+      "files": 5,
+      "licenses": [
+        "node_modules/gopd/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/graceful-fs/package.json",
+      "name": "graceful-fs",
+      "version": "4.2.11",
+      "license": "ISC",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/isaacs/node-graceful-fs"
+      },
+      "files": 6,
+      "licenses": [
+        "node_modules/graceful-fs/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/has-property-descriptors/package.json",
+      "name": "has-property-descriptors",
+      "version": "1.0.2",
+      "license": "MIT",
+      "author": "Jordan Harband <ljharb@gmail.com>",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/inspect-js/has-property-descriptors.git"
+      },
+      "files": 4,
+      "licenses": [
+        "node_modules/has-property-descriptors/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/js-yaml/package.json",
+      "name": "js-yaml",
+      "version": "4.3.2",
+      "license": "MIT",
+      "author": "Vladimir Zapparov <dervus.grim@gmail.com>",
+      "repository": "nodeca/js-yaml",
+      "files": 37,
+      "licenses": [
+        "node_modules/js-yaml/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/jsonfile/package.json",
+      "name": "jsonfile",
+      "version": "6.2.1",
+      "license": "MIT",
+      "author": "JP Richardson <jprichardson@gmail.com>",
+      "repository": {
+        "type": "git",
+        "url": "git@github.com:jprichardson/node-jsonfile.git"
+      },
+      "files": 4,
+      "licenses": [
+        "node_modules/jsonfile/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/lazy-val/package.json",
+      "name": "lazy-val",
+      "version": "1.0.5",
+      "license": "MIT",
+      "author": "Vladimir Krivosheev",
+      "repository": "develar/lazy-val",
+      "files": 3,
+      "licenses": [],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/lodash.escaperegexp/package.json",
+      "name": "lodash.escaperegexp",
+      "version": "4.1.2",
+      "license": "MIT",
+      "author": "John-David Dalton <john.david.dalton@gmail.com> (http://allyoucanleet.com/)",
+      "repository": "lodash/lodash",
+      "files": 3,
+      "licenses": [
+        "node_modules/lodash.escaperegexp/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/lodash.isequal/package.json",
+      "name": "lodash.isequal",
+      "version": "4.5.0",
+      "license": "MIT",
+      "author": "John-David Dalton <john.david.dalton@gmail.com> (http://allyoucanleet.com/)",
+      "repository": "lodash/lodash",
+      "files": 3,
+      "licenses": [
+        "node_modules/lodash.isequal/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/matcher/package.json",
+      "name": "matcher",
+      "version": "4.0.0",
+      "license": "MIT",
+      "author": {
+        "name": "Sindre Sorhus",
+        "email": "sindresorhus@gmail.com",
+        "url": "https://sindresorhus.com"
+      },
+      "repository": "sindresorhus/matcher",
+      "files": 3,
+      "licenses": [
+        "node_modules/matcher/license"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/ms/package.json",
+      "name": "ms",
+      "version": "2.1.3",
+      "license": "MIT",
+      "repository": "vercel/ms",
+      "files": 3,
+      "licenses": [
+        "node_modules/ms/license.md"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/object-keys/package.json",
+      "name": "object-keys",
+      "version": "1.1.1",
+      "license": "MIT",
+      "author": {
+        "name": "Jordan Harband",
+        "email": "ljharb@gmail.com",
+        "url": "http://ljharb.codes"
+      },
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/ljharb/object-keys.git"
+      },
+      "files": 6,
+      "licenses": [
+        "node_modules/object-keys/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/onnxruntime-common/package.json",
+      "name": "onnxruntime-common",
+      "version": "1.30.0",
+      "license": "MIT",
+      "author": "fs-eire",
+      "repository": {
+        "url": "https://github.com/Microsoft/onnxruntime.git",
+        "type": "git"
+      },
+      "files": 70,
+      "licenses": [],
+      "sourceFiles": 21
+    },
+    {
+      "path": "node_modules/onnxruntime-node/package.json",
+      "name": "onnxruntime-node",
+      "version": "1.30.0",
+      "license": "MIT",
+      "author": "fs-eire",
+      "repository": {
+        "url": "https://github.com/Microsoft/onnxruntime.git",
+        "type": "git"
+      },
+      "files": 29,
+      "licenses": [],
+      "sourceFiles": 6
+    },
+    {
+      "path": "node_modules/react-dom/package.json",
+      "name": "react-dom",
+      "version": "19.3.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/react/react.git",
+        "directory": "packages/react-dom"
+      },
+      "files": 43,
+      "licenses": [
+        "node_modules/react-dom/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/react/package.json",
+      "name": "react",
+      "version": "19.3.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/react/react.git",
+        "directory": "packages/react"
+      },
+      "files": 27,
+      "licenses": [
+        "node_modules/react/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/sax/package.json",
+      "name": "sax",
+      "version": "1.6.1",
+      "license": "BlueOak-1.0.0",
+      "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
+      "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/isaacs/sax-js.git"
+      },
+      "files": 4,
+      "licenses": [
+        "node_modules/sax/LICENSE.md"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/scheduler/package.json",
+      "name": "scheduler",
+      "version": "0.28.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/react/react.git",
+        "directory": "packages/scheduler"
+      },
+      "files": 15,
+      "licenses": [
+        "node_modules/scheduler/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/semver/package.json",
+      "name": "semver",
+      "version": "7.8.5",
+      "license": "ISC",
+      "author": "GitHub Inc.",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/npm/node-semver.git"
+      },
+      "files": 57,
+      "licenses": [
+        "node_modules/semver/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/serialize-error/package.json",
+      "name": "serialize-error",
+      "version": "8.1.0",
+      "license": "MIT",
+      "author": {
+        "name": "Sindre Sorhus",
+        "email": "sindresorhus@gmail.com",
+        "url": "https://sindresorhus.com"
+      },
+      "repository": "sindresorhus/serialize-error",
+      "files": 3,
+      "licenses": [
+        "node_modules/serialize-error/license"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/sharp/package.json",
+      "name": "sharp",
+      "version": "0.35.4",
+      "license": "Apache-2.0",
+      "author": "Lovell Fuller <npm@lovell.info>",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/lovell/sharp.git"
+      },
+      "files": 40,
+      "licenses": [
+        "node_modules/sharp/LICENSE"
+      ],
+      "sourceFiles": 6
+    },
+    {
+      "path": "node_modules/tiny-typed-emitter/package.json",
+      "name": "tiny-typed-emitter",
+      "version": "2.1.0",
+      "license": "MIT",
+      "author": "Zurab Benashvili <zura.benashvili@gmail.com>",
+      "repository": "https://github.com/binier/tiny-typed-emitter.git",
+      "files": 4,
+      "licenses": [
+        "node_modules/tiny-typed-emitter/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/type-fest/package.json",
+      "name": "type-fest",
+      "version": "0.20.2",
+      "license": "(MIT OR CC0-1.0)",
+      "author": {
+        "name": "Sindre Sorhus",
+        "email": "sindresorhus@gmail.com",
+        "url": "https://sindresorhus.com"
+      },
+      "repository": "sindresorhus/type-fest",
+      "files": 2,
+      "licenses": [
+        "node_modules/type-fest/license"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/universalify/package.json",
+      "name": "universalify",
+      "version": "2.0.1",
+      "license": "MIT",
+      "author": "Ryan Zimmerman <opensrc@ryanzim.com>",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/RyanZim/universalify.git"
+      },
+      "files": 3,
+      "licenses": [
+        "node_modules/universalify/LICENSE"
+      ],
+      "sourceFiles": 0
+    },
+    {
+      "path": "node_modules/zod/package.json",
+      "name": "zod",
+      "version": "4.6.5",
+      "license": "MIT",
+      "author": "Colin McDonnell <zod@colinhacks.com>",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/colinhacks/zod.git"
+      },
+      "files": 744,
+      "licenses": [
+        "node_modules/zod/LICENSE"
+      ],
+      "sourceFiles": 332
+    }
+  ]
+}

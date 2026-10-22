@@ -4,6 +4,7 @@ import type { AdapterDescription } from '../core/model-library.js';
 import type { CloudExecutionContext, ExecutionResult } from '../core/ports.js';
 import { defaultImagesCompatibility } from '../core/domain.js';
 import { captureModelInput } from './capture-model-input.js';
+import { readReferenceImage } from './reference-image.js';
 import { imagesProfile } from '../protocols/generation-profiles.js';
 import { normalizeParameters,extensionOptions,validateGenerationParameters } from '../core/generation-parameters.js';
 import { validSize } from '../core/generation-contract.js';
@@ -57,7 +58,7 @@ export class ImagesGenerator {
     let body:string|FormData=JSON.stringify(fields);
     if(ids.length){const form=new FormData();for(const [key,value] of Object.entries(fields))form.append(key,String(value));let size=Buffer.byteLength(prompt);
       for(const [index,id] of ids.entries()){
-        if(signal.aborted)throw new Error('任务已取消。');const bytes=await context.readImage(id);size+=bytes.length;
+        if(signal.aborted)throw new Error('任务已取消。');const bytes=await readReferenceImage(context,id,index);size+=bytes.length;
         validateImagesUpload(bytes.length,size,compatibility);
         let meta;try{meta=await sharp(bytes,{limitInputPixels:40_000_000}).metadata();await sharp(bytes,{limitInputPixels:40_000_000}).stats();}catch{throw new Error('参考图无法完整解码。');}
         if(!['png','jpeg','webp'].includes(meta.format??''))throw new Error('参考图格式不支持。');

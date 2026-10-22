@@ -1,6 +1,7 @@
 import sharp from 'sharp';
 import type { CloudExecutionContext, CloudExecutionPort } from '../core/ports.js';
 import { mockDescription } from '../core/model-library.js';
+import { readReferenceImage } from './reference-image.js';
 const escape = (text: string) => text.replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]!));
 async function pause(ms: number, signal: AbortSignal) {
   if (signal.aborted) throw new Error('任务已取消。');
@@ -14,15 +15,16 @@ async function pause(ms: number, signal: AbortSignal) {
 export class MockGenerator implements CloudExecutionPort {
   readonly description = mockDescription;
   constructor(private delay = 500) {}
-  async execute({ job, model, readImage,recordModelInput }: CloudExecutionContext, signal: AbortSignal, progress: (stage: string, value: number) => Promise<void>) {
+  async execute(context:CloudExecutionContext, signal: AbortSignal, progress: (stage: string, value: number) => Promise<void>) {
+    const {job,model,readImage,recordModelInput}=context;
     if (model.kind !== 'mock') throw new Error('真实模型适配器尚未接入；不会调用网络或产生费用。');
     if(recordModelInput){
-      const blocks:unknown[]=[];
+      const blocks:unknown[]=[];let imageIndex=0;
       if(job.adapted_input.kind==='native_blocks'){
-        for(const block of job.adapted_input.blocks??[])if(block.type==='text')blocks.push({text:block.text});else{const bytes=await readImage(block.asset_id),meta=await sharp(bytes).metadata();blocks.push({inlineData:{mimeType:`image/${meta.format}`,data:bytes.toString('base64')}});}
+        for(const block of job.adapted_input.blocks??[])if(block.type==='text')blocks.push({text:block.text});else{const bytes=await readReferenceImage(context,block.asset_id,imageIndex++),meta=await sharp(bytes).metadata();blocks.push({inlineData:{mimeType:`image/${meta.format}`,data:bytes.toString('base64')}});}
       }else{
         blocks.push({prompt:job.adapted_input.prompt});
-        for(const id of job.adapted_input.image_asset_ids??[]){const bytes=await readImage(id),meta=await sharp(bytes).metadata();blocks.push({inlineData:{mimeType:`image/${meta.format}`,data:bytes.toString('base64')}});}
+        for(const id of job.adapted_input.image_asset_ids??[]){const bytes=await readReferenceImage(context,id,imageIndex++),meta=await sharp(bytes).metadata();blocks.push({inlineData:{mimeType:`image/${meta.format}`,data:bytes.toString('base64')}});}
       }
       if(job.mask_edit&&job.mask_edit.method!=='guided')blocks.push({mask:{mimeType:'image/png',data:(await readImage(job.mask_edit.mask_asset_id)).toString('base64')}});
       await recordModelInput({version:1,adapter_id:model.adapter_id,captured_at:new Date().toISOString(),route:'/simulation',body:{encoding:'simulation',blocks:[{parameters:job.recipe_snapshot.core_parameters},...blocks]}});
@@ -40,7 +42,7 @@ export class MockGenerator implements CloudExecutionPort {
     const ratio=job.output_geometry?.ratio??(job.recipe_snapshot.core_parameters.aspect_ratio==='auto'?'1:1':job.recipe_snapshot.core_parameters.aspect_ratio);
     const [rw, rh] = ratio.split(':').map(Number);
     const first = job.chain_snapshot.blocks.find(b => b.type === 'image');
-    const reference = first?.type === 'image' ? await readImage(first.asset_id) : undefined;
+    const reference = first?.type === 'image' ? await readReferenceImage(context,first.asset_id,0) : undefined;
     const width = rw >= rh ? 1200 : Math.round(1200 * rw / rh), height = rw >= rh ? Math.round(1200 * rh / rw) : 1200;
     const text = job.recipe_snapshot.modules.filter(m => m.enabled && m.reference_type === 'prompt').map(m => m.user_instruction).join(' ').slice(0, 36);
     const outputs: Buffer[] = [];

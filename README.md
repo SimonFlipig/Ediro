@@ -6,7 +6,7 @@
 
 Ediro 独立运行，不依赖 Codex 或其他工作台。真实生成需要自行配置模型连接与 API Key；模拟引擎可以免费检查工作流程，不代表真实模型效果。
 
-[下载最新版](https://github.com/SimonFlipig/Ediro/releases/latest) · [首版发布说明](docs/RELEASE_NOTES_v0.1.0.md) · [反馈问题](https://github.com/SimonFlipig/Ediro/issues)
+[下载最新版](https://github.com/SimonFlipig/Ediro/releases/latest) · [v0.1.3 发布说明](docs/RELEASE_NOTES_v0.1.3.md) · [反馈问题](https://github.com/SimonFlipig/Ediro/issues)
 
 ![Ediro 工作台：素材、参考模块、预览、结果版本和生成参数](docs/screenshots/workspace.png)
 
@@ -14,7 +14,7 @@ Ediro 独立运行，不依赖 Codex 或其他工作台。真实生成需要自�
 
 ## 获取与启动
 
-目标平台为 **Windows x64**。在 [GitHub Releases](https://github.com/SimonFlipig/Ediro/releases) 获取发布版本，首版变更见 [v0.1.0 发布说明](docs/RELEASE_NOTES_v0.1.0.md)：
+目标平台为 **Windows x64**。在 [GitHub Releases](https://github.com/SimonFlipig/Ediro/releases) 获取发布版本，本次变更见 [v0.1.3 发布说明](docs/RELEASE_NOTES_v0.1.3.md)：
 
 - **安装版**：下载 `Ediro-<版本>-windows-x64-setup.exe`，安装后从桌面或开始菜单启动。一般保留当前用户的默认安装目录；如需安装到 `Program Files`，请选择为所有用户安装并允许管理员权限请求。
 - **便携版**：下载 `Ediro-<版本>-windows-x64-portable.zip`，完整解压到可写文件夹，运行其中的 `Ediro.exe`，不要直接在压缩包内运行。
@@ -30,6 +30,8 @@ Ediro 独立运行，不依赖 Codex 或其他工作台。真实生成需要自�
 5. 选择历史结果可恢复该版本的创作参数；需要修改时进入局部编辑。完成后导出普通图片。
 
 默认包含作者选定的模块提示词配置。模型能力、输入图片和用户要求仍会影响结果，不保证所有模型产生相同效果。
+
+设置中的“核心指令”支持自定义模块与角色指令、恢复默认及导入导出。预览只编译当前编辑项，不显示出厂指令正文；详见[核心指令自定义](docs/核心指令自定义.md)。
 
 ## 功能截图
 

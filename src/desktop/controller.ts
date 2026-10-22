@@ -2,6 +2,7 @@ import { dialog, shell, type BrowserWindow } from 'electron';
 import { readFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
+import sharp from 'sharp';
 import { planExecution } from '../core/execution-plan.js';
 import { newId } from '../core/domain.js';
 import { ModelLibrary } from '../core/models.js';
@@ -10,11 +11,19 @@ import { ProjectRepository, atomicJson, projectFilename } from '../adapters/proj
 import { MockGenerator } from '../adapters/mock-generator.js';
 import { openModelLibrary,modelLibraryFilename } from '../adapters/model-library-repository.js';
 import { ExecutionRegistry } from '../adapters/execution-registry.js';
-import { loadPromptConfig } from '../adapters/prompt-config-repository.js';
+import { loadPromptSettings,savePromptCustomizations,importPromptCustomizations,exportPromptCustomizations } from '../adapters/prompt-config-repository.js';
+import { emptyPromptCustomizations, type PromptCustomizations } from '../core/prompt-customization.js';
+import { loadModuleSettings,saveModuleSettings } from '../adapters/module-settings-repository.js';
+import { loadGenerationTimings } from '../adapters/generation-timing-repository.js';
+import { ReferencePreprocessor } from '../adapters/reference-preprocessor.js';
+import { resizeReferenceImage } from '../adapters/reference-image.js';
+import {localImageModelStatus,prepareLocalImageModel,type LocalImageModelKind} from '../adapters/local-image-models.js';
 import { ModuleRegistry } from '../core/modules.js';
-import {prepareModuleInference,executeModuleInference} from '../core/module-inference.js';
+import {prepareModuleInference,executeModuleInference,applyAutomaticPromptSuggestion} from '../core/module-inference.js';
+import {getAutoPromptState} from '../core/auto-prompt.js';
 import { GeminiGenerator } from '../adapters/gemini-generator.js';
 import { ImagesGenerator } from '../adapters/images-generator.js';
+import { ChatCompletionsAdapter } from '../adapters/chat-completions.js';
 import { MaskPixels } from '../adapters/mask-pixels.js';
 import { commandSchema } from '../shared/commands.js';
 import type { ApiResponse, WorkspaceView } from '../shared/api.js';
@@ -28,8 +37,12 @@ import {outputFilename} from '../core/output-name.js';
 import {inspectDocumentTarget,sameDocumentFile} from '../adapters/document-save-target.js';
 
 export class DesktopController {
+  private promptCustomizations:PromptCustomizations=structuredClone(emptyPromptCustomizations);
   private showMessage:(options:import('electron').MessageBoxOptions)=>Promise<{response:number}>;
   private inferences=new Map<string,AbortController>();
+  private referenceDownloads=new Map<LocalImageModelKind,AbortController>();
+  private referenceDownloadTasks=new Set<Promise<void>>();
+  private referencePreviews=new Map<string,AbortController>();
   private token = newId('session');
   private hiddenRecords=new Set<string>();
   readonly projects:ProjectLibrary;
@@ -39,8 +52,9 @@ export class DesktopController {
   private draft?:DraftRepository;
   private get outputDirectory(){return this.projects.outputDirectory;}
   private repository(directory:string){return this.projects.repository(directory);}
-  private constructor(readonly workspace: Workspace, private window: () => BrowserWindow, private runtimeDirectory: string, private executors:ExecutionRegistry,readonly modelTests:ModelTests,showMessage?: (options:import('electron').MessageBoxOptions)=>Promise<{response:number}>,projectRoot=path.resolve(runtimeDirectory,'..','..')) {this.showMessage=showMessage??(options=>dialog.showMessageBox(window(),options));this.projects=new ProjectLibrary(projectRoot,runtimeDirectory);this.documents=new DocumentLibrary(runtimeDirectory);}
-  async shutdown(){for(const task of this.inferences.values())task.abort();this.modelTests.shutdown();await this.workspace.shutdown();if(this.workspace.repository instanceof DraftRepository)await this.workspace.repository.close();await this.documents.releaseExcept(undefined);}
+  private cancelReferencePreviews(){for(const preview of this.referencePreviews.values())preview.abort();}
+  private constructor(readonly workspace: Workspace, private window: () => BrowserWindow, private runtimeDirectory: string, private executors:ExecutionRegistry,readonly modelTests:ModelTests,showMessage?: (options:import('electron').MessageBoxOptions)=>Promise<{response:number}>,projectRoot=path.resolve(runtimeDirectory,'..','..'),private referencePreprocessor=new ReferencePreprocessor(runtimeDirectory)) {this.showMessage=showMessage??(options=>dialog.showMessageBox(window(),options));this.projects=new ProjectLibrary(projectRoot,runtimeDirectory);this.documents=new DocumentLibrary(runtimeDirectory);}
+  async shutdown(){for(const task of this.inferences.values())task.abort();for(const task of this.referenceDownloads.values())task.abort();this.cancelReferencePreviews();this.modelTests.shutdown();await this.workspace.shutdown();await this.referencePreprocessor.close();await Promise.allSettled([...this.referenceDownloadTasks]);if(this.workspace.repository instanceof DraftRepository)await this.workspace.repository.close();await this.documents.releaseExcept(undefined);}
   assertReadyForUpdate(){
     if(this.inferences.size||this.modelTests.list().some(test=>test.status==='running')||this.workspace.project?.jobs.some(job=>['queued','preparing','running','post_processing'].includes(job.status)))throw new Error('请等待生成、推理或模型测试结束后再重启升级。');
   }
@@ -55,6 +69,7 @@ export class DesktopController {
     await this.documents.releaseExcept(repo);this.needsRegistration=false;
   }
   private async newWorkspace(name: string) {
+    this.cancelReferencePreviews();
     this.workspace.assertSwitchable();await this.workspace.flush();
     const previous=this.workspace.repository;
     const repository=new DraftRepository(path.join(this.runtimeDirectory,'draft-cache'),this.projects.directory,this.documents.cacheRoot,repo=>{this.workspace.repository=repo;this.needsRegistration=true;});
@@ -75,15 +90,19 @@ export class DesktopController {
   static async create(runtimeDirectory: string, window: () => BrowserWindow,options?:{showMessage?:(options:import('electron').MessageBoxOptions)=>Promise<{response:number}>;deferStartup?:boolean;projectRoot?:string}) {
     const file = path.join(runtimeDirectory, modelLibraryFilename);
     const configs = await openModelLibrary(runtimeDirectory);
-    const executors=new ExecutionRegistry().register(new MockGenerator()).register(new GeminiGenerator()).register(new ImagesGenerator());
+    const preprocessing=new ReferencePreprocessor(runtimeDirectory);
+    const executors=new ExecutionRegistry((bytes,settings,signal)=>preprocessing.process(bytes,settings,signal)).register(new MockGenerator()).register(new GeminiGenerator()).register(new ImagesGenerator()).register(new ChatCompletionsAdapter());
     const descriptions=executors.descriptions();
     descriptions.push({adapter_id:'local-pending',version:1,title:'本地引擎 · 待选型',kind:'local',installed:false,purposes:['generation'],requires_credential:false,supports_probe:false,interleaving:['native'],operations:[],parameters:[]});
     const library = new ModelLibrary(configs, data => atomicJson(file, data), new EncryptedSecretStore(path.join(runtimeDirectory, 'credentials')),descriptions);
     const testFile=path.join(runtimeDirectory,'model-tests.v1.json');let testRecords:ModelTestRecord[];
     try{testRecords=z.array(modelTestSchema).max(200).parse(JSON.parse(await readFile(testFile,'utf8')));}catch(e){if((e as NodeJS.ErrnoException).code!=='ENOENT')throw new Error('模型测试记录无效，不会静默清除。');testRecords=[];}
     const modelTests=new ModelTests(testRecords,records=>atomicJson(testFile,records),executors,model=>library.credential(model));await modelTests.recover();
-    const promptConfig=await loadPromptConfig(runtimeDirectory);
-    const controller = new DesktopController(new Workspace(library, executors,new ModuleRegistry(undefined,promptConfig),new MaskPixels(),2000), window, runtimeDirectory,executors,modelTests,options?.showMessage,options?.projectRoot);
+    const prompts=await loadPromptSettings(runtimeDirectory);
+    const controller = new DesktopController(new Workspace(library, executors,new ModuleRegistry(undefined,prompts.config,prompts.customizations.roles),new MaskPixels(),2000), window, runtimeDirectory,executors,modelTests,options?.showMessage,options?.projectRoot,preprocessing);
+    controller.promptCustomizations=prompts.customizations;
+    controller.workspace.moduleSettings=await loadModuleSettings(runtimeDirectory);
+    controller.workspace.generationTimings=await loadGenerationTimings(runtimeDirectory);
     await controller.documents.initialize();
     try{controller.hiddenRecords=new Set(z.array(z.string().regex(/^(work-[a-zA-Z0-9]{6}|file-[a-f0-9]{12})$/)).parse(JSON.parse(await readFile(path.join(runtimeDirectory,'removed-workspaces.json'),'utf8'))));}catch(e){if((e as NodeJS.ErrnoException).code!=='ENOENT')throw new Error('已移除工作记录列表无效。');}
     await controller.projects.migrate(undefined,controller.hiddenRecords);
@@ -114,12 +133,17 @@ export class DesktopController {
   }
   async view(): Promise<WorkspaceView> {
     const workspace = this.workspace, project = workspace.project ? structuredClone(workspace.project) : null;
+    const reference_models:NonNullable<WorkspaceView['reference_models']>=await localImageModelStatus(this.runtimeDirectory);
+    for(const kind of this.referenceDownloads.keys())reference_models[kind]='downloading';
     let chain = null, adaptation = null, adaptation_error;
     if (project) {
       try { const plan=planExecution(project.recipe,project.assets,workspace.models.resolve(project.recipe.model_config_id),workspace.registry);chain=plan.chain;adaptation=plan.adapted; }
       catch (e) { adaptation_error = e instanceof Error ? e.message : '配方无法编译'; }
     }
-    return { project,prompt_config:structuredClone(workspace.registry.promptConfig), models: await workspace.models.list(),model_tests:this.modelTests.list(),connections:await workspace.models.connections(),adapters:workspace.models.adapters,assignments:workspace.models.snapshot().assignments, module_definitions: workspace.registry.list(), chain, adaptation, adaptation_error,
+    let auto_prompt:WorkspaceView['auto_prompt'];
+    if(project)try{auto_prompt=getAutoPromptState(project.recipe,workspace.registry,workspace.moduleSettings,project.assets);}
+    catch(error){adaptation_error??=error instanceof Error?error.message:'自动提示词条件无法读取。';}
+    return { project,prompt_customizations:structuredClone(this.promptCustomizations),generation_timings:structuredClone(Object.fromEntries(workspace.generationTimingByTask)),reference_models,module_settings:structuredClone(workspace.moduleSettings),auto_prompt,prompt_config:structuredClone(workspace.registry.promptConfig), models: await workspace.models.list(),model_tests:this.modelTests.list(),connections:await workspace.models.connections(),adapters:workspace.models.adapters,assignments:workspace.models.effectiveAssignments(), module_definitions: workspace.registry.list(), chain, adaptation, adaptation_error,
       project_location: workspace.repository instanceof DraftRepository?null:workspace.repository instanceof DocumentRepository?workspace.repository.filename:workspace.repository?.directory ?? null,
       project_record_id:this.currentRecordId,project_format:workspace.repository instanceof DraftRepository?'draft':workspace.repository instanceof DocumentRepository?'ediro':'legacy',project_storage_version:workspace.repository instanceof DocumentRepository?workspace.repository.storageVersion:undefined,save_state:workspace.saveState,save_error:workspace.saveError,
       recent_workspaces: await this.recentWorkspaces(),
@@ -139,21 +163,71 @@ export class DesktopController {
     try {
       // Validate at the privileged boundary; never trust renderer objects.
       const command = commandSchema.parse(raw);
+      if(command.type==='reference:cancel-preview'){this.referencePreviews.get(command.request_id)?.abort();return {ok:true};}
+      if(['project:create','project:open','workspace:resume','workspace:remove'].includes(command.type))this.cancelReferencePreviews();
+      if(command.type==='reference-model:prepare'){
+        if(this.referenceDownloads.has(command.kind))return {ok:true};
+        const download=new AbortController();this.referenceDownloads.set(command.kind,download);
+        const operation=(async()=>{
+          await this.refreshState();
+          await prepareLocalImageModel(this.runtimeDirectory,command.kind,download.signal);
+        })();
+        this.referenceDownloadTasks.add(operation);
+        try{await operation;}finally{this.referenceDownloadTasks.delete(operation);this.referenceDownloads.delete(command.kind);if(!download.signal.aborted)await this.refreshState();}
+        return {ok:true};
+      }
+      if(command.type==='reference:preview'){
+        if(this.referencePreviews.has(command.request_id))throw new Error('预览请求编号重复，请重新预览。');
+        const preview=new AbortController();this.referencePreviews.set(command.request_id,preview);
+        try{
+        const input=await this.workspace.serial(async()=>{
+          if(preview.signal.aborted)throw new Error('预览已取消。');
+          const project=this.workspace.requireProject();
+          if(project.project_id!==command.project_id)throw new Error('工作记录已切换，请重新打开模块。');
+          const module=project.recipe.modules.find(module=>(!command.module_id||module.module_id===command.module_id)&&module.reference_type===command.reference_type&&module.asset_ids.includes(command.asset_id));
+          if(!module)throw new Error('参考图已从当前模块移除。');
+          const asset=project.assets.find(asset=>asset.asset_id===command.asset_id);
+          if(!asset)throw new Error('参考图不存在。');
+          return {bytes:await this.workspace.repository!.readAsset(asset),settings:structuredClone(command.settings??module.reference_settings??this.workspace.moduleSettings[command.reference_type])};
+        });
+        const clear=await resizeReferenceImage(input.bytes,input.settings.max_edge);
+        const result=await this.referencePreprocessor.process(clear,input.settings,preview.signal);
+        const {format}=await sharp(result).metadata();
+        if(preview.signal.aborted)throw new Error('预览已取消。');
+        return {ok:true,reference_preview:`data:image/${format};base64,${result.toString('base64')}`};
+        }finally{if(this.referencePreviews.get(command.request_id)===preview)this.referencePreviews.delete(command.request_id);}
+      }
       if(command.type==='module:cancel-inference'){this.inferences.get(command.request_id)?.abort();return {ok:true};}
       if(command.type==='module:infer'){
         if(this.inferences.size)throw new Error('已有模块推理正在运行，请等待或取消。');
         const controller=new AbortController();this.inferences.set(command.request_id,controller);
         try{
           const prepared=await this.workspace.serial(async()=>{
+            if(controller.signal.aborted)throw new Error('推理已取消。');
             const project=this.workspace.requireProject();if(project.project_id!==command.project_id)throw new Error('工作记录已切换，请重新打开编辑窗口。');
             await this.workspace.flush();
             const model=structuredClone(await this.workspace.models.execution(command.model_config_id));
-            const plan=prepareModuleInference(project.recipe,command.module_id,command.text,model,this.workspace.registry,command.allow_text_only);
+            const automatic=command.automatic?getAutoPromptState(project.recipe,this.workspace.registry,this.workspace.moduleSettings,project.assets):undefined;
+            if(command.automatic&&automatic?.module_id!==command.module_id)throw new Error('当前模块不是已启用的自动提示词目标。');
+            const originalText=project.recipe.modules.find(module=>module.module_id===command.module_id)?.user_instruction;
+            if(command.automatic&&command.text!==originalText)throw new Error('当前提示词文字已变化，请重新开始自动推理。');
+            const plan=prepareModuleInference(project.recipe,command.module_id,command.text,model,this.workspace.registry,command.allow_text_only,this.workspace.moduleSettings,{automatic:command.automatic,promptRole:command.prompt_role});
             const repository=this.workspace.repository!,assets=structuredClone(project.assets);
             const ids=new Set(plan.job.adapted_input.blocks?.filter(b=>b.type==='image').map(b=>b.asset_id)??plan.job.adapted_input.image_asset_ids??[]);
-            return {plan,context:{model,job:plan.job,readImage:async(id:string)=>{const asset=assets.find(a=>a.asset_id===id);if(!ids.has(id)||!asset)throw new Error('推理请求不能读取上下文之外的素材。');return repository.readAsset(asset);},resolveCredential:()=>this.workspace.models.credential(model)}};
+            return {plan,project,automatic,originalText,context:{model,job:plan.job,readImage:async(id:string)=>{const asset=assets.find(a=>a.asset_id===id);if(!ids.has(id)||!asset)throw new Error('推理请求不能读取上下文之外的素材。');return repository.readAsset(asset);},resolveCredential:()=>this.workspace.models.credential(model)}};
           });
           const suggestion=await executeModuleInference(this.executors,prepared.context,prepared.plan,controller.signal);
+          if(prepared.automatic)return await this.workspace.serial(async()=>{
+            if(controller.signal.aborted)throw new Error('推理已取消，原文未修改。');
+            const project=this.workspace.requireProject();
+            if(project!==prepared.project||project.project_id!==command.project_id)throw new Error('工作记录已切换，推理结果未写入。');
+            const current=getAutoPromptState(project.recipe,this.workspace.registry,this.workspace.moduleSettings,project.assets);
+            if(current?.module_id!==command.module_id)throw new Error('自动提示词目标已改变，原文未修改。');
+            const previous=project.recipe;
+            project.recipe=applyAutomaticPromptSuggestion(previous,command.module_id,prepared.originalText!,prepared.automatic!.input_key,suggestion.text);
+            try{await this.workspace.persist();}catch(error){project.recipe=previous;throw error;}
+            return {ok:true,suggestion,state:await this.view()};
+          });
           return {ok:true,suggestion};
         }finally{this.inferences.delete(command.request_id);}
       }
@@ -166,6 +240,26 @@ export class DesktopController {
         const w = this.window();
         let selected_asset_id:string|undefined;
         switch (command.type) {
+          case 'prompt-customizations:save':{
+            const prompts=await savePromptCustomizations(this.runtimeDirectory,command.customizations);
+            // Enqueued jobs and in-flight inference already own their snapshots.
+            this.workspace.registry=new ModuleRegistry(undefined,prompts.config,prompts.customizations.roles);
+            this.promptCustomizations=prompts.customizations;
+            if(this.workspace.project)this.workspace.project.recipe=this.workspace.registry.resolveRecipe(this.workspace.project.recipe);
+            break;
+          }
+          case 'prompt-customizations:import':{
+            const selected=await dialog.showOpenDialog(w,{title:'导入自定义指令',properties:['openFile'],filters:[{name:'Ediro 自定义指令',extensions:['json']}]});
+            if(selected.canceled||!selected.filePaths[0])return {ok:true,cancelled:true};
+            return {ok:true,prompt_customizations:await importPromptCustomizations(selected.filePaths[0])};
+          }
+          case 'prompt-customizations:export':{
+            const selected=await dialog.showSaveDialog(w,{title:'导出自定义指令',defaultPath:'Ediro-自定义指令.json',filters:[{name:'Ediro 自定义指令',extensions:['json']}],properties:['showOverwriteConfirmation']});
+            if(selected.canceled||!selected.filePath)return {ok:true,cancelled:true};
+            await exportPromptCustomizations(selected.filePath,command.customizations);
+            return {ok:true};
+          }
+          case 'module-settings:save':this.workspace.moduleSettings=await saveModuleSettings(this.runtimeDirectory,command.settings);break;
           case 'mask:save-composite':await this.workspace.saveCompositeMask(command.project_id,command.task_id,command.strokes);break;
           case 'mask:save-draft':await this.workspace.saveMaskDraft(command.project_id,command.draft);break;
           case 'mask:preview':return {ok:true,mask_preview:await this.workspace.previewMask(command.project_id,command.task_id,command.mode,command.feather,command.composite_strokes)};
@@ -185,7 +279,7 @@ export class DesktopController {
           case 'connection:probe':{
             const c=this.workspace.models.snapshot().connections.find(c=>c.connection_id===command.connection_id);
             if(!c||!c.enabled||!c.credential_ref)throw new Error('请先保存并启用连接，配置 API Key。');
-            const key=await this.workspace.models.credential({...this.workspace.models.resolve(this.workspace.models.defaultModel()),credential_ref:c.credential_ref});
+            const key=await this.workspace.models.credential(c);
             const discovered_models=await this.executors.probe(command.adapter_id,c.endpoint,key,AbortSignal.timeout(30_000));
             return {ok:true,state:await this.view(),discovered_models};
           }
@@ -295,6 +389,8 @@ export class DesktopController {
           case 'job:start': await this.workspace.enqueue(command.allow_degradation); break;
           case 'job:cancel': await this.workspace.cancel(command.task_id); break;
           case 'job:restore': await this.workspace.restore(command.task_id); break;
+          case 'job:restore-recipe': await this.workspace.restoreTaskRecipe(command.project_id,command.task_id); break;
+          case 'job:hide-result': await this.workspace.hideTaskResult(command.project_id,command.task_id); break;
           case 'result:restore': await this.workspace.restoreResult(command.project_id,command.asset_id); break;
           case 'asset:export': {
             const p = this.workspace.requireProject(), asset = p.assets.find(a => a.asset_id === command.asset_id);
@@ -322,6 +418,7 @@ export class DesktopController {
     }
   }
   private async recover(filename:string,known?:DocumentOutputMatch[]):Promise<string|undefined>{
+    this.cancelReferencePreviews();
     this.workspace.assertSwitchable();await this.workspace.flush();
     const matches=known??await this.documents.findOutputs(filename,this.hiddenRecords);
     if(matches.length){
@@ -355,6 +452,7 @@ export class DesktopController {
   }
   openRepository(directory:string){return path.dirname(path.resolve(directory))===path.resolve(this.projects.directory)?this.repository(directory):new ProjectRepository(directory);}
   async openProjectFile(filename:string){
+    this.cancelReferencePreviews();
     this.workspace.assertSwitchable();await this.workspace.flush();
     if(path.extname(filename).toLowerCase()==='.ediro'){
       const {repo}=await this.documents.openFile(filename);

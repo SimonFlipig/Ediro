@@ -20,6 +20,17 @@ test('Google 请求保留图文顺序与参数；JPEG 响应如实保存，忽�
 });
 test('原生路径规范化；未知协议不自动回退',async()=>{assert.equal(geminiRoot('https://api.aipix.one/v1beta'),'https://api.aipix.one/v1beta');assert.equal(geminiRoot('https://api.aipix.one/gemini'),'https://api.aipix.one/gemini/v1beta');assert.throws(()=>geminiRoot('https://api.aipix.one/v1'),/原生连接/);
   const c=context(Buffer.alloc(0));c.model.adapter_id='unknown';assert.throws(()=>new ExecutionRegistry().execute(c,new AbortController().signal,async()=>{}),/未安装/);});
+test('完整 Gemini 模型资源名只在请求路径去除一次 models 前缀，保留配置原值',async()=>{
+  const c=context(awaitBuffer);c.model.model='models/gemini-3-pro-image-preview';c.model.endpoint='https://example.com';let capturedRoute='';
+  c.recordModelInput=async input=>{capturedRoute=input.route;};
+  const adapter=new GeminiGenerator(async(url)=>{
+    assert.equal(String(url),'https://example.com/v1beta/models/gemini-3-pro-image-preview:generateContent');
+    return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{inlineData:{mimeType:'image/png',data:awaitBuffer.toString('base64')}}]}}]});
+  });
+  const result=await adapter.execute(c,new AbortController().signal,async()=>{});
+  assert.equal(result.images.length,1);assert.equal(c.model.model,'models/gemini-3-pro-image-preview');
+  assert.equal(capturedRoute,'/v1beta/models/gemini-3-pro-image-preview:generateContent');
+});
 test('失败不自动重试、不回显上游错误或 Key；空图不成功',async()=>{let calls=0;const adapter=new GeminiGenerator(async()=>{calls++;return Response.json({error:{message:'test-key secret upstream detail'}},{status:429});});await assert.rejects(()=>adapter.execute(context(awaitBuffer),new AbortController().signal,async()=>{}),error=>error instanceof Error&&error.message.includes('受限')&&!error.message.includes('test-key'));assert.equal(calls,1);
   const empty=new GeminiGenerator(async()=>Response.json({candidates:[{content:{parts:[{text:'no image'}]}}]}));await assert.rejects(()=>empty.execute(context(awaitBuffer),new AbortController().signal,async()=>{}),/没有返回图片/);});
 const awaitBuffer=await sharp({create:{width:10,height:10,channels:3,background:'#fff'}}).png().toBuffer();

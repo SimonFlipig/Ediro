@@ -4,9 +4,10 @@ module.exports = {
   productName: 'Ediro',
   electronDist: 'node_modules/electron/dist',
   directories: { output: '.local/release-build', buildResources: 'build' },
-  files: ['dist/**/*', 'dist-host/**/*', 'package.json', 'LICENSE', 'THIRD_PARTY_NOTICES.md', '!**/*.map'],
+  files: ['dist/**/*', 'dist-host/**/*', 'package.json', 'LICENSE', 'THIRD_PARTY_NOTICES.md', '!**/*.map',
+    '!node_modules/onnxruntime-node/bin/napi-v6/darwin/**/*', '!node_modules/onnxruntime-node/bin/napi-v6/linux/**/*', '!node_modules/onnxruntime-node/bin/napi-v6/win32/arm64/**/*'],
   asar: true,
-  asarUnpack: ['node_modules/sharp/**/*', 'node_modules/@img/**/*'],
+  asarUnpack: ['node_modules/sharp/**/*', 'node_modules/@img/**/*', 'node_modules/onnxruntime-node/bin/**/*'],
   npmRebuild: false,
   win: {
     icon: '.local/release-icon.ico',

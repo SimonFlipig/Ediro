@@ -1,0 +1,44 @@
+[
+  {
+    "file": "native-mpl-2.0.html",
+    "url": "https://www.mozilla.org/en-US/MPL/2.0/",
+    "bytes": 17329,
+    "sha256": "79fefbb5ce750421056e8639e83b055fa97deb02407617d4c0f9d50cfa0cfd32"
+  },
+  {
+    "file": "native-llvm-license.txt",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.7/llvm/LICENSE.TXT",
+    "bytes": 15141,
+    "sha256": "8d85c1057d742e597985c7d4e6320b015a9139385cff4cbae06ffc0ebe89afee"
+  },
+  {
+    "file": "native-libcxx-license.txt",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.7/libcxx/LICENSE.TXT",
+    "bytes": 16703,
+    "sha256": "539dd7aed86e8a4f12cbdd0e6c50c189c7d74847e4fecc64ce2c6ee3a01da38b"
+  },
+  {
+    "file": "native-mingw-license.txt",
+    "url": "https://raw.githubusercontent.com/mingw-w64/mingw-w64/b536c4fdb038a9c59a7e5fb36e7d1293c4dc61d6/COPYING",
+    "bytes": 2326,
+    "sha256": "99a69660981156c21336fdb5661f89341b013c94e4bf9e1c7467b4745718397f"
+  },
+  {
+    "file": "native-rust-license-mit.txt",
+    "url": "https://raw.githubusercontent.com/rust-lang/rust/e7815e522ecc746592fee32f50478f521333b503/LICENSE-MIT",
+    "bytes": 1068,
+    "sha256": "b71bd43a069ca0641a9ecfe585ca7b3c53b5cc1608f8b68321168698e28b5ea1"
+  },
+  {
+    "file": "native-rust-license-apache.txt",
+    "url": "https://raw.githubusercontent.com/rust-lang/rust/e7815e522ecc746592fee32f50478f521333b503/LICENSE-APACHE",
+    "bytes": 9723,
+    "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+  },
+  {
+    "file": "native-rust-copyright.txt",
+    "url": "https://raw.githubusercontent.com/rust-lang/rust/e7815e522ecc746592fee32f50478f521333b503/COPYRIGHT",
+    "bytes": 1571,
+    "sha256": "172020dbfd5b53a226dfde77616190a48dcff519b0bc0e6deb91a8450782c4af"
+  }
+]

@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import {mkdtemp,readdir,writeFile,cp} from 'node:fs/promises';
+import {randomUUID} from 'node:crypto';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {build,Platform,Arch} from 'electron-builder';
+import configuration from '../electron-builder.cjs';
+import {prepareNsisTemplate} from '../scripts/prepare-nsis-template.mjs';
+import {verifyInstallerShell} from './verify-installer-shell.mjs';
+
+const root=fileURLToPath(new URL('../',import.meta.url));
+assert.ok(process.argv[2],'Usage: node build/verify-shell-template.mjs <prepackaged-win-unpacked-directory>');
+process.env.ELECTRON_BUILDER_CACHE??=path.join(root,'.local/electron-builder-cache');
+process.env.CSC_IDENTITY_AUTO_DISCOVERY='false';
+process.env.EDIRO_NSIS_TEMPLATE_DIRECTORY=await prepareNsisTemplate(root);
+const output=await mkdtemp(path.join(root,'.local/shell-template-build-'));
+const appId='io.github.simonflipig.ediro.shelltest.'+randomUUID();
+const input=path.join(output,'prepackaged');
+await cp(path.resolve(process.argv[2]),input,{recursive:true,errorOnExist:true,force:false});
+await build({projectDir:root,prepackaged:input,targets:Platform.WINDOWS.createTarget(['nsis'],Arch.x64),publish:'never',config:{...configuration,appId,productName:'Ediro Shell Validation',directories:{...configuration.directories,output},win:{...configuration.win,artifactName:'Ediro-Shell-Validation-setup.exe'}}});
+const setup=(await readdir(output)).find(name=>name==='Ediro-Shell-Validation-setup.exe');
+assert.ok(setup,'Validation installer was not generated');
+const report=await verifyInstallerShell(path.join(output,setup));
+await writeFile(path.join(output,'shell-verification.json'),JSON.stringify({...report,appId,template:process.env.EDIRO_NSIS_TEMPLATE_DIRECTORY},null,2)+'\n');
+console.log(JSON.stringify({output,appId,...report},null,2));

@@ -1,15 +1,15 @@
 import type {Project,PublicModel} from '../core/domain.js';
 import type {MaskDraft,MaskStroke} from '../core/mask.js';
 import {maskEditMethod} from '../core/mask-request.js';
-import {findPreset} from '../protocols/model-catalog.js';
+import {familyForModel} from '../protocols/model-catalog.js';
 
 export function defaultMaskModel(models:PublicModel[],defaultId?:string){
   const eligible=models.filter(m=>m.enabled&&maskEditMethod(m));
   const preferred=eligible.find(m=>m.model_config_id===defaultId);if(preferred)return preferred;
-  return eligible.find(m=>m.executable&&findPreset(m.preset_id)?.family==='nano')
+  return eligible.find(m=>m.executable&&familyForModel(m)==='nano')
     ??eligible.find(m=>m.executable&&m.adapter_id==='openai-images')
     ??eligible.find(m=>m.executable&&m.kind==='mock')
-    ??eligible.find(m=>findPreset(m.preset_id)?.family==='nano')
+    ??eligible.find(m=>familyForModel(m)==='nano')
     ??eligible.find(m=>m.adapter_id==='openai-images');
 }
 

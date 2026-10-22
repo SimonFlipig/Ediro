@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "candidate": "0.1.3-2026-10-22T08-59-44-637Z",
+  "setupSha256": "95fa45acafd985ebe69ea02f41541bbf16b3462c0adcd4201d5885fe43e4e8eb",
+  "format": "NSIS-3 Unicode; Deflate outer stub",
+  "plugins": [
+    {
+      "name": "nsDialogs.dll",
+      "sha256": "1e40211af65923c2f4fd02ce021458a7745d28e2f383835e3015e96575632172",
+      "bytes": 9728,
+      "vendorMatches": [
+        "vendor-nsis/Plugins/x86-unicode/nsDialogs.dll"
+      ],
+      "originalAuthorDistributionMatches": []
+    },
+    {
+      "name": "nsExec.dll",
+      "sha256": "5d9ceb1ce5f35aea5f9e5a0c0edeeec04dfefe0c77890c80c70e98209b58b962",
+      "bytes": 6656,
+      "vendorMatches": [
+        "vendor-nsis/Plugins/x86-unicode/nsExec.dll"
+      ],
+      "originalAuthorDistributionMatches": []
+    },
+    {
+      "name": "nsis7z.dll",
+      "sha256": "b393f05e8ff919ef071181050e1873c9a776e1a0ae8329aefff7007d0cadf592",
+      "bytes": 434176,
+      "vendorMatches": [
+        "vendor-nsis-resources/plugins/x86-unicode/nsis7z.dll"
+      ],
+      "originalAuthorDistributionMatches": [
+        "official-nsis7z/Plugins/x86-unicode/nsis7z.dll"
+      ]
+    },
+    {
+      "name": "StdUtils.dll",
+      "sha256": "b72e9013a6204e9f01076dc38dabbf30870d44dfc66962adbf73619d4331601e",
+      "bytes": 102400,
+      "vendorMatches": [
+        "vendor-nsis-resources/plugins/x86-unicode/StdUtils.dll"
+      ],
+      "originalAuthorDistributionMatches": []
+    },
+    {
+      "name": "System.dll",
+      "sha256": "3eb38ae99653a7dbc724132ee240f6e5c4af4bfe7c01d31d23faf373f9f2eaca",
+      "bytes": 12288,
+      "vendorMatches": [
+        "vendor-nsis/Plugins/x86-unicode/System.dll"
+      ],
+      "originalAuthorDistributionMatches": []
+    },
+    {
+      "name": "UAC.dll",
+      "sha256": "2f7f8fc05dc4fd0d5cda501b47e4433357e887bbfed7292c028d99c73b52dc08",
+      "bytes": 14848,
+      "vendorMatches": [
+        "vendor-nsis-resources/plugins/x86-unicode/UAC.dll"
+      ],
+      "originalAuthorDistributionMatches": [
+        "official-uac/Plugins/x86-unicode/UAC.dll"
+      ]
+    },
+    {
+      "name": "WinShell.dll",
+      "sha256": "9be85b986ea66a6997dde658abe82b3147ed2a1a3dcb784bb5176f41d22815a6",
+      "bytes": 3072,
+      "vendorMatches": [
+        "vendor-nsis-resources/plugins/x86-unicode/WinShell.dll"
+      ],
+      "originalAuthorDistributionMatches": [
+        "official-winshell/Plugins/x86-unicode/WinShell.dll"
+      ]
+    }
+  ],
+  "allPluginsMatchLockedVendorDownloads": true,
+  "unresolved": [
+    "WinShell.dll original page declares Freeware, without an explicit redistribution grant or source. Replacement pending."
+  ],
+  "origin": [
+    {
+      "name": "electron-builder-nsis",
+      "version": "3.0.4.1",
+      "file": "nsis-3.0.4.1.7z",
+      "url": "https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-3.0.4.1/nsis-3.0.4.1.7z",
+      "sha256": "9877df902530f96357d13a7a31ae2b9df67f48b11ffc9a1700a7c961574ec5fa",
+      "bytes": 1287512
+    },
+    {
+      "name": "electron-builder-nsis-resources",
+      "version": "3.4.1",
+      "file": "nsis-resources-3.4.1.7z",
+      "url": "https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-resources-3.4.1/nsis-resources-3.4.1.7z",
+      "sha256": "593a9a92ef958321293ac6a2ee61e64bf1bd543142a5bd6b3d310709cc924103",
+      "bytes": 730800
+    }
+  ]
+}

@@ -12,6 +12,7 @@ import { outputGeometrySchema } from '../core/output-geometry.js';
 import { modelInputSchema,type ModelInput } from '../core/model-input.js';
 import { promptConfigSchema } from '../core/prompt-config.js';
 import { maskDraftSchema, maskEditSchema } from '../core/mask.js';
+import { moduleSettingsSchema } from '../core/module-settings.js';
 import {atomicJson} from './atomic-json.js';
 import {OutputRecords,type OutputRecord} from './output-records.js';
 import {optionalRemovedResults} from '../core/project-asset-references.js';
@@ -38,6 +39,8 @@ const projectSchema = z.object({
   schema_version: z.union([z.literal(2),z.literal(3)]), project_id: idSchema, name: z.string().min(1).max(100), created_at: z.string(), updated_at: z.string(), recipe: recipeSchema,
   assets: z.array(assetSchema).max(5000),
   jobs: z.array(z.object({
+    hidden_from_results:z.boolean().optional(),
+    module_settings_snapshot:moduleSettingsSchema.optional(),
     mask_edit:maskEditSchema.optional(),
     task_id: idSchema, status: z.enum(['queued','preparing','running','post_processing','succeeded','failed','cancelled']),
     stage: z.string(), progress: z.number().min(0).max(100), created_at: z.string(), finished_at: z.string().optional(), error: z.string().optional(),

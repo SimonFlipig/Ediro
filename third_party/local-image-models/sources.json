@@ -1,0 +1,22 @@
+[
+  {
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "source": "https://raw.githubusercontent.com/DepthAnything/Depth-Anything-V2/a561b849ebae10a6f5ef49e26c83cbbcd36c71bf/LICENSE",
+    "file": "local-image-models/depth-anything-v2-LICENSE"
+  },
+  {
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "source": "https://raw.githubusercontent.com/ChaoningZhang/MobileSAM/f706ad9c4eb7f219c00d9050e46328518ffb65d2/LICENSE",
+    "file": "local-image-models/mobilesam-LICENSE"
+  },
+  {
+    "sha256": "ab5d1207032c8c4d2c52efe094952fc4cc060e5b4e6a6f05fa26eeb5e56c0c3b",
+    "source": "https://huggingface.co/onnx-community/depth-anything-v2-small-ONNX/raw/c3b67641fd837b2368757101311e5d21e511441e/README.md",
+    "file": "local-image-models/depth-onnx-MODEL_CARD.md"
+  },
+  {
+    "sha256": "9f65cf87488ad1a3c8b191ac9fd5a8ce04b999810bfc7d1a2625750edb969c56",
+    "source": "https://huggingface.co/Acly/MobileSAM/raw/0d3b403339b4674a82493d5e97964dd78089ddc8/README.md",
+    "file": "local-image-models/mobilesam-onnx-MODEL_CARD.md"
+  }
+]

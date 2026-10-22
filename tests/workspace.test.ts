@@ -96,6 +96,58 @@ test('重开后按结果切换参数和模块，继续生成使用所选版本�
   assert.deepEqual(w.project!.jobs.slice(0,2),history);
 });
 
+test('无产图失败任务重开后可恢复完整配方，拒绝串工程且不会重试或改写历史',async()=>{
+  let calls=0;
+  const {workspace:w,directory}=await fixture(1,{execute:async()=>{calls++;throw new Error('受控生成失败');}});
+  const recipe=structuredClone(w.project!.recipe),composition=recipe.modules.find(m=>m.reference_type==='composition')!;
+  composition.reference_settings={max_edge:512,preprocess:'blur',blur_strength:'strong'};
+  recipe.core_parameters.aspect_ratio='16:9';
+  await w.saveRecipe(recipe);await w.serial(()=>w.enqueue(false));await settle(w);
+  const task=structuredClone(w.project!.jobs[0]);assert.equal(task.status,'failed');assert.deepEqual(task.output_asset_ids,[]);
+  const current=structuredClone(w.project!.recipe);current.modules.reverse();current.modules[0].user_instruction='失败后继续编辑的新内容';current.core_parameters.aspect_ratio='1:1';
+  await w.saveRecipe(current);await w.open(new ProjectRepository(directory));
+  const projectId=w.project!.project_id,history=structuredClone(w.project!.jobs),before=structuredClone(w.project!.recipe);
+  await assert.rejects(()=>w.restoreTaskRecipe('project_other',task.task_id),/工作记录已切换/);
+  await assert.rejects(()=>w.restoreTaskRecipe(projectId,'task_unknown'),/没有可恢复/);
+  assert.deepEqual(w.project!.recipe,before);
+  const save=w.repository!.save;
+  w.repository!.save=async()=>{throw new Error('disk failure');};
+  try{await assert.rejects(()=>w.restoreTaskRecipe(projectId,task.task_id),/disk failure/);}
+  finally{w.repository!.save=save;}
+  assert.deepEqual(w.project!.recipe,before);
+  await w.restoreTaskRecipe(projectId,task.task_id);
+  assert.deepEqual(w.project!.recipe,w.registry.resolveRecipe(task.recipe_snapshot));
+  assert.deepEqual((await w.repository!.load()).recipe,w.project!.recipe);
+  assert.deepEqual(w.project!.jobs,history);assert.equal(calls,1);await w.shutdown();
+});
+
+test('执行中和排队任务可恢复配方但不启动新调用，取消任务重开仍能恢复',async()=>{
+  let calls=0,entered!:()=>void;const started=new Promise<void>(resolve=>{entered=resolve;});
+  const {workspace:w,directory}=await fixture(1,{execute:async(_context,signal,progress)=>{
+    calls++;await progress('受控执行中',50);entered();await new Promise<void>((_resolve,reject)=>{
+      if(signal.aborted)reject(new Error('已取消'));
+      else signal.addEventListener('abort',()=>reject(new Error('已取消')),{once:true});
+    });return {images:[]};
+  }});
+  await w.serial(()=>w.enqueue(false));await started;
+  const running=structuredClone(w.project!.jobs[0]);assert.equal(running.status,'running');
+  const changed=structuredClone(w.project!.recipe);changed.modules.at(-1)!.user_instruction='排队任务的另一份输入';changed.core_parameters.aspect_ratio='16:9';
+  await w.saveRecipe(changed);await w.serial(()=>w.enqueue(false));
+  const queued=structuredClone(w.project!.jobs[1]);assert.equal(queued.status,'queued');
+  const history=structuredClone(w.project!.jobs),projectId=w.project!.project_id;
+  for(const job of [running,queued]){
+    await w.serial(()=>w.restoreTaskRecipe(projectId,job.task_id));
+    assert.deepEqual(w.project!.recipe,w.registry.resolveRecipe(job.recipe_snapshot));
+    assert.deepEqual(w.project!.jobs,history);assert.equal(calls,1);
+  }
+  await w.serial(()=>w.cancel(queued.task_id));await w.serial(()=>w.cancel(running.task_id));await settle(w);
+  await w.open(new ProjectRepository(directory));
+  const cancelled=structuredClone(w.project!.jobs);assert.ok(cancelled.every(job=>job.status==='cancelled'));
+  await w.restoreTaskRecipe(projectId,running.task_id);
+  assert.deepEqual(w.project!.recipe,w.registry.resolveRecipe(running.recipe_snapshot));
+  assert.deepEqual(w.project!.jobs,cancelled);assert.equal(calls,1);await w.shutdown();
+});
+
 test('移除备选素材只隐藏入口，模块引用、历史身份及源文件不变；重新导入可显示',async()=>{
   const {workspace,directory}=await fixture();const source=path.join(directory,'source.png');
   const bytes=await sharp({create:{width:12,height:12,channels:3,background:'#334455'}}).png().toBuffer();await writeFile(source,bytes);

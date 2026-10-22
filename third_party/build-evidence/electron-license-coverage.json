@@ -1,0 +1,830 @@
+{
+  "schemaVersion": 1,
+  "electronVersion": "44.4.1",
+  "target": "win32-x64",
+  "licenseFile": "node_modules/electron/dist/LICENSES.chromium.html",
+  "licenseFileSha256": "7b328b8c7463ac9bfc7dc648c751533517c8441a0b5b21047d6c0b2620e60d70",
+  "totalCreditEntries": 780,
+  "lgplMplMarkerEntries": 56,
+  "additionalMarkerEntries": 6,
+  "interpretation": "Credits are a cross-platform notice inventory, not a Windows binary SBOM. Source coverage is conservative; inclusion does not claim that a component is linked. Every scan match has either source material or a specific exclusion/alternative-license rationale.",
+  "entries": [
+    {
+      "name": "Android NDK",
+      "homepage": "http://developer.android.com/ndk/index.html",
+      "creditsBlockSha256": "92060e5181509d5ffb7dc4e168672fccf907809b39052b709943cb807d764ef9",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android cross-compilation toolchain; Electron DEPS sets checkout_android=false and checkout_android_native_support=false for this Windows distribution.",
+      "evidence": [
+        "electron-upstream/electron__DEPS"
+      ]
+    },
+    {
+      "name": "AXE-CORE Accessibility Audit",
+      "homepage": "https://github.com/dequelabs/axe-core/",
+      "creditsBlockSha256": "da0a962c472092ff6f8acb99de7615e46aabecb36271e882364df7ceec051e47",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar",
+        "axe-core-281653df3794.tar.gz"
+      ],
+      "sourcePaths": [
+        "third_party/axe-core"
+      ],
+      "note": "MPL-2.0. The Chromium bundle and its build wrapper are retained; the exact upstream commit adds the preferred JavaScript source that is not present in axe.min.js.",
+      "evidence": []
+    },
+    {
+      "name": "Braille Translation Library",
+      "homepage": "https://github.com/liblouis/liblouis",
+      "creditsBlockSha256": "df0f9c72f2a5c51a80fe8f79f5a1b1a4b0d1cfc5792deb73751198594f1592b3",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "extra-other-platform-source",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar",
+        "liblouis-9700847afb92.tar.gz"
+      ],
+      "sourcePaths": [
+        "third_party/liblouis"
+      ],
+      "note": "LGPL-2.1-or-later. ChromeOS ChromeVox target; Electron Windows does not ship ChromeVox. Exact source is additionally retained, without claiming this library is a Windows runtime constituent.",
+      "evidence": [
+        "third_party/build-evidence/electron-upstream/third_party__liblouis__BUILD.gn",
+        "chromium-152.0.7977.78-DEPS: checkout_linux condition for liblouis"
+      ]
+    },
+    {
+      "name": "Checker Qual",
+      "homepage": "https://repo.maven.apache.org/maven2/org/checkerframework/checker-qual/4.2.1/checker-qual-4.2.1.jar",
+      "creditsBlockSha256": "9c078054d5a91727806f68611291f2be6d51e6fee54c8c83c78ee301aca79786",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Java checker annotation JAR used by the Android build. This Windows Electron package does not contain or execute Java/Android JARs; checkout_android=false.",
+      "evidence": [
+        "electron-upstream/electron__DEPS"
+      ]
+    },
+    {
+      "name": "common",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/mlkit/common/18.11.0/common-18.11.0.aar",
+      "creditsBlockSha256": "1773994a2c82defa57d85d2f83da2dc4a0f7ad53970bc73def39c6e8814219d7",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "core-common",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/play/core-common/2.0.4/core-common-2.0.4.aar",
+      "creditsBlockSha256": "b0ec8735dcc91cbf2442988fee094bfd29295f956fcaa7a1a397d6a815bbe743",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "DirectX-Shader-Compiler",
+      "homepage": "https://github.com/microsoft/DirectX-Shader-Compiler",
+      "creditsBlockSha256": "677faf854e856506a2ef8bb26ba8772e4e749dec4c8f89f02204290b568f98dd",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar",
+        "directx-shader-compiler-1f8a14aecd4f.tar.gz",
+        "dawn-ab8827bc57b1.tar.gz"
+      ],
+      "sourcePaths": [
+        "third_party/dawn/third_party/directx-shader-compiler"
+      ],
+      "note": "The upstream tree has mixed third-party notices, including Autoconf/other exceptions; preserve all of them. Actual dxcompiler.dll and dxil.dll are in the verified Windows runtime. Exact Dawn DEPS revision and DXC source, license texts, build files and patches are retained.",
+      "evidence": []
+    },
+    {
+      "name": "Eigen",
+      "homepage": "https://gitlab.com/libeigen/eigen",
+      "creditsBlockSha256": "ef0fdbaf27aef8a11904a36244916411b743e8c824b3a0a65174a70e6664e4ba",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar",
+        "eigen-d53ac33805ba.tar.gz"
+      ],
+      "sourcePaths": [
+        "third_party/eigen3"
+      ],
+      "note": "MPL-2.0; retain Chromium build wrapper and exact header source.",
+      "evidence": []
+    },
+    {
+      "name": "feature-delivery",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/play/feature-delivery/2.1.0/feature-delivery-2.1.0.aar",
+      "creditsBlockSha256": "87404c004653d7aafc2ee7c675d7f8f382a2d2f61d9980de690f4831e24df523",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "ffmpeg",
+      "homepage": "https://git.ffmpeg.org/ffmpeg.git",
+      "creditsBlockSha256": "41f0b24cd7be69b8f74196bff3545a5611764fc96e0f7b67c77664c5bc9a71db",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar",
+        "ffmpeg-2b68d2babae73714846961fb0ee47e3b3d2e39a9.tar.gz"
+      ],
+      "sourcePaths": [
+        "third_party/ffmpeg"
+      ],
+      "note": "LGPL-2.1-or-later source and Chromium win/x64 configuration retained. Electron release.gn sets is_component_ffmpeg=true; its FFmpeg patch is in electron-44.4.1.tar.gz. CONFIG_GPL/NONFREE/VERSION3/GPLV3 are zero in the selected configuration; this is build-source evidence, not a new native rebuild.",
+      "evidence": []
+    },
+    {
+      "name": "genai-common",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/mlkit/genai-common/1.0.0-beta4/genai-common-1.0.0-beta4.aar",
+      "creditsBlockSha256": "6274b3c8b7a8fad59281d0bf571e2530890322afa6bffc69e8efe893ac3ba0ee",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "genai-prompt",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/mlkit/genai-prompt/1.0.0-beta4/genai-prompt-1.0.0-beta4.aar",
+      "creditsBlockSha256": "6a15562c2db842b1d832622330a983768f37fb653116973d47549d5683374acd",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "glibc",
+      "homepage": "https://www.gnu.org/software/libc/",
+      "creditsBlockSha256": "03978c2593eda2309abc4e84377dc21754c827041d291a9d146523d0839731b2",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Linux C runtime/sysroot material. This Windows target does not distribute a glibc ELF runtime; Windows build configuration and PE binaries are the relevant target."
+    },
+    {
+      "name": "googleid",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/libraries/identity/googleid/googleid/1.2.0/googleid-1.2.0.aar",
+      "creditsBlockSha256": "f5b1741b861814f12137dbf47b445834a1ff255fa1f710f70bc47fb39d49a996",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "grpc",
+      "homepage": "https://github.com/grpc/grpc",
+      "creditsBlockSha256": "2d78c9e1635be8dea9e7b262af834355777522fe341b9df30d05f4e246137a78",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "third_party/grpc"
+      ],
+      "note": "Retain mixed Apache/BSD/MPL notices, preferred source, generated files and vendoring patches in the exact Chromium subtree.",
+      "evidence": []
+    },
+    {
+      "name": "gtk",
+      "homepage": "https://github.com/GNOME/gtk",
+      "creditsBlockSha256": "dec6dd873aeb483e3ec0c8299622597da93e5dacced4d1449722fe0937b34ccb",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Linux GTK integration; the Windows target uses Windows UI APIs, not GTK system libraries.",
+      "evidence": [
+        "third_party/build-evidence/electron-upstream/build__config__linux__BUILD.gn"
+      ]
+    },
+    {
+      "name": "hunspell",
+      "homepage": "http://hunspell.sourceforge.net/",
+      "creditsBlockSha256": "7120e50689d088fefcf1dfc362eb7413e3138dcbe27fde5795fd722a5662a3a3",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "third_party/hunspell"
+      ],
+      "note": "MPL/GPL/LGPL multi-license text preserved. The vendored source, Chromium changes and build configuration are retained.",
+      "evidence": []
+    },
+    {
+      "name": "hunspell dictionaries",
+      "homepage": "http://bgoffice.sourceforge.net/",
+      "creditsBlockSha256": "d18fb9825318ea42ec351c580cb5e8c47ec64dad6b45abee673e46df2ca916fb",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar",
+        "hunspell-dictionaries-cccf64a8acc9.tar.gz"
+      ],
+      "sourcePaths": [
+        "third_party/hunspell_dictionaries"
+      ],
+      "note": "Mixed per-dictionary licenses; retain editable dictionaries, conversion/build material and all per-language notices. Do not apply a single permissive license to the collection.",
+      "evidence": []
+    },
+    {
+      "name": "hyphenation-patterns",
+      "homepage": "https://android.googlesource.com/platform/external/hyphenation-patterns/",
+      "creditsBlockSha256": "f9e96c1a3ee5d0c68d9a06ced17d833735354afb3127adb2be68eec3046cde0f",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "third_party/hyphenation-patterns"
+      ],
+      "note": "Mixed BSD/MIT/LGPL/MPL and other pattern-specific terms. Retain editable src patterns, generated hyb data, build-hyb.sh and the full license aggregation.",
+      "evidence": []
+    },
+    {
+      "name": "icu",
+      "homepage": "https://github.com/unicode-org/icu",
+      "creditsBlockSha256": "e840ee5716c6c69042e05cafd433caeb92dc795c355c1134a979afabffc21bbd",
+      "scanGroup": "additional-copyleft-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "third_party/icu"
+      ],
+      "note": "ICU permissive license plus third-party notices and Autoconf GPL exceptions. Preserve the complete source and exceptions; a GPL mention in an Autoconf notice does not change the license of the whole ICU runtime.",
+      "evidence": []
+    },
+    {
+      "name": "ISimpleDOM COM interfaces for accessibility",
+      "homepage": "https://github.com/mozilla/gecko-dev",
+      "creditsBlockSha256": "8ce1396db30a0c8cc0da693480f624db0f86e25310931b9d69dffa2b2c25e526",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "third_party/isimpledom"
+      ],
+      "note": "MPL-1.1/GPL/LGPL alternatives. Preserve the actual IDL source, license and Chromium build rules.",
+      "evidence": []
+    },
+    {
+      "name": "JSZip",
+      "homepage": "https://github.com/Stuk/jszip",
+      "creditsBlockSha256": "a86df1aadaa485a606d95399b9afb0d5f45e405bf8f38c64635893d81d9102c9",
+      "scanGroup": "additional-copyleft-marker",
+      "status": "source-covered-permissive-alternative",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "third_party/catapult/third_party/jszip",
+        "third_party/catapult/tracing/third_party/jszip"
+      ],
+      "note": "Upstream offers MIT or GPL-3.0. Select MIT, preserve its copyright and license and the bundled distribution; the GPL alternative alone does not require treating the containing program as GPL. The exact Catapult copies are also retained in the full Chromium archive.",
+      "evidence": []
+    },
+    {
+      "name": "libbrlapi",
+      "homepage": "https://github.com/brltty/brltty",
+      "creditsBlockSha256": "423ed3863a76aa2335336dd357cc3d0d007047f24aec243a86fa2a0e9103aea3",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "BrlAPI Linux/ChromeOS accessibility integration; not distributed as part of Electron Windows."
+    },
+    {
+      "name": "libsecret",
+      "homepage": "https://git.gnome.org/browse/libsecret/",
+      "creditsBlockSha256": "c2f1cdf9e9608ddf806787fae57c2967f842dbb5f09be9f25c37299f7b9e5590",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Linux Secret Service integration; not the Windows credential-store implementation and not distributed with this Windows runtime."
+    },
+    {
+      "name": "libusbx",
+      "homepage": "https://github.com/libusb/libusb",
+      "creditsBlockSha256": "682ac813752bb1e6b274b8553b3bd556bd15eb11826463faf5807e3075f1d140",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "services/device/usb/BUILD.gn selects libusb only for is_mac; is_win selects native WinUSB sources and winusb.lib. Full Chromium source also retains the libusb fork.",
+      "evidence": [
+        "third_party/build-evidence/electron-upstream/services__device__usb__BUILD.gn",
+        "third_party/build-evidence/electron-upstream/third_party__libusb__README.chromium"
+      ]
+    },
+    {
+      "name": "Mozilla Personal Security Manager",
+      "homepage": "https://dxr.mozilla.org/mozilla1.9.2/source/security/manager/",
+      "creditsBlockSha256": "513e2fbbda69944ece11baac0fad8276599a64daf78cd4a4f0b81756860739e5",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "net/third_party/mozilla_security_manager"
+      ],
+      "note": "MPL-1.1 covered files including the Chromium fork modifications are retained at the exact revision.",
+      "evidence": []
+    },
+    {
+      "name": "Mozilla Windows Cert code",
+      "homepage": "https://searchfox.org/mozilla-central/rev/0fec57c05d3996cc00c55a66f20dd5793a9bfb5d/security/manager/ssl/EnterpriseRoots.cpp",
+      "creditsBlockSha256": "f80f33df5f15c1eaa7b6422316014a636044a322488483bc7186b8731988cdb3",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "net/third_party/mozilla_win"
+      ],
+      "note": "MPL-2.0; cert/win_util.cc and .h preserve the actual modified source and its notices.",
+      "evidence": []
+    },
+    {
+      "name": "Netscape Portable Runtime (NSPR)",
+      "homepage": "https://hg.mozilla.org/projects/nspr",
+      "creditsBlockSha256": "aa807f5e4663ae2b5954dba371a921388e878cec9771eb9f874323f9697f8ced",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "base/third_party/nspr"
+      ],
+      "note": "MPL-2.0; actual Chromium-vendored time parsing code and modifications are retained, rather than an unrelated stock NSPR release.",
+      "evidence": []
+    },
+    {
+      "name": "Node.js",
+      "homepage": "https://github.com/nodejs/node",
+      "creditsBlockSha256": "75a6f33f5bc4ad9d49afe2fb7bf60db494c90a4e6e80f56a3597b46375d09644",
+      "scanGroup": "additional-copyleft-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "node-v24.21.0.tar.xz"
+      ],
+      "sourcePaths": [],
+      "note": "MIT core plus included third-party notices, including ICU/Autoconf exceptions. Official Node source tarball and checksum are retained; Electron Node patches and GN build integration are in the full Electron source.",
+      "evidence": []
+    },
+    {
+      "name": "plasma-wayland-protocols",
+      "homepage": "https://github.com/KDE/plasma-wayland-protocols",
+      "creditsBlockSha256": "726a98dcd5396b2b8e391087d8e9f287899c43b2bc22380f646d5291bfd52d26",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "KDE Wayland protocol definitions for Linux/Ozone; not a protocol backend selected by Electron Windows."
+    },
+    {
+      "name": "play-services-auth",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-auth/21.4.0/play-services-auth-21.4.0.aar",
+      "creditsBlockSha256": "f4e45a8effba54b2fce8a2b9a2f5fd182e0dba15527c5c94d51d0ad9980a6111",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-auth-api-phone",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-auth-api-phone/18.3.1/play-services-auth-api-phone-18.3.1.aar",
+      "creditsBlockSha256": "062c370ea1ee0a12c8cdbd0e2b89cd2e5699938f339ae8173f2631466c1e91be",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-auth-base",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-auth-base/18.3.0/play-services-auth-base-18.3.0.aar",
+      "creditsBlockSha256": "1811caea8a33d6b6637fa553c46211186e3bfe18dff3522e87f3e7ac664453bf",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-auth-blockstore",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-auth-blockstore/16.4.0/play-services-auth-blockstore-16.4.0.aar",
+      "creditsBlockSha256": "4163562a0b93e1eef2df1e8f7e3922746f5d90d8925f6c70b67d23715814fcee",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-base",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-base/18.10.0/play-services-base-18.10.0.aar",
+      "creditsBlockSha256": "766e09ed3863c1bcb1309de6280b0e12dfebc58cf2c68d6205808ed0af90aed1",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-basement",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-basement/18.10.0/play-services-basement-18.10.0.aar",
+      "creditsBlockSha256": "f8f025eb7b6ec10563b0bee51149099f2e8a687e241b3e5bfb05ffb5701acfdc",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-cast",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-cast/22.2.0/play-services-cast-22.2.0.aar",
+      "creditsBlockSha256": "9ba1c53f0f687119ea355aad7355ff148bd14108937937ed87b08894f11c6e49",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-cast-framework",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-cast-framework/22.2.0/play-services-cast-framework-22.2.0.aar",
+      "creditsBlockSha256": "ba6ace3932323c2887eecfaf7f516d3438358809562ce3a33e1850ae3a8c6f32",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-clearcut",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-clearcut/17.0.0/play-services-clearcut-17.0.0.aar",
+      "creditsBlockSha256": "73d504bf3cffafa753ea653d1969fbb54bbe870efd345e0771c7c7422eb3464d",
+      "scanGroup": "additional-copyleft-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-cloud-messaging",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-cloud-messaging/17.4.0/play-services-cloud-messaging-17.4.0.aar",
+      "creditsBlockSha256": "f7c2f09559871c223dd3e492d49627bf3fcafdc86b9d0da387e7f447e3a2d67b",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-fido",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-fido/21.3.0/play-services-fido-21.3.0.aar",
+      "creditsBlockSha256": "4d90ee41cee5e73e892f5a7b7271d1d8bb14f3832dcdf1ebbc364585a73ac450",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-gcm",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-gcm/17.0.0/play-services-gcm-17.0.0.aar",
+      "creditsBlockSha256": "fc6c99a55205426e2b0df749655d7bc0a522e75293d484d2a8b932b859238fef",
+      "scanGroup": "additional-copyleft-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-identity-credentials",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-identity-credentials/16.0.0-alpha12/play-services-identity-credentials-16.0.0-alpha12.aar",
+      "creditsBlockSha256": "216bc56f83f7aebb0da40d8a3b25753497f5f8c5e9a1425adcc4cb29b69c69fc",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-instantapps",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-instantapps/18.2.0/play-services-instantapps-18.2.0.aar",
+      "creditsBlockSha256": "124f2de30ae047fa474ffba46e0a3832952f8f3de0aba1a681210673f1c3ad6e",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-location",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-location/21.4.0/play-services-location-21.4.0.aar",
+      "creditsBlockSha256": "f5ca8f45ad98523b7a1ee6485c12b319a722326f4e7ed8fa8a639d30bc09e417",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-phenotype",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-phenotype/17.0.0/play-services-phenotype-17.0.0.aar",
+      "creditsBlockSha256": "86c3e5be6bb6a060469e96ac3db6a49be7d4997a0e8f0fb40092c7d715c27caa",
+      "scanGroup": "additional-copyleft-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-tasks",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-tasks/18.4.1/play-services-tasks-18.4.1.aar",
+      "creditsBlockSha256": "0768b9ae64a54f547593ea6fa83aafb282201fca64d25c1e74c9f3dd0e903b51",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "play-services-time",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-time/16.0.1/play-services-time-16.0.1.aar",
+      "creditsBlockSha256": "9d6258ea7c3d08bf5d7fc07fba280d6cd38da1bc4208217709b68759996ef627",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "review",
+      "homepage": "https://dl.google.com/dl/android/maven2/com/google/android/play/review/2.0.2/review-2.0.2.aar",
+      "creditsBlockSha256": "2e1903d09317bfd6774d957cecc8ec7c82599c5647fb8f4f78abc5de093dcd40",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Android Maven AAR package; Electron DEPS disables Android/native Android support, and this Windows runtime contains no AAR/DEX/Java payload. Credits aggregate other platform dependencies.",
+      "evidence": [
+        "electron-upstream/electron__DEPS",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "ScreenAI Library",
+      "homepage": "https://source.corp.google.com/piper///depot/google3/chrome/accessibility/machine_intelligence/chrome_screen_ai",
+      "creditsBlockSha256": "d727edb1d1b3a9a578854539524106a75643b1ec91f351ee3b0aaa31cd750210",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-not-distributed",
+      "reason": "The credited proprietary Chrome component is delivered by Chrome Component Updater. Its Chromium BUILD.gn target is testonly; the official Electron Windows runtime contains no ScreenAI library/models. This metadata entry is not a shipped Electron constituent and is not represented as archived source.",
+      "evidence": [
+        "third_party/build-evidence/electron-upstream/third_party__screen-ai__README.chromium",
+        "third_party/build-evidence/electron-upstream/third_party__screen-ai__BUILD.gn",
+        "electron-runtime-origin.json"
+      ]
+    },
+    {
+      "name": "Speech Dispatcher",
+      "homepage": "https://github.com/brailcom/speechd",
+      "creditsBlockSha256": "bfc81baf8945f871ecca465e26fa442b7b333831393365ac04a1f32370428fe9",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Linux speech-dispatcher service integration; Electron Windows uses the Windows speech implementation and does not bundle this service."
+    },
+    {
+      "name": "symphonia",
+      "homepage": "https://crates.io/crates/symphonia",
+      "creditsBlockSha256": "858a079b16decd7cc21964b5b9c7d88c466be33046947af506db48dda6ba62bd",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "third_party/rust/symphonia",
+        "third_party/rust/chromium_crates_io/vendor/symphonia-v0_6"
+      ],
+      "note": "MPL-2.0, v0.6 vendored Rust preferred source. Both actual vendor source and Chromium GN wrapper are retained, with the Cargo manifest/lock and per-crate license.",
+      "evidence": []
+    },
+    {
+      "name": "symphonia-bundle-flac",
+      "homepage": "https://crates.io/crates/symphonia-bundle-flac",
+      "creditsBlockSha256": "1daebedbce5b51d25ca3cc4b008d82845b76496ee2386466fcbb19d93f384e0d",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "third_party/rust/symphonia_bundle_flac",
+        "third_party/rust/chromium_crates_io/vendor/symphonia-bundle-flac-v0_6"
+      ],
+      "note": "MPL-2.0, v0.6 vendored Rust preferred source. Both actual vendor source and Chromium GN wrapper are retained, with the Cargo manifest/lock and per-crate license.",
+      "evidence": []
+    },
+    {
+      "name": "symphonia-bundle-mp3",
+      "homepage": "https://crates.io/crates/symphonia-bundle-mp3",
+      "creditsBlockSha256": "ceb30539eecda5514ddcb068ab33caa71a593aaed0222cc3fac5f756e4186ea5",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "third_party/rust/symphonia_bundle_mp3",
+        "third_party/rust/chromium_crates_io/vendor/symphonia-bundle-mp3-v0_6"
+      ],
+      "note": "MPL-2.0, v0.6 vendored Rust preferred source. Both actual vendor source and Chromium GN wrapper are retained, with the Cargo manifest/lock and per-crate license.",
+      "evidence": []
+    },
+    {
+      "name": "symphonia-codec-pcm",
+      "homepage": "https://crates.io/crates/symphonia-codec-pcm",
+      "creditsBlockSha256": "5d5279cccf3c3a4968282659136c9b04e4d31cb7f77fef0af6322089799a004c",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "third_party/rust/symphonia_codec_pcm",
+        "third_party/rust/chromium_crates_io/vendor/symphonia-codec-pcm-v0_6"
+      ],
+      "note": "MPL-2.0, v0.6 vendored Rust preferred source. Both actual vendor source and Chromium GN wrapper are retained, with the Cargo manifest/lock and per-crate license.",
+      "evidence": []
+    },
+    {
+      "name": "symphonia-codec-vorbis",
+      "homepage": "https://crates.io/crates/symphonia-codec-vorbis",
+      "creditsBlockSha256": "6dcefc57fcf604996cf4db6db5988330f8cb7753c4950e0634fdb0e86b36853c",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "third_party/rust/symphonia_codec_vorbis",
+        "third_party/rust/chromium_crates_io/vendor/symphonia-codec-vorbis-v0_6"
+      ],
+      "note": "MPL-2.0, v0.6 vendored Rust preferred source. Both actual vendor source and Chromium GN wrapper are retained, with the Cargo manifest/lock and per-crate license.",
+      "evidence": []
+    },
+    {
+      "name": "symphonia-common",
+      "homepage": "https://crates.io/crates/symphonia-common",
+      "creditsBlockSha256": "2271b3af0e07d075681932535f358c7f0690a9a192ad7887fe256f227229cc84",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "third_party/rust/symphonia_common",
+        "third_party/rust/chromium_crates_io/vendor/symphonia-common-v0_6"
+      ],
+      "note": "MPL-2.0, v0.6 vendored Rust preferred source. Both actual vendor source and Chromium GN wrapper are retained, with the Cargo manifest/lock and per-crate license.",
+      "evidence": []
+    },
+    {
+      "name": "symphonia-core",
+      "homepage": "https://crates.io/crates/symphonia-core",
+      "creditsBlockSha256": "bc9dafef36024b3af6f41aa2896c79e152f700d95d3633d5255e9426e2ce422b",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "third_party/rust/symphonia_core",
+        "third_party/rust/chromium_crates_io/vendor/symphonia-core-v0_6"
+      ],
+      "note": "MPL-2.0, v0.6 vendored Rust preferred source. Both actual vendor source and Chromium GN wrapper are retained, with the Cargo manifest/lock and per-crate license.",
+      "evidence": []
+    },
+    {
+      "name": "symphonia-metadata",
+      "homepage": "https://crates.io/crates/symphonia-metadata",
+      "creditsBlockSha256": "b2b9424b336d3b0eacc6fd7c771ac0f3ea5eccf34a667e81bce83722d0b7b448",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "third_party/rust/symphonia_metadata",
+        "third_party/rust/chromium_crates_io/vendor/symphonia-metadata-v0_6"
+      ],
+      "note": "MPL-2.0, v0.6 vendored Rust preferred source. Both actual vendor source and Chromium GN wrapper are retained, with the Cargo manifest/lock and per-crate license.",
+      "evidence": []
+    },
+    {
+      "name": "url_parse",
+      "homepage": "https://github.com/mozilla-firefox/firefox.git",
+      "creditsBlockSha256": "f6fbca26fa500c5078b0e184cf9ba052c5a9d51db022d1141f0f158805e36da1",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "url"
+      ],
+      "note": "MPL-1.1/GPL/LGPL alternatives in legacy Mozilla-derived parsing files; retain the whole exact url subtree and all file-level notices.",
+      "evidence": []
+    },
+    {
+      "name": "v4l-utils",
+      "homepage": "http://git.linuxtv.org/v4l-utils.git",
+      "creditsBlockSha256": "040d354835c7a7937712f647a2e5d814b53fc51e83ee60ad4955b07fa9a616dd",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "excluded-other-platform",
+      "reason": "Video4Linux capture backend; GN target is under media/capture/video/linux and is not selected for the Windows capture target.",
+      "evidence": [
+        "third_party/build-evidence/electron-upstream/media__capture__video__linux__BUILD.gn"
+      ]
+    },
+    {
+      "name": "WebKit",
+      "homepage": "https://webkit.org/",
+      "creditsBlockSha256": "f19b33818ce6e2c2a6d60a79a5732065b02d1a4f5c522d086de989cec98cfce0",
+      "scanGroup": "LGPL-or-MPL-marker",
+      "status": "source-covered",
+      "archiveFiles": [
+        "chromium-152.0.7977.78-source-only.tar"
+      ],
+      "sourcePaths": [
+        "third_party/blink"
+      ],
+      "note": "Contains LGPL-2.1-or-later and BSD code. Electron release.gn uses is_component_build=false, so Blink is part of the combined Electron executable. The full Chromium source (including external runtime trees), full Electron source plus patches, Node and NAN are retained for the source/relink route under LGPL-2.1 section 6(a). A Blink-only subset is not treated as sufficient.",
+      "evidence": []
+    }
+  ],
+  "unresolvedEntries": []
+}

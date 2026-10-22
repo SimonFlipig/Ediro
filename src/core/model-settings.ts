@@ -12,9 +12,18 @@ export function snapshotParameters(input:Parameters,model:ModelConfig):Parameter
 export function selectWorkflowModel(recipe:Recipe,model:ModelConfig,previous?:ModelConfig):Recipe {
   const remembered=structuredClone(recipe.model_parameters??{});
   const channels={...recipe.model_channels};
-  if(previous){remembered[modelIdentity(previous)]=structuredClone(recipe.core_parameters);channels[modelIdentity(previous)]=previous.model_config_id;}
-  const parameters=remembered[modelIdentity(model)]??snapshotParameters(model.defaults,model);
+  if(previous){
+    remembered[modelIdentity(previous)]=structuredClone(recipe.core_parameters);channels[modelIdentity(previous)]=previous.model_config_id;
+    if(previous.preset_id)channels[previous.preset_id]=previous.model_config_id;
+  }
+  // Keep an older workflow's own remembered channel when that entry becomes
+  // independent. Never borrow another channel's values just for sharing a preset.
+  const legacyKey=model.independent_defaults&&model.preset_id&&channels[model.preset_id]===model.model_config_id?model.preset_id:undefined;
+  const parameters=remembered[modelIdentity(model)]??(legacyKey?remembered[legacyKey]:undefined)??snapshotParameters(model.defaults,model);
   channels[modelIdentity(model)]=model.model_config_id;
+  // Historical restoration needs the last explicitly selected channel for a
+  // concrete model, even when that channel's parameter values are independent.
+  if(model.preset_id)channels[model.preset_id]=model.model_config_id;
   return {...recipe,model_config_id:model.model_config_id,model_preset_id:model.preset_id,model_channels:channels,model_parameters:remembered,core_parameters:structuredClone(parameters)};
 }
 // Preserve all entry IDs, credentials and conflicting legacy defaults. The UI asks
@@ -33,8 +42,8 @@ export function migrateModelSettings(input:LibraryData):LibraryData {
     m.generation_contract=structuredClone(p.config.generation_contract);
     if(m.purpose==='understanding'&&m.defaults.extensions?.[m.adapter_id])delete m.defaults.extensions[m.adapter_id].response_mode;
   }
-  for(const p of new Set(data.models.map(m=>m.preset_id).filter((x):x is string=>!!x))){
-    const entries=data.models.filter(m=>m.preset_id===p);
+  for(const p of new Set(data.models.filter(m=>!m.independent_defaults).map(m=>m.preset_id).filter((x):x is string=>!!x))){
+    const entries=data.models.filter(m=>!m.independent_defaults&&m.preset_id===p);
     const first=entries.find(m=>Object.values(data.assignments).includes(m.model_config_id))??entries[0];
     data.defaults_by_model![p]=structuredClone(first.defaults);
     const conflict=entries.some(m=>JSON.stringify(m.defaults)!==JSON.stringify(first.defaults));

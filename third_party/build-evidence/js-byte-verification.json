@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 1,
+  "candidate": "0.1.3-2026-10-22T08-59-44-637Z",
+  "scope": "All packaged npm files other than package.json (builder prunes metadata); compares original npm tarball bytes to app.asar bytes.",
+  "packages": [
+    {
+      "name": "@img/colour",
+      "version": "1.1.0",
+      "filesCompared": 3,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "@img/sharp-win32-x64",
+      "version": "0.35.4",
+      "filesCompared": 6,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "adm-zip",
+      "version": "0.6.1",
+      "filesCompared": 17,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "argparse",
+      "version": "2.0.1",
+      "filesCompared": 4,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "builder-util-runtime",
+      "version": "9.7.0",
+      "filesCompared": 15,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "debug",
+      "version": "4.4.3",
+      "filesCompared": 5,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "define-data-property",
+      "version": "1.1.4",
+      "filesCompared": 4,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "define-properties",
+      "version": "1.2.1",
+      "filesCompared": 4,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "detect-libc",
+      "version": "2.1.2",
+      "filesCompared": 5,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "electron-updater",
+      "version": "6.8.9",
+      "filesCompared": 33,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "semver",
+      "version": "7.7.4",
+      "filesCompared": 50,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "es-define-property",
+      "version": "1.0.1",
+      "filesCompared": 4,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "es-errors",
+      "version": "1.3.0",
+      "filesCompared": 9,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "escape-string-regexp",
+      "version": "4.0.0",
+      "filesCompared": 2,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "fs-extra",
+      "version": "10.1.0",
+      "filesCompared": 29,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "global-agent",
+      "version": "4.1.3",
+      "filesCompared": 23,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "globalthis",
+      "version": "1.0.4",
+      "filesCompared": 8,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "gopd",
+      "version": "1.2.0",
+      "filesCompared": 4,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "graceful-fs",
+      "version": "4.2.11",
+      "filesCompared": 5,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "has-property-descriptors",
+      "version": "1.0.2",
+      "filesCompared": 3,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "js-yaml",
+      "version": "4.3.2",
+      "filesCompared": 31,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "jsonfile",
+      "version": "6.2.1",
+      "filesCompared": 3,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "lazy-val",
+      "version": "1.0.5",
+      "filesCompared": 1,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "lodash.escaperegexp",
+      "version": "4.1.2",
+      "filesCompared": 2,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "lodash.isequal",
+      "version": "4.5.0",
+      "filesCompared": 2,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "matcher",
+      "version": "4.0.0",
+      "filesCompared": 2,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "ms",
+      "version": "2.1.3",
+      "filesCompared": 2,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "object-keys",
+      "version": "1.1.1",
+      "filesCompared": 5,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "onnxruntime-common",
+      "version": "1.30.0",
+      "filesCompared": 65,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "onnxruntime-node",
+      "version": "1.30.0",
+      "filesCompared": 21,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "react",
+      "version": "19.3.0",
+      "filesCompared": 25,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "react-dom",
+      "version": "19.3.0",
+      "filesCompared": 41,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "sax",
+      "version": "1.6.1",
+      "filesCompared": 2,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "scheduler",
+      "version": "0.28.0",
+      "filesCompared": 13,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "semver",
+      "version": "7.8.5",
+      "filesCompared": 51,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "serialize-error",
+      "version": "8.1.0",
+      "filesCompared": 2,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "sharp",
+      "version": "0.35.4",
+      "filesCompared": 36,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "tiny-typed-emitter",
+      "version": "2.1.0",
+      "filesCompared": 2,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "type-fest",
+      "version": "0.20.2",
+      "filesCompared": 1,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "universalify",
+      "version": "2.0.1",
+      "filesCompared": 2,
+      "missing": [],
+      "mismatched": []
+    },
+    {
+      "name": "zod",
+      "version": "4.6.5",
+      "filesCompared": 714,
+      "missing": [],
+      "mismatched": []
+    }
+  ],
+  "pass": true
+}

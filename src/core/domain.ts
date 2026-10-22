@@ -4,6 +4,8 @@ import type { OutputGeometry } from './output-geometry.js';
 import type { ModuleInferenceTask } from './module-inference-tasks.js';
 import { promptConfigSchema,modelNameSchema,type PromptConfig } from './prompt-config.js';
 import { generationContractSchema,inputStrategySchema,resolutionSchema,extensionValueSchema,parameterLimitSchema,sizeLimitsSchema,type PlanSummary,type SizeLimits,type ParameterField } from './generation-contract.js';
+import {referenceSettingsSchema} from './module-settings.js';
+import {promptRoleSchema} from './prompt-roles.js';
 
 export const idSchema = z.string().regex(/^[a-zA-Z][a-zA-Z0-9_-]{1,95}$/);
 const text = z.string().max(32000);
@@ -18,6 +20,11 @@ export const moduleSchema = z.object({
   model_name:modelNameSchema.optional(),
   user_instruction: text,
   asset_ids: z.array(idSchema).max(64),
+  reference_settings: referenceSettingsSchema.optional(),
+  reference_mode: z.enum(['image_text','text_only']).optional(),
+  auto_prompt: z.boolean().optional(),
+  prompt_role: promptRoleSchema.optional(),
+  auto_prompt_input_key: z.string().max(128).optional(),
   // Future interactive reference tools own their state, not model adapters.
   tool_state: z.record(z.string(), z.unknown()).optional(),
 });
@@ -132,6 +139,8 @@ export const geminiCompatibilitySchema=z.object({
 });
 export const modelConfigSchema = z.object({
   preset_id:z.string().optional(),
+  family:z.enum(['reasoning','nano','gpt-image']).optional(),
+  independent_defaults:z.boolean().optional(),
   legacy_defaults_pending:z.boolean().optional(),
   model_config_id: idSchema,
   title: z.string().min(1).max(100),
@@ -177,6 +186,8 @@ export interface AdaptedInput {
   adjustments: string[];
 }
 export interface Job {
+  hidden_from_results?: boolean;
+  module_settings_snapshot?: import('./module-settings.js').ModuleSettings;
   mask_edit?: import('./mask.js').MaskEdit;
   execution_plan?:PlanSummary;
   output_geometry?:OutputGeometry;

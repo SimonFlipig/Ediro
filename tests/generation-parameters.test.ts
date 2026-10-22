@@ -8,6 +8,7 @@ import { resolveOutputGeometry } from '../src/core/output-geometry.js';
 import { validateGenerationParameters } from '../src/core/generation-parameters.js';
 import { ImagesGenerator } from '../src/adapters/images-generator.js';
 import { GeminiGenerator } from '../src/adapters/gemini-generator.js';
+import { modelFromPreset } from '../src/protocols/model-catalog.js';
 import type { CloudExecutionContext } from '../src/core/ports.js';
 
 const png=await sharp({create:{width:16,height:16,channels:4,background:'#fff'}}).png().toBuffer();
@@ -47,7 +48,9 @@ test('不支持的参数和格式组合在发送前明确拒绝',()=>{
   const images=seedModels()[3],google=seedModels()[2];
   assert.throws(()=>validateGenerationParameters({...images.defaults,output_format:'jpeg',images_options:{background:'transparent'}},images),/透明背景/);
   assert.throws(()=>validateGenerationParameters({...images.defaults,images_options:{output_compression:80}},images),/压缩率/);
-  assert.throws(()=>validateGenerationParameters({...images.defaults,quality:'max'},images),/质量/);
+  assert.doesNotThrow(()=>validateGenerationParameters({...images.defaults,quality:'max'},images));
+  const legacyImages=modelFromPreset('gpt-image-2','legacy-images','legacy-platform','gpt-image-2');
+  assert.throws(()=>validateGenerationParameters({...legacyImages.defaults,quality:'max'},legacyImages),/质量/);
   assert.throws(()=>validateGenerationParameters({...google.defaults,output_resolution:'4MP'},google),/分辨率/);
   assert.throws(()=>validateGenerationParameters({...images.defaults,gemini_options:{reference_precision:'high'}},images),/Google/);
 });

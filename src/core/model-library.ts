@@ -5,11 +5,12 @@ import type { GenerationContract } from './generation-contract.js';
 
 export const connectionSchema = modelConfigSchema.pick({ endpoint: true, enabled: true, revision: true, credential_ref: true }).extend({ connection_id: idSchema, title: z.string().trim().min(1).max(100),adapter_id:z.string().optional() });
 export const modelEntrySchema = modelConfigSchema.omit({ endpoint: true, credential_ref: true, executable: true }).extend({
+  origin: z.enum(['builtin', 'user']).optional(),
   validation:z.object({test_id:idSchema,model_revision:z.number().int(),connection_revision:z.number().int(),adapter_version:z.number().int(),checked_at:z.string(),operation:z.literal('understand')}).optional(),
   connection_id: idSchema.optional(), purpose: z.enum(['generation', 'understanding']).default('generation'),
   capability_source: z.enum(['documented', 'user', 'tested']).default('documented'),
 });
-export const librarySchema = z.object({ schema_version: z.union([z.literal(1),z.literal(2),z.literal(3)]), defaults_by_model:z.record(z.string(),parametersSchema).optional(), connections: z.array(connectionSchema).max(200), models: z.array(modelEntrySchema).max(1000), assignments: z.object({ generation_default: idSchema, understanding_default: idSchema.optional(), editing_default:idSchema.optional() }) }).superRefine((data, ctx) => {
+export const librarySchema = z.object({ schema_version: z.union([z.literal(1),z.literal(2),z.literal(3)]), defaults_by_model:z.record(z.string(),parametersSchema).optional(), connections: z.array(connectionSchema).max(200), models: z.array(modelEntrySchema).max(1000), assignments: z.object({ generation_default: idSchema.optional(), understanding_default: idSchema.optional(), editing_default:idSchema.optional() }) }).superRefine((data, ctx) => {
   for (const [items, key] of [[data.connections, 'connection_id'], [data.models, 'model_config_id']] as const) {
     if (new Set(items.map(item => (item as unknown as Record<string,string>)[key])).size !== items.length) ctx.addIssue({ code: 'custom', message: '模型库身份重复。' });
   }

@@ -1,0 +1,344 @@
+{
+  "schemaVersion": 1,
+  "packages": [
+    {
+      "name": "builder-util-runtime",
+      "version": "9.7.0",
+      "upstream": "electron-builder-26.15.3-512a57ec.tar.gz",
+      "sourceMapFiles": 14,
+      "comparisons": [
+        {
+          "mapFile": "package/out/blockMapApi.js.map",
+          "source": "src/blockMapApi.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "fa35ac9477c84e9a8eb32655ec41623c018a862d819241e7f4e5ccc5245ff662"
+        },
+        {
+          "mapFile": "package/out/CancellationToken.js.map",
+          "source": "src/CancellationToken.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "5125db205ab31f618a4a3c5158a2d50da56290e619b087ecc1fdd34660ac61d6"
+        },
+        {
+          "mapFile": "package/out/error.js.map",
+          "source": "src/error.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "91374ec93d4d8df6790252ff325b48d1cf3c5900c38964716baedb092595c6a3"
+        },
+        {
+          "mapFile": "package/out/httpExecutor.js.map",
+          "source": "src/httpExecutor.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "f4d392ffbc8e340f0fec269f22f0786c140d5bc8adbf1a4cf3771322961f64ca"
+        },
+        {
+          "mapFile": "package/out/index.js.map",
+          "source": "src/index.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "ca90e0bd324d398829e055f21e9952c101ae597305c78fecb77483ecd4de44e1"
+        },
+        {
+          "mapFile": "package/out/MemoLazy.js.map",
+          "source": "src/MemoLazy.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "5ff8bbd467c391327d3ff442d6daea493ffaa63ee2b9306a2c1bbfffbb0c7b26"
+        },
+        {
+          "mapFile": "package/out/objects.js.map",
+          "source": "src/objects.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "9f38b8a34e9531346477df84b0e080904d59eb4b296964ab23ab129041d3cbc1"
+        },
+        {
+          "mapFile": "package/out/ProgressCallbackTransform.js.map",
+          "source": "src/ProgressCallbackTransform.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "e87aac10c43cd6079ab17894a403d93315cd0841f703d6387b24aca92011214a"
+        },
+        {
+          "mapFile": "package/out/publishOptions.js.map",
+          "source": "src/publishOptions.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "c4fd8556cda5ea8630e5a40da0c4bef77495375f90891f656792f86c256cf8c7"
+        },
+        {
+          "mapFile": "package/out/retry.js.map",
+          "source": "src/retry.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "16016001daa4445c4e4deba3d40a1afd26cf3f389062da73014ff1233f953bff"
+        },
+        {
+          "mapFile": "package/out/rfc2253Parser.js.map",
+          "source": "src/rfc2253Parser.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "595365f992f6d11810a59beed7c8dab27a23ca96a6644c713dfd078f8455faf7"
+        },
+        {
+          "mapFile": "package/out/updateInfo.js.map",
+          "source": "src/updateInfo.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "89b703aadc357274123c65ee8fa86251a0bac445fc64c6225b1a1e99d7071316"
+        },
+        {
+          "mapFile": "package/out/uuid.js.map",
+          "source": "src/uuid.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "c1ab33fa28ad935a56a070a9a8a37317ae890ad412fdd8f56d090d7e0cb3c310"
+        },
+        {
+          "mapFile": "package/out/xml.js.map",
+          "source": "src/xml.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "94aa5d597a5e7029265527770eb4bc32f26922dbf7cd3d62c68a870c33ab4692"
+        }
+      ]
+    },
+    {
+      "name": "electron-updater",
+      "version": "6.8.9",
+      "upstream": "electron-updater-6.8.9-bed3a9c4.tar.gz",
+      "sourceMapFiles": 32,
+      "comparisons": [
+        {
+          "mapFile": "package/out/AppAdapter.js.map",
+          "source": "src/AppAdapter.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "8774d3704822ee1079e63e258fdfb95db524f459f5ad321ede0fa43c4f6a337f"
+        },
+        {
+          "mapFile": "package/out/AppImageUpdater.js.map",
+          "source": "src/AppImageUpdater.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "376c8ac01015562a6b3d216baf58b64cd7605bfecac6b28c20167ad6fd0e4c1d"
+        },
+        {
+          "mapFile": "package/out/AppUpdater.js.map",
+          "source": "src/AppUpdater.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "408282f22257398c93665b4b42b2fd1873a041cb030197a619a2d8d1b5727d95"
+        },
+        {
+          "mapFile": "package/out/BaseUpdater.js.map",
+          "source": "src/BaseUpdater.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "5dde4a9c8369088e426a91f98d03fecb3ca0b3acbd2f962e0952f0cce9cc21ce"
+        },
+        {
+          "mapFile": "package/out/providers/BitbucketProvider.js.map",
+          "source": "src/providers/BitbucketProvider.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "e5fc8ee2b7b5af8d2de1c3b75cb54f594cbed0f34fd75dbd0d61cf6b5d00ba38"
+        },
+        {
+          "mapFile": "package/out/differentialDownloader/DataSplitter.js.map",
+          "source": "src/differentialDownloader/DataSplitter.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "04cec219d3c83a35e1ebee3840d4f3e7916df9fb0d082bc4763c1ec9eda141a6"
+        },
+        {
+          "mapFile": "package/out/DebUpdater.js.map",
+          "source": "src/DebUpdater.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "ab9e70a3078d80753b333946391d8364066a0ed73038c0431823439f0858fe12"
+        },
+        {
+          "mapFile": "package/out/differentialDownloader/DifferentialDownloader.js.map",
+          "source": "src/differentialDownloader/DifferentialDownloader.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "ec2d7f53026602592cf89e1b856812e7f78c4372ca3f138801896aa13704c57c"
+        },
+        {
+          "mapFile": "package/out/DownloadedUpdateHelper.js.map",
+          "source": "src/DownloadedUpdateHelper.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "0f218a278f76da530c4400e86adef70c98fee98ad70b8f4df895db48029f71ea"
+        },
+        {
+          "mapFile": "package/out/differentialDownloader/downloadPlanBuilder.js.map",
+          "source": "src/differentialDownloader/downloadPlanBuilder.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "10c063028e8d6f9cd687e1d359c03dd938db3035b2d8081b5188b9f3701a9534"
+        },
+        {
+          "mapFile": "package/out/ElectronAppAdapter.js.map",
+          "source": "src/ElectronAppAdapter.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "2c48bc65cb9df53d0b26462f44aa32a03e59481fa598c9338a8e1c4341ae6d08"
+        },
+        {
+          "mapFile": "package/out/electronHttpExecutor.js.map",
+          "source": "src/electronHttpExecutor.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "4d3be06f0c7702ceac56ee6b588867b9be6327e5aaa947c960c9e6cdf0c33499"
+        },
+        {
+          "mapFile": "package/out/differentialDownloader/FileWithEmbeddedBlockMapDifferentialDownloader.js.map",
+          "source": "src/differentialDownloader/FileWithEmbeddedBlockMapDifferentialDownloader.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "1edc26cd6e78ed77035772fc647aea06af4526a66d561f773665f40f92d5e823"
+        },
+        {
+          "mapFile": "package/out/differentialDownloader/GenericDifferentialDownloader.js.map",
+          "source": "src/differentialDownloader/GenericDifferentialDownloader.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "ad16067fb8d479f40f89ccbceb1141eab3792a622c3ce227437499999b74ef39"
+        },
+        {
+          "mapFile": "package/out/providers/GenericProvider.js.map",
+          "source": "src/providers/GenericProvider.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "6038e6717ba79088608b02c44775a64ce1c466f99bba09d0c83c53680a19e62a"
+        },
+        {
+          "mapFile": "package/out/providers/GitHubProvider.js.map",
+          "source": "src/providers/GitHubProvider.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "18807b36a900d8c121bfc2573d6d2cce0694e5da1d6bb38a6e8fedc090f56881"
+        },
+        {
+          "mapFile": "package/out/providers/GitLabProvider.js.map",
+          "source": "src/providers/GitLabProvider.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "e7f4375611387b6597a1dcff843df5423401f2948e0faf1cc2cd11ad1b47f66c"
+        },
+        {
+          "mapFile": "package/out/providers/KeygenProvider.js.map",
+          "source": "src/providers/KeygenProvider.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "95ed50590200daf90abaf813a538985a7508c944edb78573ea003b45943ba89b"
+        },
+        {
+          "mapFile": "package/out/LinuxUpdater.js.map",
+          "source": "src/LinuxUpdater.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "7f431b8005ff539de928e84e3a59bdd72d89e39c7dc525689352a63713d2825e"
+        },
+        {
+          "mapFile": "package/out/MacUpdater.js.map",
+          "source": "src/MacUpdater.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "2e3f108c3f9dc28e2fecda0617ab25b54e3e0100e9718f7bc375d60f16283d27"
+        },
+        {
+          "mapFile": "package/out/main.js.map",
+          "source": "src/main.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "99dbca19c6d5d6ff73db1d314dcf386b55bec9cdfce49158731d95e598dd5d2f"
+        },
+        {
+          "mapFile": "package/out/differentialDownloader/multipleRangeDownloader.js.map",
+          "source": "src/differentialDownloader/multipleRangeDownloader.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "2f4f601c010989bc6b70df60197b4de3287e453710aae06bf136715ed6bcbd4b"
+        },
+        {
+          "mapFile": "package/out/NsisUpdater.js.map",
+          "source": "src/NsisUpdater.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "59e276e3c86e1ad180ce60896f89da15f9369914bb28d4f771227a193ee06754"
+        },
+        {
+          "mapFile": "package/out/PacmanUpdater.js.map",
+          "source": "src/PacmanUpdater.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "0de6309fbd921d5586496982366ea0185b0fc1c8a4e7376e0a2bfc5291f9a9f4"
+        },
+        {
+          "mapFile": "package/out/providers/PrivateGitHubProvider.js.map",
+          "source": "src/providers/PrivateGitHubProvider.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "7951c652efe6b656777cf6149ff0d4e8cc80e9a11b170b7bbdf84f144b1a2501"
+        },
+        {
+          "mapFile": "package/out/differentialDownloader/ProgressDifferentialDownloadCallbackTransform.js.map",
+          "source": "src/differentialDownloader/ProgressDifferentialDownloadCallbackTransform.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "05282ab2089950b11230d3dbe8b9d045bf3714c249d163b5ddaed283b55c6cad"
+        },
+        {
+          "mapFile": "package/out/providers/Provider.js.map",
+          "source": "src/providers/Provider.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "7b9e71dc3ea3e645c764bbb3a328bf7f66abe3a1f26eb3d3a7fdeaf4fb8ef3a7"
+        },
+        {
+          "mapFile": "package/out/providerFactory.js.map",
+          "source": "src/providerFactory.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "7320fe9d59f8edc4870e9dbb21a2da3d5ac1c1fa80c23aee655f56e1d23847c9"
+        },
+        {
+          "mapFile": "package/out/RpmUpdater.js.map",
+          "source": "src/RpmUpdater.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "bab0da0f204fa2a308edc983647383b56e5c105b0e4ca8ddc258be2b7ef57bfe"
+        },
+        {
+          "mapFile": "package/out/types.js.map",
+          "source": "src/types.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "ed068f2e9190f65b233e5d208da07b546a4520b728ac92f254480f911fadd254"
+        },
+        {
+          "mapFile": "package/out/util.js.map",
+          "source": "src/util.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "b46ade3f3826d39dcd780f0314be9d4b85b512f22dfc709cd87e0584c9f6f846"
+        },
+        {
+          "mapFile": "package/out/windowsExecutableCodeSignatureVerifier.js.map",
+          "source": "src/windowsExecutableCodeSignatureVerifier.ts",
+          "embeddedPreferredSource": true,
+          "matchesUpstream": true,
+          "sha256": "f5e3300035602476203d105d82ffd6b9372b30560cfcdcc6975d73a9da3aadd3"
+        }
+      ]
+    }
+  ],
+  "pass": true
+}

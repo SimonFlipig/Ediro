@@ -9,387 +9,6 @@
   },
   "archives": [
     {
-      "name": "aom",
-      "version": "3.14.1",
-      "file": "libaom-3.14.1.tar.gz",
-      "url": "https://storage.googleapis.com/aom-releases/libaom-3.14.1.tar.gz",
-      "sha256": "44bf90dbd23e734d50e70a8c41c285193922938bd0d3bc2ee56764d181d55ef5",
-      "kind": "native-source",
-      "recipes": [
-        "build-win64-mxe-8.18.6/build/aom.mk"
-      ],
-      "bytes": 6368868
-    },
-    {
-      "name": "archive",
-      "version": "3.8.9",
-      "file": "libarchive-3.8.9.tar.xz",
-      "url": "https://github.com/libarchive/libarchive/releases/download/v3.8.9/libarchive-3.8.9.tar.xz",
-      "sha256": "888c934f9d95648ecb9163dc8e23ab80a476ecb81a8f1154704a227b5b676dde",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/libarchive.mk"
-      ],
-      "bytes": 6617696
-    },
-    {
-      "name": "cairo",
-      "version": "1.18.4",
-      "file": "cairo-1.18.4.tar.xz",
-      "url": "https://cairographics.org/releases/cairo-1.18.4.tar.xz",
-      "sha256": "445ed8208a6e4823de1226a74ca319d3600e83f6369f99b14265006599c32ccb",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/cairo.mk"
-      ],
-      "bytes": 32578804
-    },
-    {
-      "name": "cgif",
-      "version": "0.5.3",
-      "file": "cgif-0.5.3.tar.gz",
-      "url": "https://github.com/dloebl/cgif/archive/v0.5.3.tar.gz",
-      "sha256": "dcc7731e974ee77db75df26c99aca4d95f11ca2d267d870d42bce1e0d1e1e75f",
-      "kind": "native-source",
-      "recipes": [
-        "build-win64-mxe-8.18.6/build/cgif.mk"
-      ],
-      "bytes": 40021
-    },
-    {
-      "name": "exif",
-      "version": "0.6.26",
-      "file": "libexif-0.6.26.tar.xz",
-      "url": "https://github.com/libexif/libexif/releases/download/v0.6.26/libexif-0.6.26.tar.xz",
-      "sha256": "4a055ed6575e61ca46c3172be3c753cc16c9becd0f99ec71d58dd0e471476c0c",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/libexif.mk"
-      ],
-      "bytes": 1335488
-    },
-    {
-      "name": "expat",
-      "version": "2.8.3",
-      "file": "expat-2.8.3.tar.xz",
-      "url": "https://github.com/libexpat/libexpat/releases/download/R_2_8_3/expat-2.8.3.tar.xz",
-      "sha256": "f6256df90c906773d344da084402b7d3e4f22ed41b1a59c989098a83d3ea0c85",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/expat.mk"
-      ],
-      "bytes": 517264
-    },
-    {
-      "name": "ffi",
-      "version": "3.8.0",
-      "file": "libffi-3.8.0.tar.gz",
-      "url": "https://github.com/libffi/libffi/releases/download/v3.8.0/libffi-3.8.0.tar.gz",
-      "sha256": "7da3e2d9a171eb0a038f592ecad3ff2bb2550f3496d87b3b29ad0cf4430c0db4",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/libffi.mk"
-      ],
-      "bytes": 1581626
-    },
-    {
-      "name": "fontconfig",
-      "version": "2.18.3",
-      "file": "fontconfig-2.18.3.tar.xz",
-      "url": "https://gitlab.freedesktop.org/api/v4/projects/890/packages/generic/fontconfig/2.18.3/fontconfig-2.18.3.tar.xz",
-      "sha256": "4f7b554a38cdf78c033f666c8871f3749e14a094f65a07f630c91ed0b43d35e3",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/fontconfig.mk"
-      ],
-      "bytes": 1172016
-    },
-    {
-      "name": "freetype",
-      "version": "2.14.3",
-      "file": "freetype-2.14.3.tar.xz",
-      "url": "https://downloads.sourceforge.net/project/freetype/freetype2/2.14.3/freetype-2.14.3.tar.xz",
-      "sha256": "36bc4f1cc413335368ee656c42afca65c5a3987e8768cc28cf11ba775e785a5f",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/freetype.mk"
-      ],
-      "bytes": 2670220
-    },
-    {
-      "name": "fribidi",
-      "version": "1.0.16",
-      "file": "fribidi-1.0.16.tar.xz",
-      "url": "https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz",
-      "sha256": "1b1cde5b235d40479e91be2f0e88a309e3214c8ab470ec8a2744d82a5a9ea05c",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/fribidi.mk"
-      ],
-      "bytes": 1098260
-    },
-    {
-      "name": "glib",
-      "version": "2.89.4",
-      "file": "glib-2.89.4.tar.xz",
-      "url": "https://download.gnome.org/sources/glib/2.89/glib-2.89.4.tar.xz",
-      "sha256": "1cdbb799f558832e6f14b8337b5fd599c6918ab144977b55e05e00a5e2e84a2c",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/glib.mk"
-      ],
-      "bytes": 5830980
-    },
-    {
-      "name": "harfbuzz",
-      "version": "14.3.1",
-      "file": "harfbuzz-14.3.1.tar.xz",
-      "url": "https://github.com/harfbuzz/harfbuzz/releases/download/14.3.1/harfbuzz-14.3.1.tar.xz",
-      "sha256": "9dae9538aae2ffdf70cec31f2c27bf68e2aaeeae3112688467697d5faf6194f7",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/harfbuzz.mk"
-      ],
-      "bytes": 19826476
-    },
-    {
-      "name": "heif",
-      "version": "1.23.2",
-      "file": "libheif-1.23.2.tar.gz",
-      "url": "https://github.com/strukturag/libheif/releases/download/v1.23.2/libheif-1.23.2.tar.gz",
-      "sha256": "8bd5d41d19dc84536d118b04774709f244df6104ef66d623dad5fa4650143405",
-      "kind": "native-source",
-      "recipes": [
-        "build-win64-mxe-8.18.6/build/libheif.mk"
-      ],
-      "bytes": 2111195
-    },
-    {
-      "name": "highway",
-      "version": "1.4.0",
-      "file": "highway-1.4.0.tar.gz",
-      "url": "https://github.com/google/highway/releases/download/1.4.0/highway-1.4.0.tar.gz",
-      "sha256": "36f672ab48ddb3c8555e9e89e16fe400cd7d16c6eb455a1a3d0c146a63ababdc",
-      "kind": "native-source",
-      "recipes": [
-        "build-win64-mxe-8.18.6/build/highway.mk"
-      ],
-      "bytes": 3691557
-    },
-    {
-      "name": "imagequant",
-      "version": "2.4.1",
-      "file": "libimagequant-2.4.1.tar.gz",
-      "url": "https://github.com/lovell/libimagequant/archive/v2.4.1.tar.gz",
-      "sha256": "47d2a84b7b1052975c9d50a3d4e3cacbf57b43d84a4c3131210848ead9964dfb",
-      "kind": "native-source",
-      "recipes": [
-        "build-win64-mxe-8.18.6/build/libimagequant.mk"
-      ],
-      "bytes": 45792
-    },
-    {
-      "name": "lcms",
-      "version": "2.19.1",
-      "file": "lcms2-2.19.1.tar.gz",
-      "url": "https://downloads.sourceforge.net/project/lcms/lcms/2.19.1/lcms2-2.19.1.tar.gz",
-      "sha256": "bfc54f7bab59fbc921012014a8032e4cba4abd46db47d46b76416a8c0b2815c8",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/lcms.mk"
-      ],
-      "bytes": 5728743
-    },
-    {
-      "name": "mozjpeg",
-      "version": "0826579",
-      "file": "mozjpeg-0826579.tar.gz",
-      "url": "https://github.com/mozilla/mozjpeg/tarball/0826579/mozjpeg-0826579.tar.gz",
-      "sha256": "375d19302f09dfa267651dcfd3ddb62862ab3a488862b6168ce755bb1a925860",
-      "kind": "native-source",
-      "recipes": [
-        "build-win64-mxe-8.18.6/build/plugins/mozjpeg/mozjpeg.mk"
-      ],
-      "bytes": 2442626
-    },
-    {
-      "name": "pango",
-      "version": "1.58.2",
-      "file": "pango-1.58.2.tar.xz",
-      "url": "https://download.gnome.org/sources/pango/1.58/pango-1.58.2.tar.xz",
-      "sha256": "342385b6ca3b7c73455d7c80a13b7dbe4489e00bc3bd4c5bd6ed4dce421e374a",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/pango.mk"
-      ],
-      "bytes": 1918112
-    },
-    {
-      "name": "pixman",
-      "version": "0.46.4",
-      "file": "pixman-0.46.4.tar.gz",
-      "url": "https://cairographics.org/releases/pixman-0.46.4.tar.gz",
-      "sha256": "d09c44ebc3bd5bee7021c79f922fe8fb2fb57f7320f55e97ff9914d2346a591c",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/pixman.mk"
-      ],
-      "bytes": 827198
-    },
-    {
-      "name": "png",
-      "version": "1.6.58",
-      "file": "libpng-1.6.58.tar.xz",
-      "url": "https://downloads.sourceforge.net/project/libpng/libpng16/1.6.58/libpng-1.6.58.tar.xz",
-      "sha256": "28eb403f51f0f7405249132cecfe82ea5c0ef97f1b32c5a65828814ae0d34775",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/libpng.mk"
-      ],
-      "bytes": 1070096
-    },
-    {
-      "name": "proxy-libintl",
-      "version": "0.5",
-      "file": "proxy-libintl-0.5.tar.gz",
-      "url": "https://github.com/frida/proxy-libintl/archive/0.5.tar.gz",
-      "sha256": "f7a1cbd7579baaf575c66f9d99fb6295e9b0684a28b095967cfda17857595303",
-      "kind": "native-source",
-      "recipes": [
-        "build-win64-mxe-8.18.6/build/plugins/proxy-libintl/proxy-libintl.mk"
-      ],
-      "bytes": 13056
-    },
-    {
-      "name": "rsvg",
-      "version": "2.62.91",
-      "file": "librsvg-2.62.91.tar.xz",
-      "url": "https://download.gnome.org/sources/librsvg/2.62/librsvg-2.62.91.tar.xz",
-      "sha256": "6caeae129d40dd88f8ec49436fd89bfe4ada716a125187a7fa0def8fcaa0b250",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/librsvg.mk"
-      ],
-      "bytes": 6766696
-    },
-    {
-      "name": "tiff",
-      "version": "4.7.2",
-      "file": "tiff-4.7.2.tar.xz",
-      "url": "https://download.osgeo.org/libtiff/tiff-4.7.2.tar.xz",
-      "sha256": "4996f0c4f93094719b1ca5c6279b20e588773ba8a247533e486416fb662ddb88",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/tiff.mk"
-      ],
-      "bytes": 2409652
-    },
-    {
-      "name": "uhdr",
-      "version": "2.0.2",
-      "file": "uhdr-2.0.2.tar.gz",
-      "url": "https://github.com/google/libultrahdr/archive/v2.0.2.tar.gz",
-      "sha256": "aa8d193bb887c348c419780511dd03b374f4e07af8812b6d3f80c8537cf1ef2c",
-      "kind": "native-source",
-      "recipes": [
-        "build-win64-mxe-8.18.6/build/uhdr.mk"
-      ],
-      "bytes": 1518872
-    },
-    {
-      "name": "vips",
-      "version": "8.18.6",
-      "file": "vips-8.18.6.tar.xz",
-      "url": "https://github.com/libvips/libvips/releases/download/v8.18.6/vips-8.18.6.tar.xz",
-      "sha256": "3c41e1d5458081bfa4a5bc54e116c46259c75c6760a18027764555632b9dda3e",
-      "kind": "native-source",
-      "recipes": [
-        "build-win64-mxe-8.18.6/build/vips.mk"
-      ],
-      "bytes": 25431000
-    },
-    {
-      "name": "webp",
-      "version": "1.6.0",
-      "file": "libwebp-1.6.0.tar.gz",
-      "url": "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.6.0.tar.gz",
-      "sha256": "e4ab7009bf0629fd11982d4c2aa83964cf244cffba7347ecd39019a9e38c4564",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/libwebp.mk"
-      ],
-      "bytes": 4296070
-    },
-    {
-      "name": "xml2",
-      "version": "2.15.3",
-      "file": "libxml2-2.15.3.tar.xz",
-      "url": "https://download.gnome.org/sources/libxml2/2.15/libxml2-2.15.3.tar.xz",
-      "sha256": "78262a6e7ac170d6528ebfe2efccdf220191a5af6a6cd61ea4a9a9a5042c7a07",
-      "kind": "native-source",
-      "recipes": [
-        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/libxml2.mk"
-      ],
-      "bytes": 3152452
-    },
-    {
-      "name": "zlib-ng",
-      "version": "2.3.3",
-      "file": "zlib-ng-2.3.3.tar.gz",
-      "url": "https://github.com/zlib-ng/zlib-ng/archive/2.3.3.tar.gz",
-      "sha256": "f9c65aa9c852eb8255b636fd9f07ce1c406f061ec19a2e7d508b318ca0c907d1",
-      "kind": "native-source",
-      "recipes": [
-        "build-win64-mxe-8.18.6/build/plugins/zlib-ng/zlib-ng.mk"
-      ],
-      "bytes": 2447397
-    },
-    {
-      "name": "sharp",
-      "version": "0.35.4",
-      "file": "sharp-0.35.4.tar.gz",
-      "url": "https://github.com/lovell/sharp/archive/refs/tags/v0.35.4.tar.gz",
-      "kind": "wrapper-source",
-      "sha256": "c28497f06919490a5073fd489541203406fbca99c1c0147810cb12c7da30ac05",
-      "bytes": 41787797
-    },
-    {
-      "name": "sharp-libvips",
-      "version": "1.3.3",
-      "file": "sharp-libvips-1.3.3.tar.gz",
-      "url": "https://github.com/lovell/sharp-libvips/archive/refs/tags/v1.3.3.tar.gz",
-      "kind": "build-source",
-      "sha256": "544ebd8e34be4baf751cc26c8691a46eddbb56183ead1b20ca5b737e93482d86",
-      "bytes": 24051
-    },
-    {
-      "name": "electron",
-      "version": "44.4.1",
-      "file": "electron-44.4.1.tar.gz",
-      "url": "https://github.com/electron/electron/archive/refs/tags/v44.4.1.tar.gz",
-      "kind": "runtime-source",
-      "sha256": "17ef01a20540b008a24fa92baecf7218bf95e41dc8e7b8e7e4f1207587e8f977",
-      "bytes": 19768064
-    },
-    {
-      "name": "build-win64-mxe",
-      "version": "8.18.6",
-      "file": "build-win64-mxe-v8.18.6.tar.gz",
-      "url": "https://github.com/libvips/build-win64-mxe/archive/refs/tags/v8.18.6.tar.gz",
-      "kind": "build-source",
-      "sha256": "14267940771c8d285dc1e76929500f16f2dabd569afeb74747fb6663289b39ea",
-      "bytes": 64501
-    },
-    {
-      "name": "mxe",
-      "version": "d973945bb92c7783d5afa41bb2b8d2e1a04eaba3",
-      "file": "mxe-d973945.tar.gz",
-      "url": "https://github.com/kleisauke/mxe/archive/d973945bb92c7783d5afa41bb2b8d2e1a04eaba3.tar.gz",
-      "kind": "build-source",
-      "sha256": "1ac248d1411407b1bbef0a91297c620a1486bdda67cd5913505290d72495338d",
-      "bytes": 2645560
-    },
-    {
       "name": "adler2",
       "version": "2.0.1",
       "file": "adler2-2.0.1.crate",
@@ -543,6 +162,16 @@
       "bytes": 17576
     },
     {
+      "name": "axe-core-preferred-source",
+      "version": "281653df3794f429b71327fe3afa37ca0fadb1c7",
+      "file": "axe-core-281653df3794.tar.gz",
+      "url": "https://github.com/dequelabs/axe-core/archive/281653df3794f429b71327fe3afa37ca0fadb1c7.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "upstream/axe-core",
+      "bytes": 525905,
+      "sha256": "d9b7aa1c13dafaab97ce9a34768a4d43656072a25f34f3f6d945ff4b4f88e7b3"
+    },
+    {
       "name": "bit-set",
       "version": "0.8.0",
       "file": "bit-set-0.8.0.crate",
@@ -624,6 +253,15 @@
       "bytes": 356631
     },
     {
+      "name": "build-win64-mxe",
+      "version": "8.18.6",
+      "file": "build-win64-mxe-v8.18.6.tar.gz",
+      "url": "https://github.com/libvips/build-win64-mxe/archive/refs/tags/v8.18.6.tar.gz",
+      "kind": "build-source",
+      "sha256": "14267940771c8d285dc1e76929500f16f2dabd569afeb74747fb6663289b39ea",
+      "bytes": 64501
+    },
+    {
       "name": "bumpalo",
       "version": "3.20.3",
       "file": "bumpalo-3.20.3.crate",
@@ -676,6 +314,18 @@
       "sha256": "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04",
       "kind": "rust-lock-source",
       "bytes": 75667
+    },
+    {
+      "name": "cairo",
+      "version": "1.18.4",
+      "file": "cairo-1.18.4.tar.xz",
+      "url": "https://cairographics.org/releases/cairo-1.18.4.tar.xz",
+      "sha256": "445ed8208a6e4823de1226a74ca319d3600e83f6369f99b14265006599c32ccb",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/cairo.mk"
+      ],
+      "bytes": 32578804
     },
     {
       "name": "cairo-rs",
@@ -741,6 +391,18 @@
       "bytes": 9360
     },
     {
+      "name": "cgif",
+      "version": "0.5.3",
+      "file": "cgif-0.5.3.tar.gz",
+      "url": "https://github.com/dloebl/cgif/archive/v0.5.3.tar.gz",
+      "sha256": "dcc7731e974ee77db75df26c99aca4d95f11ca2d267d870d42bce1e0d1e1e75f",
+      "kind": "native-source",
+      "recipes": [
+        "build-win64-mxe-8.18.6/build/cgif.mk"
+      ],
+      "bytes": 40021
+    },
+    {
       "name": "chacha20",
       "version": "0.10.1",
       "file": "chacha20-0.10.1.crate",
@@ -748,6 +410,371 @@
       "sha256": "d524456ba66e72eb8b115ff89e01e497f8e6d11d78b70b1aa13c0fbd97540a81",
       "kind": "rust-lock-source",
       "bytes": 38187
+    },
+    {
+      "name": "chromium-base-third_party-nspr",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-base-third_party-nspr.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/base/third_party/nspr.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/base/third_party/nspr",
+      "bytes": 18680,
+      "sha256": "8f04b56476333887e76a62eb01114661fadee6e510292353c79f8ed1c6210936"
+    },
+    {
+      "name": "chromium-build_overrides",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-build_overrides.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/build_overrides.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/build_overrides",
+      "bytes": 8144,
+      "sha256": "b47c0e9c69370823db456d8cff9eb6c9f10ad5ff137b704c40fdebabf957204a"
+    },
+    {
+      "name": "chromium-build",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-build.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/build.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/build",
+      "bytes": 1924277,
+      "sha256": "98c0ef8f688c3734aaa5135de3fa6e12d27190a4519f9861696cad5ce082849e"
+    },
+    {
+      "name": "chromium-net-third_party-mozilla_security_manager",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-net-third_party-mozilla_security_manager.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/net/third_party/mozilla_security_manager.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/net/third_party/mozilla_security_manager",
+      "bytes": 16484,
+      "sha256": "32e70dfec589409eefa226f60b504af137f7562753619e125b77995d8093671f"
+    },
+    {
+      "name": "chromium-net-third_party-mozilla_win",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-net-third_party-mozilla_win.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/net/third_party/mozilla_win.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/net/third_party/mozilla_win",
+      "bytes": 7745,
+      "sha256": "6bd20814f47a9621f432b8369623287e1e0cf9c8706312128e7cea3835e8170a"
+    },
+    {
+      "sha256": "500c308174e7b2eb2eccb4e79dcdcc039743d9e364630092efe43ff203ee6ff1",
+      "url": "https://commondatastorage.googleapis.com/chromium-browser-official/chromium-152.0.7977.78.tar.xz",
+      "bytes": 15779153920,
+      "name": "chromium-windows-source-tree",
+      "version": "152.0.7977.78",
+      "kind": "electron-component-source-derived",
+      "destination": "src",
+      "transform": {
+        "type": "chromium-source-only-v1",
+        "sourceBytes": 5916191748,
+        "sourceSha256": "16bb4164faa455d1e6a43320b3c0e4c895a93138e892a1bbf7e801863dc4bc74"
+      },
+      "file": "chromium-152.0.7977.78-source-only.tar"
+    },
+    {
+      "name": "chromium-third_party-axe-core",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-axe-core.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/axe-core.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/axe-core",
+      "bytes": 226511,
+      "sha256": "9baa89b92525e367f26eb1158811235a293e20f324758e9ead31885f8f7715d2"
+    },
+    {
+      "name": "chromium-third_party-blink-common",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-blink-common.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/blink/common.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/blink/common",
+      "bytes": 320965,
+      "sha256": "697a7973e969e11a331418cb424fbb55ea2f9c32d548081a946b922f518282f2"
+    },
+    {
+      "name": "chromium-third_party-blink-public",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-blink-public.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/blink/public.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/blink/public",
+      "bytes": 1371993,
+      "sha256": "5c3237989448bd9cdb466a10a7ab989317e136ed8948f08667639ab070d81ca6"
+    },
+    {
+      "name": "chromium-third_party-blink-renderer",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-blink-renderer.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/blink/renderer.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/blink/renderer",
+      "bytes": 29768208,
+      "sha256": "84e3bcb4f8184a294b962c3b6829b6ca44bfb32e9174520883c47d3af46eadfe"
+    },
+    {
+      "name": "chromium-third_party-blink-tools",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-blink-tools.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/blink/tools.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/blink/tools",
+      "bytes": 849954,
+      "sha256": "6f7414f650efbdaf85644b280d84129a83ae4350073097ac99642c6fa8093c83"
+    },
+    {
+      "name": "chromium-third_party-eigen3",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-eigen3.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/eigen3.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/eigen3",
+      "bytes": 6488,
+      "sha256": "14769c43843bb7dff8eb74f9b6cd41b41bef1b63f123d71bfc74332b25385cfd"
+    },
+    {
+      "name": "chromium-third_party-grpc",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-grpc.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/grpc.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/grpc",
+      "bytes": 4220026,
+      "sha256": "4faac661b2793f0e5b4905010132a49e5ba7faa29651d3cfd6d9ecf62e3cd078"
+    },
+    {
+      "name": "chromium-third_party-hunspell",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-hunspell.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/hunspell.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/hunspell",
+      "bytes": 1199640,
+      "sha256": "d05cf2ceebce5d22a4d7daf3f192b25173ff577dfab8c502de0b2355bab1f501"
+    },
+    {
+      "name": "chromium-third_party-hyphenation-patterns",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-hyphenation-patterns.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/hyphenation-patterns.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/hyphenation-patterns",
+      "bytes": 2415584,
+      "sha256": "aa54816af792dd41136652e7a6fb905b41634498c46e01e48b3a4f9cec8a4d06"
+    },
+    {
+      "name": "chromium-third_party-isimpledom",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-isimpledom.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/isimpledom.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/isimpledom",
+      "bytes": 6117,
+      "sha256": "1078443e7145234927177e66ba683d59cf2a517b5df43f9c092cfc73673f27f5"
+    },
+    {
+      "name": "chromium-third_party-rust-chromium_crates_io-vendor-symphonia-bundle-flac-v0_6",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-chromium_crates_io-vendor-symphonia-bundle-flac-v0_6.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/chromium_crates_io/vendor/symphonia-bundle-flac-v0_6.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/chromium_crates_io/vendor/symphonia-bundle-flac-v0_6",
+      "bytes": 32033,
+      "sha256": "257ba4c88d82225dd37ebe582ba68f9935649f4364ce49b4f03d461da6947552"
+    },
+    {
+      "name": "chromium-third_party-rust-chromium_crates_io-vendor-symphonia-bundle-mp3-v0_6",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-chromium_crates_io-vendor-symphonia-bundle-mp3-v0_6.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/chromium_crates_io/vendor/symphonia-bundle-mp3-v0_6.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/chromium_crates_io/vendor/symphonia-bundle-mp3-v0_6",
+      "bytes": 69623,
+      "sha256": "be34fa46df434b97e311b48423326dc0ca9d8f693752c764e99cafcd591e0095"
+    },
+    {
+      "name": "chromium-third_party-rust-chromium_crates_io-vendor-symphonia-codec-pcm-v0_6",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-chromium_crates_io-vendor-symphonia-codec-pcm-v0_6.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/chromium_crates_io/vendor/symphonia-codec-pcm-v0_6.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/chromium_crates_io/vendor/symphonia-codec-pcm-v0_6",
+      "bytes": 12602,
+      "sha256": "a5f514e49358e0f67228632b72da4f9a11fe26600d2903f9cf9ab1ec130c1626"
+    },
+    {
+      "name": "chromium-third_party-rust-chromium_crates_io-vendor-symphonia-codec-vorbis-v0_6",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-chromium_crates_io-vendor-symphonia-codec-vorbis-v0_6.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/chromium_crates_io/vendor/symphonia-codec-vorbis-v0_6.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/chromium_crates_io/vendor/symphonia-codec-vorbis-v0_6",
+      "bytes": 32288,
+      "sha256": "1d65c4bd9d3853455df25a6ade08b1ce01b881cc879458cfd5c698a9c2742ae5"
+    },
+    {
+      "name": "chromium-third_party-rust-chromium_crates_io-vendor-symphonia-common-v0_6",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-chromium_crates_io-vendor-symphonia-common-v0_6.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/chromium_crates_io/vendor/symphonia-common-v0_6.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/chromium_crates_io/vendor/symphonia-common-v0_6",
+      "bytes": 20495,
+      "sha256": "b8a6d705dfa4642dd6da28116697a18985241b778f67b37dd5c145edea3e2df6"
+    },
+    {
+      "name": "chromium-third_party-rust-chromium_crates_io-vendor-symphonia-core-v0_6",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-chromium_crates_io-vendor-symphonia-core-v0_6.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/chromium_crates_io/vendor/symphonia-core-v0_6.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/chromium_crates_io/vendor/symphonia-core-v0_6",
+      "bytes": 150926,
+      "sha256": "f86b44cbafe417c47b7c64114a1198cdd0d269c8c6cb1c4e535b3bb9ea1e7bde"
+    },
+    {
+      "name": "chromium-third_party-rust-chromium_crates_io-vendor-symphonia-metadata-v0_6",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-chromium_crates_io-vendor-symphonia-metadata-v0_6.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/chromium_crates_io/vendor/symphonia-metadata-v0_6.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/chromium_crates_io/vendor/symphonia-metadata-v0_6",
+      "bytes": 61498,
+      "sha256": "56b3e3e4e9ecf12701d1bae660b57ed7d4703330aaac4ce5d4842ac3af2cbe69"
+    },
+    {
+      "name": "chromium-third_party-rust-chromium_crates_io-vendor-symphonia-v0_6",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-chromium_crates_io-vendor-symphonia-v0_6.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/chromium_crates_io/vendor/symphonia-v0_6.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/chromium_crates_io/vendor/symphonia-v0_6",
+      "bytes": 17977,
+      "sha256": "eadadd56363cbc9747eb66134dabed46f7a86e8567fcf76cbcf1fdde697918c0"
+    },
+    {
+      "name": "chromium-third_party-rust-symphonia_bundle_flac",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-symphonia_bundle_flac.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/symphonia_bundle_flac.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/symphonia_bundle_flac",
+      "bytes": 1619,
+      "sha256": "7877e306fb75cae69c72428c3d4175e4c57f4026503cedce5904359796fa9877"
+    },
+    {
+      "name": "chromium-third_party-rust-symphonia_bundle_mp3",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-symphonia_bundle_mp3.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/symphonia_bundle_mp3.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/symphonia_bundle_mp3",
+      "bytes": 1648,
+      "sha256": "c0dd9bff0cad6916a226e59f6c2ca64c0ea7ad8672d5ebc7ec48873ce0dbee6b"
+    },
+    {
+      "name": "chromium-third_party-rust-symphonia_codec_pcm",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-symphonia_codec_pcm.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/symphonia_codec_pcm.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/symphonia_codec_pcm",
+      "bytes": 1485,
+      "sha256": "36f08c7bcb490d07f4783fedbb6bc2fb8bd47cbe1a48110e4fc94c07aa7ecc11"
+    },
+    {
+      "name": "chromium-third_party-rust-symphonia_codec_vorbis",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-symphonia_codec_vorbis.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/symphonia_codec_vorbis.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/symphonia_codec_vorbis",
+      "bytes": 1553,
+      "sha256": "354466d8b5e00bad287c5feed13d5bb475b11d6d7718d4209d8251b24cfeac4f"
+    },
+    {
+      "name": "chromium-third_party-rust-symphonia_common",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-symphonia_common.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/symphonia_common.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/symphonia_common",
+      "bytes": 1567,
+      "sha256": "67196ab474b874206fd11d4ab524a298235c1670332698d2bffd1af870daddcb"
+    },
+    {
+      "name": "chromium-third_party-rust-symphonia_core",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-symphonia_core.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/symphonia_core.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/symphonia_core",
+      "bytes": 1886,
+      "sha256": "4c3b65c5672441059f615dc6e6571b99da56346418d1b8e2f14884920fb94a2e"
+    },
+    {
+      "name": "chromium-third_party-rust-symphonia_metadata",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-symphonia_metadata.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/symphonia_metadata.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/symphonia_metadata",
+      "bytes": 1726,
+      "sha256": "cf663e96c5fffbdc11127dd789a8b846c65feece2be26647793c8a3fcb7c1b83"
+    },
+    {
+      "name": "chromium-third_party-rust-symphonia",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-third_party-rust-symphonia.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/third_party/rust/symphonia.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/rust/symphonia",
+      "bytes": 1564,
+      "sha256": "5ea21dcf94d13c01ac1d23940a38d4fb0478dc6f15bb074153ea0e06d083d016"
+    },
+    {
+      "name": "chromium-tools-clang",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-tools-clang.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/tools/clang.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/tools/clang",
+      "bytes": 691971,
+      "sha256": "a8c310555e4a780f282ac0e87c8352f98665e12613ba1529c52d03fe0cec8e5c"
+    },
+    {
+      "name": "chromium-tools-grit",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-tools-grit.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/tools/grit.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/tools/grit",
+      "bytes": 393224,
+      "sha256": "207b7db4bd3d8a7a5341c84651b12399ea4c00df74bd90b1d20087eb6bd29b13"
+    },
+    {
+      "name": "chromium-tools-rust",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-tools-rust.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/tools/rust.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/tools/rust",
+      "bytes": 24934,
+      "sha256": "58a2ed21c7f79b08af6873584f1e20ddb360b281a8a7fddf1b2dfcf41cf8f358"
+    },
+    {
+      "name": "chromium-url",
+      "version": "152.0.7977.78",
+      "file": "chromium-152.0.7977.78-url.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/src/+archive/152.0.7977.78/url.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/url",
+      "bytes": 238989,
+      "sha256": "32e5235098fc3a00460cb7097e642ab1492347e239424c22eb63d4b6ec8a15c4"
     },
     {
       "name": "chrono",
@@ -795,15 +822,6 @@
       "bytes": 28177
     },
     {
-      "name": "clap",
-      "version": "4.6.6",
-      "file": "clap-4.6.6.crate",
-      "url": "https://static.crates.io/crates/clap/clap-4.6.6.crate",
-      "sha256": "473c7e07f409a8d772161724aa8db6a765a2532a70f9667eeb7b49d3d02fbdca",
-      "kind": "rust-lock-source",
-      "bytes": 64815
-    },
-    {
       "name": "clap_builder",
       "version": "4.6.6",
       "file": "clap_builder-4.6.6.crate",
@@ -840,6 +858,15 @@
       "bytes": 13470
     },
     {
+      "name": "clap",
+      "version": "4.6.6",
+      "file": "clap-4.6.6.crate",
+      "url": "https://static.crates.io/crates/clap/clap-4.6.6.crate",
+      "sha256": "473c7e07f409a8d772161724aa8db6a765a2532a70f9667eeb7b49d3d02fbdca",
+      "kind": "rust-lock-source",
+      "bytes": 64815
+    },
+    {
       "name": "color_quant",
       "version": "1.1.0",
       "file": "color_quant-1.1.0.crate",
@@ -856,6 +883,15 @@
       "sha256": "1d07550c9036bf2ae0c684c4297d503f838287c83c53686d05370d0e139ae570",
       "kind": "rust-lock-source",
       "bytes": 8187
+    },
+    {
+      "name": "@img/colour",
+      "version": "1.1.0",
+      "file": "colour-1.1.0-179fa91f.tar.gz",
+      "url": "https://codeload.github.com/lovell/colour/tar.gz/179fa91fbdb8786b661f6bfb2b6de2885d4860f8",
+      "sha256": "5d0d5e7259175e0b63859ca53113357bad8226b1045a56b2b37a7aa911bf670d",
+      "bytes": 18703,
+      "kind": "javascript-upstream-source"
     },
     {
       "name": "const-oid",
@@ -1020,6 +1056,16 @@
       "bytes": 9530
     },
     {
+      "name": "dawn",
+      "version": "ab8827bc57b176eeaa89f71324130c02d4d41145",
+      "file": "dawn-ab8827bc57b1.tar.gz",
+      "url": "https://dawn.googlesource.com/dawn/+archive/ab8827bc57b176eeaa89f71324130c02d4d41145.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/dawn",
+      "bytes": 34028667,
+      "sha256": "05a399d10e85f8eee65be666428b6520353f242f912e4bd5e9f7d3b5f9bd2d93"
+    },
+    {
       "name": "defmt",
       "version": "1.1.1",
       "file": "defmt-1.1.1.crate",
@@ -1101,6 +1147,25 @@
       "bytes": 28955
     },
     {
+      "name": "directx-shader-compiler",
+      "version": "1.8.2502.8",
+      "file": "directx-shader-compiler-1.8.2502.8-b4711839.tar.gz",
+      "url": "https://codeload.github.com/microsoft/DirectXShaderCompiler/tar.gz/b4711839eb9a87da7c3436d9b212e0492359fbbd",
+      "kind": "native-source",
+      "sha256": "63b4cb23bbd13b5cf3abca66881b4835915f613566962a740b0733f78fcc46b3",
+      "bytes": 24462874
+    },
+    {
+      "name": "directx-shader-compiler",
+      "version": "1f8a14aecd4f2f25991fa9f7aad6c320fea91409",
+      "file": "directx-shader-compiler-1f8a14aecd4f.tar.gz",
+      "url": "https://chromium.googlesource.com/external/github.com/microsoft/DirectXShaderCompiler/+archive/1f8a14aecd4f2f25991fa9f7aad6c320fea91409.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/dawn/third_party/directx-shader-compiler/src",
+      "bytes": 25673283,
+      "sha256": "7778a657094601b521e1e6156a0246580e0215a498c33570165824730eb212c1"
+    },
+    {
       "name": "displaydoc",
       "version": "0.2.7",
       "file": "displaydoc-0.2.7.crate",
@@ -1146,6 +1211,16 @@
       "bytes": 7533
     },
     {
+      "name": "eigen",
+      "version": "d53ac33805ba0a23fa139adaf24227fb6707e6fa",
+      "file": "eigen-d53ac33805ba.tar.gz",
+      "url": "https://chromium.googlesource.com/external/gitlab.com/libeigen/eigen/+archive/d53ac33805ba0a23fa139adaf24227fb6707e6fa.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/eigen3/src",
+      "bytes": 3445338,
+      "sha256": "29c219cc2aab0fde5b26d5883a39b6ecc9e794816a151c424929a7b82e67ea99"
+    },
+    {
       "name": "either",
       "version": "1.17.0",
       "file": "either-1.17.0.crate",
@@ -1153,6 +1228,44 @@
       "sha256": "9e5e8f6c15a24b9a3ee5efec809ccd006d3b30e8b3bb63c39af737c7f87daa1d",
       "kind": "rust-lock-source",
       "bytes": 21820
+    },
+    {
+      "name": "electron",
+      "version": "44.4.1",
+      "file": "electron-44.4.1.tar.gz",
+      "url": "https://github.com/electron/electron/archive/refs/tags/v44.4.1.tar.gz",
+      "kind": "runtime-source",
+      "sha256": "17ef01a20540b008a24fa92baecf7218bf95e41dc8e7b8e7e4f1207587e8f977",
+      "bytes": 19768064
+    },
+    {
+      "name": "electron-builder",
+      "version": "26.15.3",
+      "file": "electron-builder-26.15.3-512a57ec.tar.gz",
+      "url": "https://codeload.github.com/electron-userland/electron-builder/tar.gz/512a57ec9bcda593d3e0970bd2b9a33a63beeb57",
+      "sha256": "228b56ec4616f82650d6f20107e209c5d7f0e2585d6148244939acbb1c21c46e",
+      "bytes": 3220715,
+      "kind": "javascript-upstream-source",
+      "commit": "512a57ec9bcda593d3e0970bd2b9a33a63beeb57"
+    },
+    {
+      "name": "electron-updater",
+      "version": "6.8.9",
+      "file": "electron-updater-6.8.9-bed3a9c4.tar.gz",
+      "url": "https://codeload.github.com/electron-userland/electron-builder/tar.gz/bed3a9c421a8a05c49f36a2af5d7ae3598cb1b95",
+      "sha256": "bc1e3908d017c020003d4fe9b616967844f92e99444f0cb0ebf00d7fb4540e83",
+      "bytes": 3209592,
+      "kind": "javascript-upstream-source",
+      "commit": "bed3a9c421a8a05c49f36a2af5d7ae3598cb1b95"
+    },
+    {
+      "name": "elevate",
+      "version": "1.0.0.2894",
+      "file": "elevate-1.0.0.2894-d5cfc93d.tar.gz",
+      "url": "https://codeload.github.com/jpassing/elevate/tar.gz/d5cfc93d1ce06844a39d1a334a7a8081d26b6204",
+      "kind": "installer-source",
+      "sha256": "4fbbbb1cb9aa478a17896919b365beff61758f1d6601abc927dd886930375b17",
+      "bytes": 8132328
     },
     {
       "name": "encoding_rs",
@@ -1182,6 +1295,18 @@
       "bytes": 12002
     },
     {
+      "name": "expat",
+      "version": "2.8.3",
+      "file": "expat-2.8.3.tar.xz",
+      "url": "https://github.com/libexpat/libexpat/releases/download/R_2_8_3/expat-2.8.3.tar.xz",
+      "sha256": "f6256df90c906773d344da084402b7d3e4f22ed41b1a59c989098a83d3ea0c85",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/expat.mk"
+      ],
+      "bytes": 517264
+    },
+    {
       "name": "fallible_collections",
       "version": "0.4.9",
       "file": "fallible_collections-0.4.9.crate",
@@ -1207,6 +1332,20 @@
       "sha256": "1e6853b52649d4ac5c0bd02320cddc5ba956bdb407c4b75a2c6b75bf51500f8c",
       "kind": "rust-lock-source",
       "bytes": 27188
+    },
+    {
+      "name": "chromium-ffmpeg",
+      "version": "2b68d2babae73714846961fb0ee47e3b3d2e39a9",
+      "file": "ffmpeg-2b68d2babae73714846961fb0ee47e3b3d2e39a9.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/third_party/ffmpeg/+archive/2b68d2babae73714846961fb0ee47e3b3d2e39a9.tar.gz",
+      "sha256": "6b009f358fe4e52b6d844cd8ccf008887eacbbebd653498d62106556fb04d704",
+      "bytes": 18819421,
+      "kind": "runtime-component-source",
+      "recipes": [
+        "electron-44.4.1/build/args/release.gn",
+        "electron-44.4.1/patches/ffmpeg/.patches",
+        "chromium/config/Chrome/win/x64/config.h"
+      ]
     },
     {
       "name": "find-msvc-tools",
@@ -1245,6 +1384,18 @@
       "bytes": 11266
     },
     {
+      "name": "fontconfig",
+      "version": "2.18.3",
+      "file": "fontconfig-2.18.3.tar.xz",
+      "url": "https://gitlab.freedesktop.org/api/v4/projects/890/packages/generic/fontconfig/2.18.3/fontconfig-2.18.3.tar.xz",
+      "sha256": "4f7b554a38cdf78c033f666c8871f3749e14a094f65a07f630c91ed0b43d35e3",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/fontconfig.mk"
+      ],
+      "bytes": 1172016
+    },
+    {
       "name": "form_urlencoded",
       "version": "1.2.2",
       "file": "form_urlencoded-1.2.2.crate",
@@ -1252,6 +1403,30 @@
       "sha256": "cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf",
       "kind": "rust-lock-source",
       "bytes": 9347
+    },
+    {
+      "name": "freetype",
+      "version": "2.14.3",
+      "file": "freetype-2.14.3.tar.xz",
+      "url": "https://downloads.sourceforge.net/project/freetype/freetype2/2.14.3/freetype-2.14.3.tar.xz",
+      "sha256": "36bc4f1cc413335368ee656c42afca65c5a3987e8768cc28cf11ba775e785a5f",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/freetype.mk"
+      ],
+      "bytes": 2670220
+    },
+    {
+      "name": "fribidi",
+      "version": "1.0.16",
+      "file": "fribidi-1.0.16.tar.xz",
+      "url": "https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz",
+      "sha256": "1b1cde5b235d40479e91be2f0e88a309e3214c8ab470ec8a2744d82a5a9ea05c",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/fribidi.mk"
+      ],
+      "bytes": 1098260
     },
     {
       "name": "futures-channel",
@@ -1461,6 +1636,18 @@
       "bytes": 302887
     },
     {
+      "name": "glib",
+      "version": "2.89.4",
+      "file": "glib-2.89.4.tar.xz",
+      "url": "https://download.gnome.org/sources/glib/2.89/glib-2.89.4.tar.xz",
+      "sha256": "1cdbb799f558832e6f14b8337b5fd599c6918ab144977b55e05e00a5e2e84a2c",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/glib.mk"
+      ],
+      "bytes": 5830980
+    },
+    {
       "name": "glib-macros",
       "version": "0.22.6",
       "file": "glib-macros-0.22.6.crate",
@@ -1479,6 +1666,16 @@
       "bytes": 66714
     },
     {
+      "name": "global-agent",
+      "version": "4.1.3",
+      "file": "global-agent-4.1.3-e9138f65.tar.gz",
+      "url": "https://codeload.github.com/gajus/global-agent/tar.gz/e9138f654826f9a82e0ac4f3abdb9541ac988286",
+      "sha256": "a4dcf64e8f9065bf8a8e76ddcd6a382044b384baaede3db273057d3b12f16c85",
+      "bytes": 123020,
+      "kind": "javascript-upstream-source",
+      "commit": "e9138f654826f9a82e0ac4f3abdb9541ac988286"
+    },
+    {
       "name": "gobject-sys",
       "version": "0.22.6",
       "file": "gobject-sys-0.22.6.crate",
@@ -1495,6 +1692,18 @@
       "sha256": "6ea2d84b969582b4b1864a92dc5d27cd2b77b622a8d79306834f1be5ba20d84b",
       "kind": "rust-lock-source",
       "bytes": 61040
+    },
+    {
+      "name": "harfbuzz",
+      "version": "14.3.1",
+      "file": "harfbuzz-14.3.1.tar.xz",
+      "url": "https://github.com/harfbuzz/harfbuzz/releases/download/14.3.1/harfbuzz-14.3.1.tar.xz",
+      "sha256": "9dae9538aae2ffdf70cec31f2c27bf68e2aaeeae3112688467697d5faf6194f7",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/harfbuzz.mk"
+      ],
+      "bytes": 19826476
     },
     {
       "name": "hashbrown",
@@ -1522,6 +1731,28 @@
       "sha256": "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea",
       "kind": "rust-lock-source",
       "bytes": 11517
+    },
+    {
+      "name": "highway",
+      "version": "1.4.0",
+      "file": "highway-1.4.0.tar.gz",
+      "url": "https://github.com/google/highway/releases/download/1.4.0/highway-1.4.0.tar.gz",
+      "sha256": "36f672ab48ddb3c8555e9e89e16fe400cd7d16c6eb455a1a3d0c146a63ababdc",
+      "kind": "native-source",
+      "recipes": [
+        "build-win64-mxe-8.18.6/build/highway.mk"
+      ],
+      "bytes": 3691557
+    },
+    {
+      "name": "hunspell-dictionaries",
+      "version": "cccf64a8acc951afe3f47fee023908e55699bc58",
+      "file": "hunspell-dictionaries-cccf64a8acc9.tar.gz",
+      "url": "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+archive/cccf64a8acc951afe3f47fee023908e55699bc58.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/hunspell_dictionaries",
+      "bytes": 69491495,
+      "sha256": "c723e160570a4f776ffd0693073e5cae5094167e2c163f02874df14244bc34f0"
     },
     {
       "name": "hybrid-array",
@@ -1569,15 +1800,6 @@
       "bytes": 78639
     },
     {
-      "name": "icu_normalizer",
-      "version": "2.2.0",
-      "file": "icu_normalizer-2.2.0.crate",
-      "url": "https://static.crates.io/crates/icu_normalizer/icu_normalizer-2.2.0.crate",
-      "sha256": "c56e5ee99d6e3d33bd91c5d85458b6005a22140021cc324cea84dd0e72cff3b4",
-      "kind": "rust-lock-source",
-      "bytes": 78154
-    },
-    {
       "name": "icu_normalizer_data",
       "version": "2.2.0",
       "file": "icu_normalizer_data-2.2.0.crate",
@@ -1587,13 +1809,13 @@
       "bytes": 67134
     },
     {
-      "name": "icu_properties",
+      "name": "icu_normalizer",
       "version": "2.2.0",
-      "file": "icu_properties-2.2.0.crate",
-      "url": "https://static.crates.io/crates/icu_properties/icu_properties-2.2.0.crate",
-      "sha256": "bee3b67d0ea5c2cca5003417989af8996f8604e34fb9ddf96208a033901e70de",
+      "file": "icu_normalizer-2.2.0.crate",
+      "url": "https://static.crates.io/crates/icu_normalizer/icu_normalizer-2.2.0.crate",
+      "sha256": "c56e5ee99d6e3d33bd91c5d85458b6005a22140021cc324cea84dd0e72cff3b4",
       "kind": "rust-lock-source",
-      "bytes": 63950
+      "bytes": 78154
     },
     {
       "name": "icu_properties_data",
@@ -1605,6 +1827,15 @@
       "bytes": 168901
     },
     {
+      "name": "icu_properties",
+      "version": "2.2.0",
+      "file": "icu_properties-2.2.0.crate",
+      "url": "https://static.crates.io/crates/icu_properties/icu_properties-2.2.0.crate",
+      "sha256": "bee3b67d0ea5c2cca5003417989af8996f8604e34fb9ddf96208a033901e70de",
+      "kind": "rust-lock-source",
+      "bytes": 63950
+    },
+    {
       "name": "icu_provider",
       "version": "2.2.0",
       "file": "icu_provider-2.2.0.crate",
@@ -1614,15 +1845,6 @@
       "bytes": 51620
     },
     {
-      "name": "idna",
-      "version": "1.1.0",
-      "file": "idna-1.1.0.crate",
-      "url": "https://static.crates.io/crates/idna/idna-1.1.0.crate",
-      "sha256": "3b0875f23caa03898994f6ddc501886a45c7d3d62d04d2d90788d47be1b1e4de",
-      "kind": "rust-lock-source",
-      "bytes": 148747
-    },
-    {
       "name": "idna_adapter",
       "version": "1.2.2",
       "file": "idna_adapter-1.2.2.crate",
@@ -1630,6 +1852,15 @@
       "sha256": "cb68373c0d6620ef8105e855e7745e18b0d00d3bdb07fb532e434244cdb9a714",
       "kind": "rust-lock-source",
       "bytes": 10444
+    },
+    {
+      "name": "idna",
+      "version": "1.1.0",
+      "file": "idna-1.1.0.crate",
+      "url": "https://static.crates.io/crates/idna/idna-1.1.0.crate",
+      "sha256": "3b0875f23caa03898994f6ddc501886a45c7d3d62d04d2d90788d47be1b1e4de",
+      "kind": "rust-lock-source",
+      "bytes": 148747
     },
     {
       "name": "image",
@@ -1785,6 +2016,52 @@
       "bytes": 14025
     },
     {
+      "name": "lazy-val",
+      "version": "1.0.5",
+      "file": "lazy-val-1.0.5-b69ad411.tar.gz",
+      "url": "https://codeload.github.com/develar/lazy-val/tar.gz/b69ad4119f1b19bdab13c61ee2fcc88d46b89071",
+      "sha256": "74a0570ef04860e20b2068db1087968ea6d4d9f596d68bbe9936960958f832a1",
+      "bytes": 1922,
+      "kind": "javascript-upstream-source",
+      "commit": "b69ad4119f1b19bdab13c61ee2fcc88d46b89071"
+    },
+    {
+      "name": "lcms",
+      "version": "2.19.1",
+      "file": "lcms2-2.19.1.tar.gz",
+      "url": "https://downloads.sourceforge.net/project/lcms/lcms/2.19.1/lcms2-2.19.1.tar.gz",
+      "sha256": "bfc54f7bab59fbc921012014a8032e4cba4abd46db47d46b76416a8c0b2815c8",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/lcms.mk"
+      ],
+      "bytes": 5728743
+    },
+    {
+      "name": "aom",
+      "version": "3.14.1",
+      "file": "libaom-3.14.1.tar.gz",
+      "url": "https://storage.googleapis.com/aom-releases/libaom-3.14.1.tar.gz",
+      "sha256": "44bf90dbd23e734d50e70a8c41c285193922938bd0d3bc2ee56764d181d55ef5",
+      "kind": "native-source",
+      "recipes": [
+        "build-win64-mxe-8.18.6/build/aom.mk"
+      ],
+      "bytes": 6368868
+    },
+    {
+      "name": "archive",
+      "version": "3.8.9",
+      "file": "libarchive-3.8.9.tar.xz",
+      "url": "https://github.com/libarchive/libarchive/releases/download/v3.8.9/libarchive-3.8.9.tar.xz",
+      "sha256": "888c934f9d95648ecb9163dc8e23ab80a476ecb81a8f1154704a227b5b676dde",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/libarchive.mk"
+      ],
+      "bytes": 6617696
+    },
+    {
       "name": "libc",
       "version": "0.2.189",
       "file": "libc-0.2.189.crate",
@@ -1792,6 +2069,30 @@
       "sha256": "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2",
       "kind": "rust-lock-source",
       "bytes": 851502
+    },
+    {
+      "name": "exif",
+      "version": "0.6.26",
+      "file": "libexif-0.6.26.tar.xz",
+      "url": "https://github.com/libexif/libexif/releases/download/v0.6.26/libexif-0.6.26.tar.xz",
+      "sha256": "4a055ed6575e61ca46c3172be3c753cc16c9becd0f99ec71d58dd0e471476c0c",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/libexif.mk"
+      ],
+      "bytes": 1335488
+    },
+    {
+      "name": "ffi",
+      "version": "3.8.0",
+      "file": "libffi-3.8.0.tar.gz",
+      "url": "https://github.com/libffi/libffi/releases/download/v3.8.0/libffi-3.8.0.tar.gz",
+      "sha256": "7da3e2d9a171eb0a038f592ecad3ff2bb2550f3496d87b3b29ad0cf4430c0db4",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/libffi.mk"
+      ],
+      "bytes": 1581626
     },
     {
       "name": "libfuzzer-sys",
@@ -1803,6 +2104,30 @@
       "bytes": 129891
     },
     {
+      "name": "heif",
+      "version": "1.23.2",
+      "file": "libheif-1.23.2.tar.gz",
+      "url": "https://github.com/strukturag/libheif/releases/download/v1.23.2/libheif-1.23.2.tar.gz",
+      "sha256": "8bd5d41d19dc84536d118b04774709f244df6104ef66d623dad5fa4650143405",
+      "kind": "native-source",
+      "recipes": [
+        "build-win64-mxe-8.18.6/build/libheif.mk"
+      ],
+      "bytes": 2111195
+    },
+    {
+      "name": "imagequant",
+      "version": "2.4.1",
+      "file": "libimagequant-2.4.1.tar.gz",
+      "url": "https://github.com/lovell/libimagequant/archive/v2.4.1.tar.gz",
+      "sha256": "47d2a84b7b1052975c9d50a3d4e3cacbf57b43d84a4c3131210848ead9964dfb",
+      "kind": "native-source",
+      "recipes": [
+        "build-win64-mxe-8.18.6/build/libimagequant.mk"
+      ],
+      "bytes": 45792
+    },
+    {
       "name": "libloading",
       "version": "0.8.9",
       "file": "libloading-0.8.9.crate",
@@ -1810,6 +2135,64 @@
       "sha256": "d7c4b02199fee7c5d21a5ae7d8cfa79a6ef5bb2fc834d6e9058e89c825efdc55",
       "kind": "rust-lock-source",
       "bytes": 30222
+    },
+    {
+      "name": "liblouis",
+      "version": "9700847afb92cb35969bdfcbbfbbb74b9c7b3376",
+      "file": "liblouis-9700847afb92.tar.gz",
+      "url": "https://chromium.googlesource.com/external/liblouis-github/+archive/9700847afb92cb35969bdfcbbfbbb74b9c7b3376.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/liblouis/src",
+      "bytes": 15684102,
+      "sha256": "a5faf20e03f02344d9a4dcc866e31712c5f8ab327479780006b1e7a53ffc667e"
+    },
+    {
+      "name": "png",
+      "version": "1.6.58",
+      "file": "libpng-1.6.58.tar.xz",
+      "url": "https://downloads.sourceforge.net/project/libpng/libpng16/1.6.58/libpng-1.6.58.tar.xz",
+      "sha256": "28eb403f51f0f7405249132cecfe82ea5c0ef97f1b32c5a65828814ae0d34775",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/libpng.mk"
+      ],
+      "bytes": 1070096
+    },
+    {
+      "name": "rsvg",
+      "version": "2.62.91",
+      "file": "librsvg-2.62.91.tar.xz",
+      "url": "https://download.gnome.org/sources/librsvg/2.62/librsvg-2.62.91.tar.xz",
+      "sha256": "6caeae129d40dd88f8ec49436fd89bfe4ada716a125187a7fa0def8fcaa0b250",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/librsvg.mk"
+      ],
+      "bytes": 6766696
+    },
+    {
+      "name": "webp",
+      "version": "1.6.0",
+      "file": "libwebp-1.6.0.tar.gz",
+      "url": "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.6.0.tar.gz",
+      "sha256": "e4ab7009bf0629fd11982d4c2aa83964cf244cffba7347ecd39019a9e38c4564",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/libwebp.mk"
+      ],
+      "bytes": 4296070
+    },
+    {
+      "name": "xml2",
+      "version": "2.15.3",
+      "file": "libxml2-2.15.3.tar.xz",
+      "url": "https://download.gnome.org/sources/libxml2/2.15/libxml2-2.15.3.tar.xz",
+      "sha256": "78262a6e7ac170d6528ebfe2efccdf220191a5af6a6cd61ea4a9a9a5042c7a07",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/libxml2.mk"
+      ],
+      "bytes": 3152452
     },
     {
       "name": "linux-raw-sys",
@@ -1866,6 +2249,15 @@
       "bytes": 245024
     },
     {
+      "name": "lzma-sdk",
+      "version": "19.00",
+      "file": "lzma1900.7z",
+      "url": "https://www.7-zip.org/a/lzma1900.7z",
+      "kind": "installer-source",
+      "sha256": "00f569e624b3d9ed89cf8d40136662c4c5207eaceb92a70b1044c77f84234bad",
+      "bytes": 1082692
+    },
+    {
       "name": "malloc_buf",
       "version": "0.0.6",
       "file": "malloc_buf-0.0.6.crate",
@@ -1920,6 +2312,26 @@
       "bytes": 99165
     },
     {
+      "name": "microsoft-dxheaders",
+      "version": "62c23d5ec700659453c6fe89d296554b2a5e7edc",
+      "file": "microsoft-dxheaders-62c23d5ec700.tar.gz",
+      "url": "https://chromium.googlesource.com/external/github.com/microsoft/DirectX-Headers/+archive/62c23d5ec700659453c6fe89d296554b2a5e7edc.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/microsoft_dxheaders/src",
+      "bytes": 475582,
+      "sha256": "2105089664e9279ac673bd6591f589d8a4945017056b02af30b8688c365a2959"
+    },
+    {
+      "name": "microsoft-webauthn",
+      "version": "ef82c157125a0490e05f6ea82a7adb1b8e1bad08",
+      "file": "microsoft-webauthn-ef82c157125a.tar.gz",
+      "url": "https://chromium.googlesource.com/external/github.com/microsoft/webauthn/+archive/ef82c157125a0490e05f6ea82a7adb1b8e1bad08.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/microsoft_webauthn/src",
+      "bytes": 20170,
+      "sha256": "eb5eea4d6a0f799d052e584c75ff52bdd0d149e696c55924b0bc654a960bcd76"
+    },
+    {
       "name": "miniz_oxide",
       "version": "0.8.9",
       "file": "miniz_oxide-0.8.9.crate",
@@ -1936,6 +2348,18 @@
       "sha256": "bb85c154ba489f01b25c0d36ae69a87e4a1c73a72631fc6c0eb6dde34a73e44b",
       "kind": "rust-lock-source",
       "bytes": 188252
+    },
+    {
+      "name": "mozjpeg",
+      "version": "0826579",
+      "file": "mozjpeg-0826579.tar.gz",
+      "url": "https://github.com/mozilla/mozjpeg/tarball/0826579/mozjpeg-0826579.tar.gz",
+      "sha256": "375d19302f09dfa267651dcfd3ddb62862ab3a488862b6168ce755bb1a925860",
+      "kind": "native-source",
+      "recipes": [
+        "build-win64-mxe-8.18.6/build/plugins/mozjpeg/mozjpeg.mk"
+      ],
+      "bytes": 2442626
     },
     {
       "name": "mp4parse",
@@ -1956,6 +2380,15 @@
       "bytes": 1641
     },
     {
+      "name": "mxe",
+      "version": "d973945bb92c7783d5afa41bb2b8d2e1a04eaba3",
+      "file": "mxe-d973945.tar.gz",
+      "url": "https://github.com/kleisauke/mxe/archive/d973945bb92c7783d5afa41bb2b8d2e1a04eaba3.tar.gz",
+      "kind": "build-source",
+      "sha256": "1ac248d1411407b1bbef0a91297c620a1486bdda67cd5913505290d72495338d",
+      "bytes": 2645560
+    },
+    {
       "name": "nalgebra",
       "version": "0.35.0",
       "file": "nalgebra-0.35.0.crate",
@@ -1974,6 +2407,16 @@
       "bytes": 13091
     },
     {
+      "name": "electron-nan",
+      "version": "675cefebca42410733da8a454c8d9391fcebfbc2",
+      "file": "nan-675cefebca42.tar.gz",
+      "url": "https://github.com/nodejs/nan/archive/675cefebca42410733da8a454c8d9391fcebfbc2.tar.gz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/nan",
+      "bytes": 111323,
+      "sha256": "3983c68f19ed75dd37dc228eab385093ae2533132730f253f0c3d19ff10788e3"
+    },
+    {
       "name": "new_debug_unreachable",
       "version": "1.0.6",
       "file": "new_debug_unreachable-1.0.6.crate",
@@ -1981,6 +2424,16 @@
       "sha256": "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086",
       "kind": "rust-lock-source",
       "bytes": 2582
+    },
+    {
+      "name": "node",
+      "version": "24.21.0",
+      "file": "node-v24.21.0.tar.xz",
+      "url": "https://nodejs.org/dist/v24.21.0/node-v24.21.0.tar.xz",
+      "kind": "electron-component-source",
+      "destination": "src/third_party/electron_node",
+      "bytes": 57357488,
+      "sha256": "a6f54defb6fd7c84f41dba13d61e78e9b4e0961712cf61f29715c05f5ced94fc"
     },
     {
       "name": "nom",
@@ -1999,6 +2452,431 @@
       "sha256": "61807f77802ff30975e01f4f071c8ba10c022052f98b3294119f3e615d13e5be",
       "kind": "rust-lock-source",
       "bytes": 5737
+    },
+    {
+      "name": "adm-zip",
+      "version": "0.6.1",
+      "file": "npm-adm-zip-0.6.1.tgz",
+      "url": "https://registry.npmjs.org/adm-zip/-/adm-zip-0.6.1.tgz",
+      "sha256": "8625031e89912267a5a093fc1e322022d5028b73b45c3274781bc1cf74ee4e82",
+      "bytes": 35489,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "argparse",
+      "version": "2.0.1",
+      "file": "npm-argparse-2.0.1.tgz",
+      "url": "https://registry.npmjs.org/argparse/-/argparse-2.0.1.tgz",
+      "sha256": "27903847fc8215e6fc5a33e81490f7baba66403f8aade33771b988cca097728c",
+      "bytes": 39740,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "builder-util-runtime",
+      "version": "9.7.0",
+      "file": "npm-builder-util-runtime-9.7.0.tgz",
+      "url": "https://registry.npmjs.org/builder-util-runtime/-/builder-util-runtime-9.7.0.tgz",
+      "sha256": "6b1f079463c7ddb2992c10ceea45761ef9be63a8e2290105fea918d869c23498",
+      "bytes": 49937,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "color",
+      "version": "5.0.3",
+      "file": "npm-color-5.0.3.tgz",
+      "url": "https://registry.npmjs.org/color/-/color-5.0.3.tgz",
+      "sha256": "4e763a3e3a83462779c5f7aca532bad119101190cba52dedac753a1a43d31c51",
+      "bytes": 7306,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "color-convert",
+      "version": "3.1.3",
+      "file": "npm-color-convert-3.1.3.tgz",
+      "url": "https://registry.npmjs.org/color-convert/-/color-convert-3.1.3.tgz",
+      "sha256": "0b484d5fc8b8104e1f6a65fa83f87af79cfd9f2e6094559476092ea6bce011c3",
+      "bytes": 13047,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "color-name",
+      "version": "2.1.0",
+      "file": "npm-color-name-2.1.0.tgz",
+      "url": "https://registry.npmjs.org/color-name/-/color-name-2.1.0.tgz",
+      "sha256": "5171f0556db01e150be78372aa6635c364458aadb768be4b4a9f652c0d474044",
+      "bytes": 2851,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "color-string",
+      "version": "2.1.4",
+      "file": "npm-color-string-2.1.4.tgz",
+      "url": "https://registry.npmjs.org/color-string/-/color-string-2.1.4.tgz",
+      "sha256": "8d2ce81ed139eaf39d209aa7f494a205b42e8a9b029ff254ed013503b7ddf925",
+      "bytes": 3638,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "debug",
+      "version": "4.4.3",
+      "file": "npm-debug-4.4.3.tgz",
+      "url": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
+      "sha256": "89c1ac9c946ee8905a875837114528e97eeae35e03be3190584b2216af43e4a7",
+      "bytes": 13449,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "define-data-property",
+      "version": "1.1.4",
+      "file": "npm-define-data-property-1.1.4.tgz",
+      "url": "https://registry.npmjs.org/define-data-property/-/define-data-property-1.1.4.tgz",
+      "sha256": "16304ad73df1364ca8623c28a8969de01cd7189b4f9b05668fadb598f110e4d2",
+      "bytes": 8913,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "define-properties",
+      "version": "1.2.1",
+      "file": "npm-define-properties-1.2.1.tgz",
+      "url": "https://registry.npmjs.org/define-properties/-/define-properties-1.2.1.tgz",
+      "sha256": "5de7e3804fadee9d773cd494b695e6efedfee8837e751fd9b9b77c3e9c6b40f4",
+      "bytes": 5203,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "detect-libc",
+      "version": "2.1.2",
+      "file": "npm-detect-libc-2.1.2.tgz",
+      "url": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz",
+      "sha256": "270dec0fc06cff86481da8af2dd8f18dee6b602790b14ef0e1c2c18d7da39427",
+      "bytes": 7776,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "electron-updater",
+      "version": "6.8.9",
+      "file": "npm-electron-updater-6.8.9.tgz",
+      "url": "https://registry.npmjs.org/electron-updater/-/electron-updater-6.8.9.tgz",
+      "sha256": "0b95d12dde27a0979eb8911f29559daab89580d884904dcf7b4a78b89513288b",
+      "bytes": 136914,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "es-define-property",
+      "version": "1.0.1",
+      "file": "npm-es-define-property-1.0.1.tgz",
+      "url": "https://registry.npmjs.org/es-define-property/-/es-define-property-1.0.1.tgz",
+      "sha256": "5986b8b13121340a8b0d5c7d8f0f961aa80ef3a74515ca9cb7a78d86ed0385f7",
+      "bytes": 4431,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "es-errors",
+      "version": "1.3.0",
+      "file": "npm-es-errors-1.3.0.tgz",
+      "url": "https://registry.npmjs.org/es-errors/-/es-errors-1.3.0.tgz",
+      "sha256": "d14dd1c35b4bd3b8aca3219fd3627eb7f3eb49cf6b4c8a7ca58b91fd7a190993",
+      "bytes": 5338,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "escape-string-regexp",
+      "version": "4.0.0",
+      "file": "npm-escape-string-regexp-4.0.0.tgz",
+      "url": "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz",
+      "sha256": "4b44a14da6987a3c0585c2ff16b3800425732ff35cad710c65e72d7f8e33b11b",
+      "bytes": 2017,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "fs-extra",
+      "version": "10.1.0",
+      "file": "npm-fs-extra-10.1.0.tgz",
+      "url": "https://registry.npmjs.org/fs-extra/-/fs-extra-10.1.0.tgz",
+      "sha256": "50aa67852e866bb06b35c23f83fd07fc21b06c21ac96283956d0480922971fea",
+      "bytes": 16920,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "global-agent",
+      "version": "4.1.3",
+      "file": "npm-global-agent-4.1.3.tgz",
+      "url": "https://registry.npmjs.org/global-agent/-/global-agent-4.1.3.tgz",
+      "sha256": "478ca4fff13292091adabb7f8ef985bf952f809cbf53ee5f9828ebd49b47a0a8",
+      "bytes": 18140,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "globalthis",
+      "version": "1.0.4",
+      "file": "npm-globalthis-1.0.4.tgz",
+      "url": "https://registry.npmjs.org/globalthis/-/globalthis-1.0.4.tgz",
+      "sha256": "de98da383c6f5c2ae39c847cedd2a2e4fd4ba344312c4309d8cee6a3a07076eb",
+      "bytes": 8504,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "gopd",
+      "version": "1.2.0",
+      "file": "npm-gopd-1.2.0.tgz",
+      "url": "https://registry.npmjs.org/gopd/-/gopd-1.2.0.tgz",
+      "sha256": "d536d0de4dd285dc1468fbb7f39334a47ee0eec9c27f9b626a6e71466c9fda82",
+      "bytes": 4584,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "graceful-fs",
+      "version": "4.2.11",
+      "file": "npm-graceful-fs-4.2.11.tgz",
+      "url": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz",
+      "sha256": "3961374aa161e6fed80d6f4b6aaf2fb7eafd2c9e5be34e865b375f0114dd099c",
+      "bytes": 9804,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "has-property-descriptors",
+      "version": "1.0.2",
+      "file": "npm-has-property-descriptors-1.0.2.tgz",
+      "url": "https://registry.npmjs.org/has-property-descriptors/-/has-property-descriptors-1.0.2.tgz",
+      "sha256": "0219bbd8f32e268eeb6efff55a2c6ff2d502098f49c583ff023b2d9d5a8bfa87",
+      "bytes": 4429,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "@img/colour",
+      "version": "1.1.0",
+      "file": "npm-img-colour-1.1.0.tgz",
+      "url": "https://registry.npmjs.org/@img/colour/-/colour-1.1.0.tgz",
+      "sha256": "6c2df3ac33d4b8647191ad8942a579e6004be00c25846677eab85f04702d85b1",
+      "bytes": 17410,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "js-yaml",
+      "version": "4.3.2",
+      "file": "npm-js-yaml-4.3.2.tgz",
+      "url": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.3.2.tgz",
+      "sha256": "c7b241d2224cf9253ff53854aa4cee87da91bd889c4d0fa3a3ffd1041ecee5b1",
+      "bytes": 227545,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "jsonfile",
+      "version": "6.2.1",
+      "file": "npm-jsonfile-6.2.1.tgz",
+      "url": "https://registry.npmjs.org/jsonfile/-/jsonfile-6.2.1.tgz",
+      "sha256": "6c1ae1dbfc6c518b10858d2e37c31d31e1fb39eaf32d77c10f1d84c573540d36",
+      "bytes": 3519,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "lazy-val",
+      "version": "1.0.5",
+      "file": "npm-lazy-val-1.0.5.tgz",
+      "url": "https://registry.npmjs.org/lazy-val/-/lazy-val-1.0.5.tgz",
+      "sha256": "7d8602ad98db3d19fbd5b46fbf3831dd996197a013ef1ff7badc205e41435372",
+      "bytes": 1182,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "lodash.escaperegexp",
+      "version": "4.1.2",
+      "file": "npm-lodash.escaperegexp-4.1.2.tgz",
+      "url": "https://registry.npmjs.org/lodash.escaperegexp/-/lodash.escaperegexp-4.1.2.tgz",
+      "sha256": "17e49a4288031a39d917abaecd2ad41919240806799dbea7f26b72748a8c483a",
+      "bytes": 3265,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "lodash.isequal",
+      "version": "4.5.0",
+      "file": "npm-lodash.isequal-4.5.0.tgz",
+      "url": "https://registry.npmjs.org/lodash.isequal/-/lodash.isequal-4.5.0.tgz",
+      "sha256": "a3b534a55485caad0c28ce56779eb4faea13d3c23a55691eaedca6a0b9834278",
+      "bytes": 12308,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "matcher",
+      "version": "4.0.0",
+      "file": "npm-matcher-4.0.0.tgz",
+      "url": "https://registry.npmjs.org/matcher/-/matcher-4.0.0.tgz",
+      "sha256": "2c318d57c8cb40d219c95c1a5699a85ac7555839332208a559cc3c0157be160e",
+      "bytes": 3483,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "ms",
+      "version": "2.1.3",
+      "file": "npm-ms-2.1.3.tgz",
+      "url": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+      "sha256": "f6616e15e530ed552f9daa2d3ce71963947c6bc7c98c9b64fd3e673fd02622c6",
+      "bytes": 2967,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "object-keys",
+      "version": "1.1.1",
+      "file": "npm-object-keys-1.1.1.tgz",
+      "url": "https://registry.npmjs.org/object-keys/-/object-keys-1.1.1.tgz",
+      "sha256": "9678d9055619767c8a134033709e88a6e0a19600f3d3f2cda40acdfd75e7f212",
+      "bytes": 7677,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "onnxruntime-common",
+      "version": "1.30.0",
+      "file": "npm-onnxruntime-common-1.30.0.tgz",
+      "url": "https://registry.npmjs.org/onnxruntime-common/-/onnxruntime-common-1.30.0.tgz",
+      "sha256": "7906c439e0d3e0f4048caa23b64cdfadc0f455c377f579ce1ab2a4b778f07d5f",
+      "bytes": 66795,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "react",
+      "version": "19.3.0",
+      "file": "npm-react-19.3.0.tgz",
+      "url": "https://registry.npmjs.org/react/-/react-19.3.0.tgz",
+      "sha256": "5a4024110c49476e1538a70fd65b9e59d038fcc280b78eb933c24e10453afbf9",
+      "bytes": 26394,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "react-dom",
+      "version": "19.3.0",
+      "file": "npm-react-dom-19.3.0.tgz",
+      "url": "https://registry.npmjs.org/react-dom/-/react-dom-19.3.0.tgz",
+      "sha256": "dbeffb1e6cdbbbba07f799da4635333d0e20c210a32278dded85441ec4cb6a17",
+      "bytes": 1409226,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "sax",
+      "version": "1.6.1",
+      "file": "npm-sax-1.6.1.tgz",
+      "url": "https://registry.npmjs.org/sax/-/sax-1.6.1.tgz",
+      "sha256": "6e9abf03478608b80894bb8b6421271a0e583504f785f749a700d6bb35be85bd",
+      "bytes": 16800,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "scheduler",
+      "version": "0.28.0",
+      "file": "npm-scheduler-0.28.0.tgz",
+      "url": "https://registry.npmjs.org/scheduler/-/scheduler-0.28.0.tgz",
+      "sha256": "302995d590e3c0a11eeb40d1d0f299c1df1800135d599d85cdd5faeb614f32d6",
+      "bytes": 10011,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "semver",
+      "version": "7.7.4",
+      "file": "npm-semver-7.7.4.tgz",
+      "url": "https://registry.npmjs.org/semver/-/semver-7.7.4.tgz",
+      "sha256": "09267ad08cfe300e6790c9b8dc3db079103b4700cc465a67779b15662fe9418c",
+      "bytes": 28442,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "semver",
+      "version": "7.8.5",
+      "file": "npm-semver-7.8.5.tgz",
+      "url": "https://registry.npmjs.org/semver/-/semver-7.8.5.tgz",
+      "sha256": "d85045d4300d7d57c891336b95df532e73f34c22ffcd222452b6d08b9d127d5d",
+      "bytes": 29399,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "serialize-error",
+      "version": "8.1.0",
+      "file": "npm-serialize-error-8.1.0.tgz",
+      "url": "https://registry.npmjs.org/serialize-error/-/serialize-error-8.1.0.tgz",
+      "sha256": "09092ee9990c5609ef691eca7de26e4b4bde285920ceef40fd806edd5ccc017f",
+      "bytes": 3479,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "sharp",
+      "version": "0.35.4",
+      "file": "npm-sharp-0.35.4.tgz",
+      "url": "https://registry.npmjs.org/sharp/-/sharp-0.35.4.tgz",
+      "sha256": "6ebef10290372c7309d9e22e3ecb9e32ca6a3aa6e07f3d83aa904df8ae4f6a5a",
+      "bytes": 214415,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "tiny-typed-emitter",
+      "version": "2.1.0",
+      "file": "npm-tiny-typed-emitter-2.1.0.tgz",
+      "url": "https://registry.npmjs.org/tiny-typed-emitter/-/tiny-typed-emitter-2.1.0.tgz",
+      "sha256": "3987c8bf8c418a308d1031d0ac7d0539c7ae9d85a1c383eab449cc8507e6ab3a",
+      "bytes": 2378,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "type-fest",
+      "version": "0.20.2",
+      "file": "npm-type-fest-0.20.2.tgz",
+      "url": "https://registry.npmjs.org/type-fest/-/type-fest-0.20.2.tgz",
+      "sha256": "b9d5d4fc05287af1445030152284e7def803976beb4b23ae4dc26824e79465a2",
+      "bytes": 37225,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "universalify",
+      "version": "2.0.1",
+      "file": "npm-universalify-2.0.1.tgz",
+      "url": "https://registry.npmjs.org/universalify/-/universalify-2.0.1.tgz",
+      "sha256": "7d07313bb61836a12f0ba5485e67673334a3ee955e7aefb3c4b3fc5a1b7b7865",
+      "bytes": 2068,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "zod",
+      "version": "4.6.5",
+      "file": "npm-zod-4.6.5.tgz",
+      "url": "https://registry.npmjs.org/zod/-/zod-4.6.5.tgz",
+      "sha256": "a78c0c533de30dc1c4afc259ac43ac06e390cb0da8d2e32eae355301b50b36fc",
+      "bytes": 1052733,
+      "kind": "javascript-package-source"
+    },
+    {
+      "name": "nsis",
+      "version": "3.04",
+      "file": "nsis-3.04-25cf71ac.tar.gz",
+      "url": "https://codeload.github.com/kichik/nsis/tar.gz/25cf71ac318c73016d0706add96f25ef70ccd4f7",
+      "commit": "25cf71ac318c73016d0706add96f25ef70ccd4f7",
+      "kind": "installer-source",
+      "sha256": "9f3caca52677c050a0952d6e41709c028bbd233e0fcf86bf0e3c1cc1f11f2ef4",
+      "bytes": 1772939
+    },
+    {
+      "name": "nsis-stdutils",
+      "version": "1.1.4",
+      "file": "nsis-stdutils-1.1.4-4e111732.tar.gz",
+      "url": "https://codeload.github.com/lordmulder/stdutils/tar.gz/4e1117321001e54dcd2c52f72d3c359d5215e426",
+      "commit": "4e1117321001e54dcd2c52f72d3c359d5215e426",
+      "kind": "installer-source",
+      "sha256": "3687ab4e09005a8a0b93c1a07a36285d93466070e94b8bf6f12781fb53c419e1",
+      "bytes": 222751
+    },
+    {
+      "name": "nsis-uac",
+      "version": "0.2.4c",
+      "file": "nsis-UAC-0.2.4c.zip",
+      "url": "https://nsis.sourceforge.io/mediawiki/images/8/8f/UAC.zip",
+      "kind": "installer-source",
+      "sha256": "20e3192af5598568887c16d88de59a52c2ce4a26e42c5fb8bee8105dcbbd1760",
+      "bytes": 52034
+    },
+    {
+      "name": "nsis7z",
+      "version": "19.00",
+      "file": "Nsis7z_19.00.7z",
+      "url": "https://nsis.sourceforge.io/mediawiki/images/6/69/Nsis7z_19.00.7z",
+      "kind": "installer-source",
+      "sha256": "6f2f3730049926f40442ee0c8b7d3e3dee7ace544d82467ff8059ea3f4201c58",
+      "bytes": 461078
     },
     {
       "name": "num-bigint",
@@ -2064,6 +2942,15 @@
       "bytes": 51631
     },
     {
+      "name": "objc_id",
+      "version": "0.1.1",
+      "file": "objc_id-0.1.1.crate",
+      "url": "https://static.crates.io/crates/objc_id/objc_id-0.1.1.crate",
+      "sha256": "c92d4ddb4bd7b50d730c215ff871754d0da6b2178849f8a2a2ab69712d0c073b",
+      "kind": "rust-lock-source",
+      "bytes": 3258
+    },
+    {
       "name": "objc",
       "version": "0.2.7",
       "file": "objc-0.2.7.crate",
@@ -2082,13 +2969,13 @@
       "bytes": 9063
     },
     {
-      "name": "objc_id",
-      "version": "0.1.1",
-      "file": "objc_id-0.1.1.crate",
-      "url": "https://static.crates.io/crates/objc_id/objc_id-0.1.1.crate",
-      "sha256": "c92d4ddb4bd7b50d730c215ff871754d0da6b2178849f8a2a2ab69712d0c073b",
+      "name": "once_cell_polyfill",
+      "version": "1.70.2",
+      "file": "once_cell_polyfill-1.70.2.crate",
+      "url": "https://static.crates.io/crates/once_cell_polyfill/once_cell_polyfill-1.70.2.crate",
+      "sha256": "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe",
       "kind": "rust-lock-source",
-      "bytes": 3258
+      "bytes": 7448
     },
     {
       "name": "once_cell",
@@ -2100,13 +2987,14 @@
       "bytes": 35010
     },
     {
-      "name": "once_cell_polyfill",
-      "version": "1.70.2",
-      "file": "once_cell_polyfill-1.70.2.crate",
-      "url": "https://static.crates.io/crates/once_cell_polyfill/once_cell_polyfill-1.70.2.crate",
-      "sha256": "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe",
-      "kind": "rust-lock-source",
-      "bytes": 7448
+      "name": "onnxruntime",
+      "version": "1.30.0",
+      "file": "onnxruntime-1.30.0-f2c39fe2.tar.gz",
+      "url": "https://codeload.github.com/microsoft/onnxruntime/tar.gz/f2c39fe2f838cf35ce7da92824f5a5e3ee6e88a7",
+      "sha256": "1b4ec55fa26ee8fe622ea256894dfe9381bdfa99d41489994a1961720f556c48",
+      "bytes": 278646793,
+      "kind": "native-source",
+      "commit": "f2c39fe2f838cf35ce7da92824f5a5e3ee6e88a7"
     },
     {
       "name": "oorandom",
@@ -2136,6 +3024,18 @@
       "bytes": 50089
     },
     {
+      "name": "pango",
+      "version": "1.58.2",
+      "file": "pango-1.58.2.tar.xz",
+      "url": "https://download.gnome.org/sources/pango/1.58/pango-1.58.2.tar.xz",
+      "sha256": "342385b6ca3b7c73455d7c80a13b7dbe4489e00bc3bd4c5bd6ed4dce421e374a",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/pango.mk"
+      ],
+      "bytes": 1918112
+    },
+    {
       "name": "pango-sys",
       "version": "0.22.0",
       "file": "pango-sys-0.22.0.crate",
@@ -2163,15 +3063,6 @@
       "bytes": 7682
     },
     {
-      "name": "parking_lot",
-      "version": "0.12.5",
-      "file": "parking_lot-0.12.5.crate",
-      "url": "https://static.crates.io/crates/parking_lot/parking_lot-0.12.5.crate",
-      "sha256": "93857453250e3077bd71ff98b6a65ea6621a19bb0f559a85248955ac12c45a1a",
-      "kind": "rust-lock-source",
-      "bytes": 46735
-    },
-    {
       "name": "parking_lot_core",
       "version": "0.9.12",
       "file": "parking_lot_core-0.9.12.crate",
@@ -2181,6 +3072,33 @@
       "bytes": 34110
     },
     {
+      "name": "parking_lot",
+      "version": "0.12.5",
+      "file": "parking_lot-0.12.5.crate",
+      "url": "https://static.crates.io/crates/parking_lot/parking_lot-0.12.5.crate",
+      "sha256": "93857453250e3077bd71ff98b6a65ea6621a19bb0f559a85248955ac12c45a1a",
+      "kind": "rust-lock-source",
+      "bytes": 46735
+    },
+    {
+      "name": "pcre2-meson-patch",
+      "version": "10.46-1",
+      "file": "pcre2_10.46-1_patch.zip",
+      "url": "https://wrapdb.mesonbuild.com/v2/pcre2_10.46-1/get_patch",
+      "sha256": "761d16c89b9c13812842916b7ee970650ee7c1810f83bc567351faf7365b66be",
+      "kind": "glib-fallback-source",
+      "bytes": 4003
+    },
+    {
+      "name": "pcre2",
+      "version": "10.46",
+      "file": "pcre2-10.46.tar.bz2",
+      "url": "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.46/pcre2-10.46.tar.bz2",
+      "sha256": "15fbc5aba6beee0b17aecb04602ae39432393aba1ebd8e39b7cabf7db883299f",
+      "kind": "glib-fallback-source",
+      "bytes": 2035354
+    },
+    {
       "name": "percent-encoding",
       "version": "2.3.2",
       "file": "percent-encoding-2.3.2.crate",
@@ -2188,15 +3106,6 @@
       "sha256": "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220",
       "kind": "rust-lock-source",
       "bytes": 11583
-    },
-    {
-      "name": "phf",
-      "version": "0.13.1",
-      "file": "phf-0.13.1.crate",
-      "url": "https://static.crates.io/crates/phf/phf-0.13.1.crate",
-      "sha256": "c1562dc717473dbaa4c1f85a36410e03c047b2e7df7f45ee938fbef64ae7fadf",
-      "kind": "rust-lock-source",
-      "bytes": 24786
     },
     {
       "name": "phf_codegen",
@@ -2244,6 +3153,15 @@
       "bytes": 20291
     },
     {
+      "name": "phf",
+      "version": "0.13.1",
+      "file": "phf-0.13.1.crate",
+      "url": "https://static.crates.io/crates/phf/phf-0.13.1.crate",
+      "sha256": "c1562dc717473dbaa4c1f85a36410e03c047b2e7df7f45ee938fbef64ae7fadf",
+      "kind": "rust-lock-source",
+      "bytes": 24786
+    },
+    {
       "name": "pin-project-lite",
       "version": "0.2.17",
       "file": "pin-project-lite-0.2.17.crate",
@@ -2251,6 +3169,18 @@
       "sha256": "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd",
       "kind": "rust-lock-source",
       "bytes": 31034
+    },
+    {
+      "name": "pixman",
+      "version": "0.46.4",
+      "file": "pixman-0.46.4.tar.gz",
+      "url": "https://cairographics.org/releases/pixman-0.46.4.tar.gz",
+      "sha256": "d09c44ebc3bd5bee7021c79f922fe8fb2fb57f7320f55e97ff9914d2346a591c",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/pixman.mk"
+      ],
+      "bytes": 827198
     },
     {
       "name": "pkg-config",
@@ -2406,6 +3336,18 @@
       "bytes": 207859
     },
     {
+      "name": "proxy-libintl",
+      "version": "0.5",
+      "file": "proxy-libintl-0.5.tar.gz",
+      "url": "https://github.com/frida/proxy-libintl/archive/0.5.tar.gz",
+      "sha256": "f7a1cbd7579baaf575c66f9d99fb6295e9b0684a28b095967cfda17857595303",
+      "kind": "native-source",
+      "recipes": [
+        "build-win64-mxe-8.18.6/build/plugins/proxy-libintl/proxy-libintl.mk"
+      ],
+      "bytes": 13056
+    },
+    {
       "name": "pxfm",
       "version": "0.1.30",
       "file": "pxfm-0.1.30.crate",
@@ -2460,24 +3402,6 @@
       "bytes": 65303
     },
     {
-      "name": "rand",
-      "version": "0.9.5",
-      "file": "rand-0.9.5.crate",
-      "url": "https://static.crates.io/crates/rand/rand-0.9.5.crate",
-      "sha256": "b9ef1d0d795eb7d84685bca4f72f3649f064e6641543d3a8c415898726a57b41",
-      "kind": "rust-lock-source",
-      "bytes": 100216
-    },
-    {
-      "name": "rand",
-      "version": "0.10.2",
-      "file": "rand-0.10.2.crate",
-      "url": "https://static.crates.io/crates/rand/rand-0.10.2.crate",
-      "sha256": "c7f5fa3a058cd35567ef9bfa5e75732bee0f9e4c55fa90477bef2dfcdbc4be80",
-      "kind": "rust-lock-source",
-      "bytes": 104493
-    },
-    {
       "name": "rand_chacha",
       "version": "0.9.0",
       "file": "rand_chacha-0.9.0.crate",
@@ -2485,15 +3409,6 @@
       "sha256": "d3022b5f1df60f26e1ffddd6c66e8aa15de382ae63b3a0c1bfc0e4d3e3f325cb",
       "kind": "rust-lock-source",
       "bytes": 18258
-    },
-    {
-      "name": "rand_core",
-      "version": "0.9.5",
-      "file": "rand_core-0.9.5.crate",
-      "url": "https://static.crates.io/crates/rand_core/rand_core-0.9.5.crate",
-      "sha256": "76afc826de14238e6e8c374ddcc1fa19e374fd8dd986b0d2af0d02377261d83c",
-      "kind": "rust-lock-source",
-      "bytes": 24129
     },
     {
       "name": "rand_core",
@@ -2505,6 +3420,15 @@
       "bytes": 22833
     },
     {
+      "name": "rand_core",
+      "version": "0.9.5",
+      "file": "rand_core-0.9.5.crate",
+      "url": "https://static.crates.io/crates/rand_core/rand_core-0.9.5.crate",
+      "sha256": "76afc826de14238e6e8c374ddcc1fa19e374fd8dd986b0d2af0d02377261d83c",
+      "kind": "rust-lock-source",
+      "bytes": 24129
+    },
+    {
       "name": "rand_xorshift",
       "version": "0.4.0",
       "file": "rand_xorshift-0.4.0.crate",
@@ -2512,6 +3436,24 @@
       "sha256": "513962919efc330f829edb2535844d1b912b0fbe2ca165d613e4e8788bb05a5a",
       "kind": "rust-lock-source",
       "bytes": 10262
+    },
+    {
+      "name": "rand",
+      "version": "0.10.2",
+      "file": "rand-0.10.2.crate",
+      "url": "https://static.crates.io/crates/rand/rand-0.10.2.crate",
+      "sha256": "c7f5fa3a058cd35567ef9bfa5e75732bee0f9e4c55fa90477bef2dfcdbc4be80",
+      "kind": "rust-lock-source",
+      "bytes": 104493
+    },
+    {
+      "name": "rand",
+      "version": "0.9.5",
+      "file": "rand-0.9.5.crate",
+      "url": "https://static.crates.io/crates/rand/rand-0.9.5.crate",
+      "sha256": "b9ef1d0d795eb7d84685bca4f72f3649f064e6641543d3a8c415898726a57b41",
+      "kind": "rust-lock-source",
+      "bytes": 100216
     },
     {
       "name": "rangemap",
@@ -2559,6 +3501,16 @@
       "bytes": 8312
     },
     {
+      "name": "react",
+      "version": "19.3.0",
+      "file": "react-19.3.0-1d34f91d.tar.gz",
+      "url": "https://codeload.github.com/react/react/tar.gz/1d34f91dfde6bba84d08b683aaba164c7194dacb",
+      "sha256": "ef34c2ad2fe4af769cdc8a067d827fbba8fde677d83f5befaa8a8cc5c3a8c6be",
+      "bytes": 10252630,
+      "kind": "javascript-upstream-source",
+      "commit": "1d34f91dfde6bba84d08b683aaba164c7194dacb"
+    },
+    {
       "name": "redox_syscall",
       "version": "0.5.18",
       "file": "redox_syscall-0.5.18.crate",
@@ -2604,15 +3556,6 @@
       "bytes": 18607
     },
     {
-      "name": "rustc-hash",
-      "version": "2.1.3",
-      "file": "rustc-hash-2.1.3.crate",
-      "url": "https://static.crates.io/crates/rustc-hash/rustc-hash-2.1.3.crate",
-      "sha256": "6b1e7f9a428571be2dc5bc0505c13fb6bf936822b894ec87abf8a08a4e51742d",
-      "kind": "rust-lock-source",
-      "bytes": 14811
-    },
-    {
       "name": "rustc_version",
       "version": "0.4.1",
       "file": "rustc_version-0.4.1.crate",
@@ -2620,6 +3563,15 @@
       "sha256": "cfcb3a22ef46e85b45de6ee7e79d063319ebb6594faafcf1c225ea92ab6e9b92",
       "kind": "rust-lock-source",
       "bytes": 12245
+    },
+    {
+      "name": "rustc-hash",
+      "version": "2.1.3",
+      "file": "rustc-hash-2.1.3.crate",
+      "url": "https://static.crates.io/crates/rustc-hash/rustc-hash-2.1.3.crate",
+      "sha256": "6b1e7f9a428571be2dc5bc0505c13fb6bf936822b894ec87abf8a08a4e51742d",
+      "kind": "rust-lock-source",
+      "bytes": 14811
     },
     {
       "name": "rustix",
@@ -2694,15 +3646,6 @@
       "bytes": 33064
     },
     {
-      "name": "serde",
-      "version": "1.0.229",
-      "file": "serde-1.0.229.crate",
-      "url": "https://static.crates.io/crates/serde/serde-1.0.229.crate",
-      "sha256": "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba",
-      "kind": "rust-lock-source",
-      "bytes": 83669
-    },
-    {
       "name": "serde_core",
       "version": "1.0.229",
       "file": "serde_core-1.0.229.crate",
@@ -2739,6 +3682,15 @@
       "bytes": 11025
     },
     {
+      "name": "serde",
+      "version": "1.0.229",
+      "file": "serde-1.0.229.crate",
+      "url": "https://static.crates.io/crates/serde/serde-1.0.229.crate",
+      "sha256": "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba",
+      "kind": "rust-lock-source",
+      "bytes": 83669
+    },
+    {
       "name": "servo_arc",
       "version": "0.4.3",
       "file": "servo_arc-0.4.3.crate",
@@ -2755,6 +3707,24 @@
       "sha256": "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4",
       "kind": "rust-lock-source",
       "bytes": 33969
+    },
+    {
+      "name": "sharp",
+      "version": "0.35.4",
+      "file": "sharp-0.35.4.tar.gz",
+      "url": "https://github.com/lovell/sharp/archive/refs/tags/v0.35.4.tar.gz",
+      "kind": "wrapper-source",
+      "sha256": "c28497f06919490a5073fd489541203406fbca99c1c0147810cb12c7da30ac05",
+      "bytes": 41787797
+    },
+    {
+      "name": "sharp-libvips",
+      "version": "1.3.3",
+      "file": "sharp-libvips-1.3.3.tar.gz",
+      "url": "https://github.com/lovell/sharp-libvips/archive/refs/tags/v1.3.3.tar.gz",
+      "kind": "build-source",
+      "sha256": "544ebd8e34be4baf751cc26c8691a46eddbb56183ead1b20ca5b737e93482d86",
+      "bytes": 24051
     },
     {
       "name": "shell-words",
@@ -2838,13 +3808,13 @@
       "bytes": 18480
     },
     {
-      "name": "string_cache",
-      "version": "0.9.0",
-      "file": "string_cache-0.9.0.crate",
-      "url": "https://static.crates.io/crates/string_cache/string_cache-0.9.0.crate",
-      "sha256": "a18596f8c785a729f2819c0f6a7eae6ebeebdfffbfe4214ae6b087f690e31901",
+      "name": "string_cache_codegen",
+      "version": "0.6.1",
+      "file": "string_cache_codegen-0.6.1.crate",
+      "url": "https://static.crates.io/crates/string_cache_codegen/string_cache_codegen-0.6.1.crate",
+      "sha256": "585635e46db231059f76c5849798146164652513eb9e8ab2685939dd90f29b69",
       "kind": "rust-lock-source",
-      "bytes": 17402
+      "bytes": 8968
     },
     {
       "name": "string_cache",
@@ -2856,13 +3826,13 @@
       "bytes": 16936
     },
     {
-      "name": "string_cache_codegen",
-      "version": "0.6.1",
-      "file": "string_cache_codegen-0.6.1.crate",
-      "url": "https://static.crates.io/crates/string_cache_codegen/string_cache_codegen-0.6.1.crate",
-      "sha256": "585635e46db231059f76c5849798146164652513eb9e8ab2685939dd90f29b69",
+      "name": "string_cache",
+      "version": "0.9.0",
+      "file": "string_cache-0.9.0.crate",
+      "url": "https://static.crates.io/crates/string_cache/string_cache-0.9.0.crate",
+      "sha256": "a18596f8c785a729f2819c0f6a7eae6ebeebdfffbfe4214ae6b087f690e31901",
       "kind": "rust-lock-source",
-      "bytes": 8968
+      "bytes": 17402
     },
     {
       "name": "stringprep",
@@ -2973,6 +3943,18 @@
       "bytes": 21436
     },
     {
+      "name": "tiff",
+      "version": "4.7.2",
+      "file": "tiff-4.7.2.tar.xz",
+      "url": "https://download.osgeo.org/libtiff/tiff-4.7.2.tar.xz",
+      "sha256": "4996f0c4f93094719b1ca5c6279b20e588773ba8a247533e486416fb662ddb88",
+      "kind": "native-source",
+      "recipes": [
+        "mxe-d973945bb92c7783d5afa41bb2b8d2e1a04eaba3/src/tiff.mk"
+      ],
+      "bytes": 2409652
+    },
+    {
       "name": "time",
       "version": "0.3.55",
       "file": "time-0.3.55.crate",
@@ -3000,6 +3982,16 @@
       "bytes": 33664
     },
     {
+      "name": "tiny-typed-emitter",
+      "version": "2.1.0",
+      "file": "tiny-typed-emitter-2.1.0-66c1b66b.tar.gz",
+      "url": "https://codeload.github.com/binier/tiny-typed-emitter/tar.gz/66c1b66bc159675352a6f38911e4c6cf2117f3e4",
+      "sha256": "91ec74b6af14d9b71066cdcfebe8fc8062e24e08fe3d8f508f11930eb5e888f7",
+      "bytes": 2920,
+      "kind": "javascript-upstream-source",
+      "commit": "66c1b66bc159675352a6f38911e4c6cf2117f3e4"
+    },
+    {
       "name": "tinystr",
       "version": "0.8.3",
       "file": "tinystr-0.8.3.crate",
@@ -3018,15 +4010,6 @@
       "bytes": 26490
     },
     {
-      "name": "tinyvec",
-      "version": "1.12.0",
-      "file": "tinyvec-1.12.0.crate",
-      "url": "https://static.crates.io/crates/tinyvec/tinyvec-1.12.0.crate",
-      "sha256": "bb4ebadaa0af04fab11ae01eb5f9fdb5f9c5b875506e210e71c07873528baa7f",
-      "kind": "rust-lock-source",
-      "bytes": 56568
-    },
-    {
       "name": "tinyvec_macros",
       "version": "0.1.1",
       "file": "tinyvec_macros-0.1.1.crate",
@@ -3036,13 +4019,13 @@
       "bytes": 5865
     },
     {
-      "name": "toml",
-      "version": "1.1.4+spec-1.1.0",
-      "file": "toml-1.1.4+spec-1.1.0.crate",
-      "url": "https://static.crates.io/crates/toml/toml-1.1.4+spec-1.1.0.crate",
-      "sha256": "3aace63f4bbcdfc2c965b059de67119c89c4017a70d633be6c104910f67056f5",
+      "name": "tinyvec",
+      "version": "1.12.0",
+      "file": "tinyvec-1.12.0.crate",
+      "url": "https://static.crates.io/crates/tinyvec/tinyvec-1.12.0.crate",
+      "sha256": "bb4ebadaa0af04fab11ae01eb5f9fdb5f9c5b875506e210e71c07873528baa7f",
       "kind": "rust-lock-source",
-      "bytes": 56447
+      "bytes": 56568
     },
     {
       "name": "toml_datetime",
@@ -3072,6 +4055,15 @@
       "bytes": 18968
     },
     {
+      "name": "toml",
+      "version": "1.1.4+spec-1.1.0",
+      "file": "toml-1.1.4+spec-1.1.0.crate",
+      "url": "https://static.crates.io/crates/toml/toml-1.1.4+spec-1.1.0.crate",
+      "sha256": "3aace63f4bbcdfc2c965b059de67119c89c4017a70d633be6c104910f67056f5",
+      "kind": "rust-lock-source",
+      "bytes": 56447
+    },
+    {
       "name": "typenum",
       "version": "1.20.1",
       "file": "typenum-1.20.1.crate",
@@ -3079,6 +4071,18 @@
       "sha256": "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20",
       "kind": "rust-lock-source",
       "bytes": 105479
+    },
+    {
+      "name": "uhdr",
+      "version": "2.0.2",
+      "file": "uhdr-2.0.2.tar.gz",
+      "url": "https://github.com/google/libultrahdr/archive/v2.0.2.tar.gz",
+      "sha256": "aa8d193bb887c348c419780511dd03b374f4e07af8812b6d3f80c8537cf1ef2c",
+      "kind": "native-source",
+      "recipes": [
+        "build-win64-mxe-8.18.6/build/uhdr.mk"
+      ],
+      "bytes": 1518872
     },
     {
       "name": "unarray",
@@ -3153,6 +4157,15 @@
       "bytes": 13499
     },
     {
+      "name": "version_check",
+      "version": "0.9.5",
+      "file": "version_check-0.9.5.crate",
+      "url": "https://static.crates.io/crates/version_check/version_check-0.9.5.crate",
+      "sha256": "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a",
+      "kind": "rust-lock-source",
+      "bytes": 15554
+    },
+    {
       "name": "version-compare",
       "version": "0.2.1",
       "file": "version-compare-0.2.1.crate",
@@ -3162,13 +4175,16 @@
       "bytes": 14245
     },
     {
-      "name": "version_check",
-      "version": "0.9.5",
-      "file": "version_check-0.9.5.crate",
-      "url": "https://static.crates.io/crates/version_check/version_check-0.9.5.crate",
-      "sha256": "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a",
-      "kind": "rust-lock-source",
-      "bytes": 15554
+      "name": "vips",
+      "version": "8.18.6",
+      "file": "vips-8.18.6.tar.xz",
+      "url": "https://github.com/libvips/libvips/releases/download/v8.18.6/vips-8.18.6.tar.xz",
+      "sha256": "3c41e1d5458081bfa4a5bc54e116c46259c75c6760a18027764555632b9dda3e",
+      "kind": "native-source",
+      "recipes": [
+        "build-win64-mxe-8.18.6/build/vips.mk"
+      ],
+      "bytes": 25431000
     },
     {
       "name": "wait-timeout",
@@ -3234,15 +4250,6 @@
       "bytes": 11291
     },
     {
-      "name": "web-sys",
-      "version": "0.3.104",
-      "file": "web-sys-0.3.104.crate",
-      "url": "https://static.crates.io/crates/web-sys/web-sys-0.3.104.crate",
-      "sha256": "c435338968042f4f59a557f690a253676d47ce13ceb55d70100e7facf6620a30",
-      "kind": "rust-lock-source",
-      "bytes": 682013
-    },
-    {
       "name": "web_atoms",
       "version": "0.2.6",
       "file": "web_atoms-0.2.6.crate",
@@ -3250,6 +4257,15 @@
       "sha256": "ba8b815c1b593dc0baf78dd0f4fc8fdb2de53198fb1163738093e9a311c33fb3",
       "kind": "rust-lock-source",
       "bytes": 27911
+    },
+    {
+      "name": "web-sys",
+      "version": "0.3.104",
+      "file": "web-sys-0.3.104.crate",
+      "url": "https://static.crates.io/crates/web-sys/web-sys-0.3.104.crate",
+      "sha256": "c435338968042f4f59a557f690a253676d47ce13ceb55d70100e7facf6620a30",
+      "kind": "rust-lock-source",
+      "bytes": 682013
     },
     {
       "name": "weezl",
@@ -3513,6 +4529,18 @@
       "bytes": 22115
     },
     {
+      "name": "zlib-ng",
+      "version": "2.3.3",
+      "file": "zlib-ng-2.3.3.tar.gz",
+      "url": "https://github.com/zlib-ng/zlib-ng/archive/2.3.3.tar.gz",
+      "sha256": "f9c65aa9c852eb8255b636fd9f07ce1c406f061ec19a2e7d508b318ca0c907d1",
+      "kind": "native-source",
+      "recipes": [
+        "build-win64-mxe-8.18.6/build/plugins/zlib-ng/zlib-ng.mk"
+      ],
+      "bytes": 2447397
+    },
+    {
       "name": "zmij",
       "version": "1.0.23",
       "file": "zmij-1.0.23.crate",
@@ -3538,24 +4566,6 @@
       "sha256": "27bc9d5b815bc103f142aa054f561d9187d191692ec7c2d1e2b4737f8dbd7296",
       "kind": "rust-lock-source",
       "bytes": 88879
-    },
-    {
-      "name": "pcre2",
-      "version": "10.46",
-      "file": "pcre2-10.46.tar.bz2",
-      "url": "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.46/pcre2-10.46.tar.bz2",
-      "sha256": "15fbc5aba6beee0b17aecb04602ae39432393aba1ebd8e39b7cabf7db883299f",
-      "kind": "glib-fallback-source",
-      "bytes": 2035354
-    },
-    {
-      "name": "pcre2-meson-patch",
-      "version": "10.46-1",
-      "file": "pcre2_10.46-1_patch.zip",
-      "url": "https://wrapdb.mesonbuild.com/v2/pcre2_10.46-1/get_patch",
-      "sha256": "761d16c89b9c13812842916b7ee970650ee7c1810f83bc567351faf7365b66be",
-      "kind": "glib-fallback-source",
-      "bytes": 4003
     }
   ]
 }

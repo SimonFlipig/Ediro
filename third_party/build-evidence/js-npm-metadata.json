@@ -1,0 +1,1205 @@
+[
+  {
+    "name": "@img/colour",
+    "version": "1.1.0",
+    "gitHead": "179fa91fbdb8786b661f6bfb2b6de2885d4860f8",
+    "repository": {
+      "url": "git+https://github.com/lovell/colour.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "dist": {
+      "shasum": "b0c2c2fa661adf75effd6b4964497cd80010bb9d",
+      "tarball": "https://registry.npmjs.org/@img/colour/-/colour-1.1.0.tgz",
+      "fileCount": 6,
+      "integrity": "sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==",
+      "signatures": [
+        {
+          "sig": "MEYCIQD6AY7tLHXJZeSw5K5akdAatr7AgGCBGmG0ODy3GkUdAAIhAOnO7hhphsCcK7xbcj/uyTRaXpj/EdAXyKRQdCEmURKq",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/@img%2fcolour@1.1.0",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 73264
+    }
+  },
+  {
+    "name": "@img/sharp-win32-x64",
+    "version": "0.35.4",
+    "gitHead": "7f1a0a22cc285fe180766f4935d50b55af6e8432",
+    "repository": {
+      "url": "git+https://github.com/lovell/sharp.git",
+      "type": "git",
+      "directory": "npm/win32-x64"
+    },
+    "license": "Apache-2.0 AND LGPL-3.0-or-later",
+    "author": {
+      "name": "Lovell Fuller",
+      "email": "npm@lovell.info"
+    },
+    "dist": {
+      "shasum": "0b67bd0b1f01123a982afcc6ba0dc00b877b8a0a",
+      "tarball": "https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.35.4.tgz",
+      "fileCount": 8,
+      "integrity": "sha512-XtmnYhBcrORsJ4XJngyzr/EWP0hRZLAZRFaApdKuviyqF78+ylxh2y06ZmtULAMOnObJ3ucpN0AcwSWnMowTRg==",
+      "signatures": [
+        {
+          "sig": "MEYCIQDII+t9tTqtqHUcKhrqy5JxCOLwNmKRfKeqz2etonyRMgIhAJa+H+wNz2YzWyu48q690Q2RfTFbqKWWfQycThaIDlc4",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEYCIQCRK1xG+4nkFBNGd3RW9WhIyYw2kYC+PVsDQyJINDcgVgIhAP/qIgQ2zdDEOTPZ0ySyG3ruHlZg3Nd0inrSpVf7W9/+",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/@img%2fsharp-win32-x64@0.35.4",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 19407388
+    }
+  },
+  {
+    "name": "adm-zip",
+    "version": "0.6.1",
+    "gitHead": "cb2cf9ba4c7c865db426e2de1997cb41194d9872",
+    "repository": {
+      "url": "git+https://github.com/cthackers/adm-zip.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "url": "https://github.com/cthackers",
+      "name": "Nasca Iacob",
+      "email": "adm-zip@pm.me"
+    },
+    "dist": {
+      "shasum": "5b95da4a6e7af0663b71457c06e1517fa6ac8d5f",
+      "tarball": "https://registry.npmjs.org/adm-zip/-/adm-zip-0.6.1.tgz",
+      "fileCount": 20,
+      "integrity": "sha512-Xwrja8nx9e5o2N1my4DsKCeKpdrnACyr1wtbPxBDgGzKzKyE9kRtBFA8mWldI+RVlD7CBZNWY/wQ2+ydwOR6kQ==",
+      "signatures": [
+        {
+          "sig": "MEQCIFr3aD12CgWdempVthK0YRcSLTB2fpDRBVuSiSNq1jWFAiBQqqGSVgUTSwIf7KMQSioebOR9WCLYEb04j1wBYT0B6Q==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEQCIDP0o1h7xro2neYhwpf9i4yRiW8EyyHnt+FUjlEePP8hAiAnoeEXisUnCVHx0pRMHc97OyDjPJPY6ltKon6mkcT4Tg==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 150551
+    }
+  },
+  {
+    "name": "argparse",
+    "version": "2.0.1",
+    "gitHead": "e373563876f1c049826c21bd1c9388f6a5737a3e",
+    "repository": {
+      "url": "git+https://github.com/nodeca/argparse.git",
+      "type": "git"
+    },
+    "license": "Python-2.0",
+    "dist": {
+      "shasum": "246f50f3ca78a3240f6c997e8a9bd1eac49e4b38",
+      "tarball": "https://registry.npmjs.org/argparse/-/argparse-2.0.1.tgz",
+      "fileCount": 7,
+      "integrity": "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==",
+      "signatures": [
+        {
+          "sig": "MEQCIH1TwnHWb5mQxIvhpMQIDK9CZjEvWm3r54fpVDzPwwqnAiB15fTGo5Qy7GVLldJRMSv/zb6ZVlip2AKfS46m6fpqjA==",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 171548,
+      "npm-signature": "-----BEGIN PGP SIGNATURE-----\r\nVersion: OpenPGP.js v3.0.4\r\nComment: https://openpgpjs.org\r\n\r\nwsFcBAEBCAAQBQJfSXOzCRA9TVsSAnZWagAA3aMP/jSc//Kv/EcAJDf9zguA\nei+dmXoFh5ZMOG8jwM5LOodJfjMcprSvNbWpFEb+d1JxX8k1ukrtTdZCt2NS\nfL7obXK0Rmze8oxM47ebqXgcIuaFwEFtbINNbdhqbxHajF7KDv68VuIQ3/R7\nJE0GtBn7pmsUWyffI4hXIHDiT6kS7X8N/XG36x09szB6aT7VI7tjvchlmKPS\nvG3X0Z3amXad43bPHjiGLVtmlUZ+DVKCr+F7C+NPwjLavDku38IWbQiL4aB6\niNmLwhp/68X08syenskp95Wob+WV9m4up5sWoN77lHw+j8ow2+7KKmZNfqB8\noCpkCh435x170x1pIbcUSlS2xTwxc7FUmNKAYyC01nSn8VBmqDuuhIyK0CmD\nJzGKBzdtRiyIYFezILEgrzFWFfDoiRCf7C7/EdGSif1u7YmhvQQzipxMlj0V\nCNjtKypRajTTznQE2P1x4VoIsGdh21odHwl/942jBte+7cCTe6q0hadfPWrg\nxV2W8+ouTlRym7MelaXImgthPljAQj9iBm2nruRiCy1fr6NYwf1n3Taw4vDI\ni96UEEoZI8B/BluR1B6r0roSC6XkS00iR9S/4p3OcKa6vzm0wKf4A/NLudpR\nyjB0qXIkGH+VYQX+qEzqBgOKnrbAibLI516zo/zdMecm5YU9zUh+MH9Wmujt\n0eJK\r\n=EMEE\r\n-----END PGP SIGNATURE-----\r\n"
+    }
+  },
+  {
+    "name": "builder-util-runtime",
+    "version": "9.7.0",
+    "repository": {
+      "url": "git+https://github.com/electron-userland/electron-builder.git",
+      "type": "git",
+      "directory": "packages/builder-util-runtime"
+    },
+    "license": "MIT",
+    "author": "Vladimir Krivosheev",
+    "dist": {
+      "shasum": "c86fba303684e877daee15c29eede81987166fef",
+      "tarball": "https://registry.npmjs.org/builder-util-runtime/-/builder-util-runtime-9.7.0.tgz",
+      "fileCount": 45,
+      "integrity": "sha512-g/kR520giAFYkSXTzcmF3kqQq7wi8F6N6SzeDgZrqTBN+VHdmgWOyTdD1yD7AATDId/yXLvuP34CxW46/BwCdw==",
+      "signatures": [
+        {
+          "sig": "MEYCIQDQcRwTKQEhCf9ZnZwhDDy9rLbJNLV68FfldHDj22KPjAIhAIvJGdekUDtvyc03YhavqlvWFxjlBf+9k0plBXiedrTE",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/builder-util-runtime@9.7.0",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 192020
+    }
+  },
+  {
+    "name": "debug",
+    "version": "4.4.3",
+    "gitHead": "6b2c5fbdb7d414483d9e306ef234acb4cd7ea67c",
+    "repository": {
+      "url": "git://github.com/debug-js/debug.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "url": "https://github.com/qix-",
+      "name": "Josh Junon"
+    },
+    "dist": {
+      "shasum": "c6ae432d9bd9662582fce08709b038c58e9e3d6a",
+      "tarball": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
+      "fileCount": 7,
+      "integrity": "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==",
+      "signatures": [
+        {
+          "sig": "MEQCICInafSZ+sajZhfNPQj8Qh6jqz8p8TN8EukVSyY1yMj+AiAptzBLrvHsI3+t0d+QToir6keiBEy9LngkCOpDUm81uA==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 42793
+    }
+  },
+  {
+    "name": "define-data-property",
+    "version": "1.1.4",
+    "gitHead": "e313da59d1f65e1549ac59539a7a8ac17632df60",
+    "repository": {
+      "url": "git+https://github.com/ljharb/define-data-property.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "Jordan Harband",
+      "email": "ljharb@gmail.com"
+    },
+    "dist": {
+      "shasum": "894dc141bb7d3060ae4366f6a0107e68fbe48c5e",
+      "tarball": "https://registry.npmjs.org/define-data-property/-/define-data-property-1.1.4.tgz",
+      "fileCount": 11,
+      "integrity": "sha512-rBMvIzlpA8v6E+SJZoo++HAYqsLrkg7MSfIinMPFhmkorw7X+dOXVJQs+QT69zGkzMyfDnIMN2Wid1+NbL3T+A==",
+      "signatures": [
+        {
+          "sig": "MEUCIDZIHkwzvBqg1i5t6fHILJt9LbUdzAYhQKrBM/W7H6VsAiEAiP7BaEDdCNeZLyDzKhFQGmkyR4qNUzIlGLa5l3veq/U=",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 30851
+    }
+  },
+  {
+    "name": "define-properties",
+    "version": "1.2.1",
+    "gitHead": "d7a4db30214eb06d3997dc3e662c11dfe95b25bd",
+    "repository": {
+      "url": "git://github.com/ljharb/define-properties.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "Jordan Harband",
+      "email": "ljharb@gmail.com"
+    },
+    "dist": {
+      "shasum": "10781cc616eb951a80a034bafcaa7377f6af2b6c",
+      "tarball": "https://registry.npmjs.org/define-properties/-/define-properties-1.2.1.tgz",
+      "fileCount": 9,
+      "integrity": "sha512-8QmQKqEASLd5nx0U1B1okLElbUuuttJ/AnYmRXbbbGDWh6uS208EjD4Xqq/I9wK7u0v6O08XhTWnt5XtEbR6Dg==",
+      "signatures": [
+        {
+          "sig": "MEUCIFStFcKn+/R6mBEFmTGy+05p5JlXtKJFWGMKiPfP7kwxAiEA0hUJ0Dh3kDbj4CwpXFjiqXtYo+tcy0N50rSz9aAEt4Q=",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 12890
+    }
+  },
+  {
+    "name": "detect-libc",
+    "version": "2.1.2",
+    "gitHead": "98928b7d26bd5c50dee12af0e433b47825d84df0",
+    "repository": {
+      "url": "git://github.com/lovell/detect-libc.git",
+      "type": "git"
+    },
+    "license": "Apache-2.0",
+    "author": {
+      "name": "Lovell Fuller",
+      "email": "npm@lovell.info"
+    },
+    "dist": {
+      "shasum": "689c5dcdc1900ef5583a4cb9f6d7b473742074ad",
+      "tarball": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz",
+      "fileCount": 8,
+      "integrity": "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==",
+      "signatures": [
+        {
+          "sig": "MEQCIF1K2xLAn5hsm9ciKDdCTYG8t/RLfRhgxAP141A5a3u7AiBqAwFNw0gO55d7HBGPBEywWb+lelLcAZWszH90TSkiiw==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/detect-libc@2.1.2",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 26437
+    }
+  },
+  {
+    "name": "electron-updater",
+    "version": "6.8.9",
+    "repository": {
+      "url": "git+https://github.com/electron-userland/electron-builder.git",
+      "type": "git",
+      "directory": "packages/electron-updater"
+    },
+    "license": "MIT",
+    "author": "Vladimir Krivosheev",
+    "dist": {
+      "shasum": "21e3e2400ee3a58b7496f0a023d95d7ab1dae019",
+      "tarball": "https://registry.npmjs.org/electron-updater/-/electron-updater-6.8.9.tgz",
+      "fileCount": 99,
+      "integrity": "sha512-ZhVxM9iGONUpZGI1FxdMRgJjUFXi7AYGVa5PwKlO1tV1/4zDxQmfKpXOHVztKrd6L9rLcFjERvi1Mf2vxyTkig==",
+      "signatures": [
+        {
+          "sig": "MEQCIBJr1L5SRQNEi6dCgNyqYvk2O5J+LOzY7DhAYHmRXTYuAiASvrO2Yvui4Ey14dqjhzFpSUofmN/e7x/rbGsA6wanVA==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/electron-updater@6.8.9",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 565021
+    }
+  },
+  {
+    "name": "es-define-property",
+    "version": "1.0.1",
+    "gitHead": "50ef129225ae17336a774f0eefc4e6bc88c79b8e",
+    "repository": {
+      "url": "git+https://github.com/ljharb/es-define-property.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "Jordan Harband",
+      "email": "ljharb@gmail.com"
+    },
+    "dist": {
+      "shasum": "983eb2f9a6724e9303f61addf011c72e09e0b0fa",
+      "tarball": "https://registry.npmjs.org/es-define-property/-/es-define-property-1.0.1.tgz",
+      "fileCount": 11,
+      "integrity": "sha512-e3nRfgfUZ4rNGL232gUgX06QNyyez04KdjFrF+LTRoOXmrOgFKDg4BCdsjW8EnT69eqdYGmRpJwiPVYNrCaW3g==",
+      "signatures": [
+        {
+          "sig": "MEQCIH/pBSmlamyOCozp2OeyVsrUaXZg1RhKL84mx3n4cs/QAiBTY5GypLDSdVwrhJ90CfLKo8K7MzG9eojcR4wPRWj2IQ==",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 10217
+    }
+  },
+  {
+    "name": "es-errors",
+    "version": "1.3.0",
+    "gitHead": "5599cf0ebe75cc3685445f83ca80207a357fdb12",
+    "repository": {
+      "url": "git+https://github.com/ljharb/es-errors.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "Jordan Harband",
+      "email": "ljharb@gmail.com"
+    },
+    "dist": {
+      "shasum": "05f75a25dab98e4fb1dcd5e1472c0546d5057c8f",
+      "tarball": "https://registry.npmjs.org/es-errors/-/es-errors-1.3.0.tgz",
+      "fileCount": 22,
+      "integrity": "sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw==",
+      "signatures": [
+        {
+          "sig": "MEQCIB9oyZ1iz6ddiQ0hSHcteY+wIu25XXiptEEQhkkx3bYGAiBWZenaYPP6g7e44zJTox9VjnaLBcI86WMLI6ZYGtQXXA==",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 12324
+    }
+  },
+  {
+    "name": "escape-string-regexp",
+    "version": "4.0.0",
+    "gitHead": "71083e89129bcf72a10656508de5442d3f97966d",
+    "repository": {
+      "url": "git+https://github.com/sindresorhus/escape-string-regexp.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "url": "https://sindresorhus.com",
+      "name": "Sindre Sorhus",
+      "email": "sindresorhus@gmail.com"
+    },
+    "dist": {
+      "shasum": "14ba83a5d373e3d311e5afca29cf5bfad965bf34",
+      "tarball": "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz",
+      "fileCount": 5,
+      "integrity": "sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==",
+      "signatures": [
+        {
+          "sig": "MEYCIQCtnB6D8NP2XpnmL7e2IvMJPdzEG2W8Z4U66+e2oVsQXQIhAPL8R6cRFx2F7KiRUjaUIdU7VF6vZsJjx21isqRe7RX+",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 3790,
+      "npm-signature": "-----BEGIN PGP SIGNATURE-----\r\nVersion: OpenPGP.js v3.0.4\r\nComment: https://openpgpjs.org\r\n\r\nwsFcBAEBCAAQBQJeoURNCRA9TVsSAnZWagAARCoQAIDrgan6KgXDUu7sPzbz\n9oiZFBPzKrp+vRltzovOSs/js5mGWY2aXUf0H2a8flCfE2kpMboKUOOTcUJ3\nWVDsgIhSr8KM5MP2oM7uWXV9ZamRp+ksHjQbumBU2a8OxakiBLQv6o6eF3DB\nIzZXYD1xb7BoUpHzMOgClabNeXqxgRsOPp3xkb04Q8Y5GotUZKPwdLhnf+io\n2SpW5xUEVzQSQSCqzpzqjyGQcwAlesqqUWc/INud8/suDEIpHSeeOv+dhhmo\nwo5v7x/Nw3uvGmDycwJ/UoTXVh9GXmy3EtY9NyRmdtThRl3MqQ6xi3z9FQ0b\nicl744RN+cexmiiXuaVkMccklpMAbNMX62VpRNMhPUG99HpUe/aAbRqGidDr\n2GTW+4D1JtCZq2yqyH91CTN0gqMZQOEeS5jS0qH0HGedKLZFynQAjSyNWevu\nra4MwFwC4jLbT/iNHE8/PWImYL8dMxKzXs7roPETZPOQuQhab3eAbOylS2dH\n2MY0HdtX0nhLyoM6jdBgCmGKwSuzVqAPeAUoke7ft75ez2WAwcPLK4yaobKO\n/4FYnpTTs5BAH403TGhuyl9mAmk7VbrCiNLUf8d5uHzMifO7bmgeZ0185M02\nGoqJxnF04MCN7cJ4wvtfJh+eAyQJXrXikEcOhJrMFth+NkwhqlFx62cZbcrE\nycp7\r\n=uG6w\r\n-----END PGP SIGNATURE-----\r\n"
+    }
+  },
+  {
+    "name": "fs-extra",
+    "version": "10.1.0",
+    "gitHead": "0220eac966d7d6b9a595d69b1242ab8a397fba7f",
+    "repository": {
+      "url": "git+https://github.com/jprichardson/node-fs-extra.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "JP Richardson",
+      "email": "jprichardson@gmail.com"
+    },
+    "dist": {
+      "shasum": "02873cfbc4084dde127eaa5f9905eef2325d1abf",
+      "tarball": "https://registry.npmjs.org/fs-extra/-/fs-extra-10.1.0.tgz",
+      "fileCount": 31,
+      "integrity": "sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==",
+      "signatures": [
+        {
+          "sig": "MEUCIQD21YYPPgkB2LOeQWvg8lrG4HDMrcyGDuHGzHSgb4C7JQIgFvAy28pTBl3wREOhOiLoYEyQzj6nz63aExuHO6pZiH8=",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 63278,
+      "npm-signature": "-----BEGIN PGP SIGNATURE-----\r\nVersion: OpenPGP.js v4.10.10\r\nComment: https://openpgpjs.org\r\n\r\nwsFzBAEBCAAGBQJiWxA2ACEJED1NWxICdlZqFiEECWMYAoorWMhJKdjhPU1b\r\nEgJ2VmqPvQ//amNoBcS9NyvKrd0yF+0y7J+Gli5ei+B3cxmsB8XvtId4ZpOj\r\n/uvQmMvyKe6/jx/WnGyiSDRC+51WEPnMr1hxaxwhsik+lefDR7cCrjjdRaB6\r\nTE50qqcXzHIcgOWWY9jmOjbcyvmMUj2BECmSKkJHZu7xYAwZgLakphXul8tL\r\nLoCSYEolCIwsbYjrUdcrTTNnpkBIr8a+Xrr3H85yhnPG0itZhiYfFzNIUabq\r\nP0ztUOSW6MvfObUWX5dMU9XeykTFRhCgsp7zEWIVlXENpErkFoPSNxMKxDte\r\nu55LF7wBpK2fhtsjurNvEN3KN41uI+xeCs/ilWn1lYDWXBAzmNZckn+qLxb/\r\nLinE2yGykmRdqF3l73EcxcU91Y+riUEA8nuH4KNQLHnkvZM+Vh+cWVM8knek\r\nfgPAy0Tg6W1oh/Il8W2TIFrcMar6AWNrsUt4TJEfYRpLrDNLvjP7afTZNF0i\r\nyPGbNVO8J9UFUk2eTrMwcm2107HdVcb+5rVxdptFeh5o9nLqznzetia4WNCY\r\n9tfgeTLhhEiv5igA3lqQTrOPE8YUJ1IQLzuFscy0QEWwdJTCmGAbWDP6xhfd\r\nbjkN0ArzH8T1vdlKBZmmdWDeq1jq0q9JPIGqcXKAT659smnMhCrw8rWRidTE\r\nsVCOU4zwwfjWMOwXAxyyDwk6lOHXIFRnRQg=\r\n=dBd9\r\n-----END PGP SIGNATURE-----\r\n"
+    }
+  },
+  {
+    "name": "global-agent",
+    "version": "4.1.3",
+    "gitHead": "e9138f654826f9a82e0ac4f3abdb9541ac988286",
+    "repository": {
+      "url": "git+https://github.com/gajus/global-agent.git",
+      "type": "git"
+    },
+    "license": "BSD-3-Clause",
+    "author": {
+      "url": "https://gajus.com",
+      "name": "Gajus Kuizinas",
+      "email": "gajus@gajus.com"
+    },
+    "dist": {
+      "shasum": "318a8a132fcf76c74adb27de2e1466d7e9241125",
+      "tarball": "https://registry.npmjs.org/global-agent/-/global-agent-4.1.3.tgz",
+      "fileCount": 47,
+      "integrity": "sha512-KUJEViiuFT3I97t+GYMikLPJS2Lfo/S2F+DQuBWzuzaMPnvt5yyZePzArx36fBzpGTxZjIpDbXLeySLgh+k76g==",
+      "signatures": [
+        {
+          "sig": "MEUCIAssZwQYrLOuHxlCfoeGrlbpGqEEa9rSpIYzijjzpjTrAiEA04IRImRoNLW7NPwjCEIDOq3YhdTcIj/WKtGtpsqBO/g=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/global-agent@4.1.3",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 87313
+    }
+  },
+  {
+    "name": "globalthis",
+    "version": "1.0.4",
+    "gitHead": "ac7b854ca44994583a71a5de17dd73a70e8beeb4",
+    "repository": {
+      "url": "git://github.com/ljharb/System.global.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "Jordan Harband",
+      "email": "ljharb@gmail.com"
+    },
+    "dist": {
+      "shasum": "7430ed3a975d97bfb59bcce41f5cabbafa651236",
+      "tarball": "https://registry.npmjs.org/globalthis/-/globalthis-1.0.4.tgz",
+      "fileCount": 17,
+      "integrity": "sha512-DpLKbNU4WylpxJykQujfCcwYWiV/Jhm50Goo0wrVILAv5jOr9d+H+UR3PhSCD2rCCEIg0uc+G+muBTwD54JhDQ==",
+      "signatures": [
+        {
+          "sig": "MEUCIQDvUhEtHNEDYj/BzG8TE6G0nwY0uOgp1CB41sXZjfdAEgIgRVTcl6smYgAa84b4igskyQjC0bKFE6iuZ+klqG9OEIE=",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 23665
+    }
+  },
+  {
+    "name": "gopd",
+    "version": "1.2.0",
+    "gitHead": "7f867f97d7c895a982a3b631287fd2c36d39c2ff",
+    "repository": {
+      "url": "git+https://github.com/ljharb/gopd.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "Jordan Harband",
+      "email": "ljharb@gmail.com"
+    },
+    "dist": {
+      "shasum": "89f56b8217bdbc8802bd299df6d7f1081d7e51a1",
+      "tarball": "https://registry.npmjs.org/gopd/-/gopd-1.2.0.tgz",
+      "fileCount": 12,
+      "integrity": "sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==",
+      "signatures": [
+        {
+          "sig": "MEYCIQD5XMsZlbC6fTaTnci63FcU7n0ajefDF31NCM5hiSNjAgIhAKOtFohttj8T5Ejj+saoHldL3znN/rzau+8Ljry8gxan",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 9869
+    }
+  },
+  {
+    "name": "graceful-fs",
+    "version": "4.2.11",
+    "gitHead": "514861c372899df14beb7aaecca4cdbb498d7d11",
+    "repository": {
+      "url": "git+https://github.com/isaacs/node-graceful-fs.git",
+      "type": "git"
+    },
+    "license": "ISC",
+    "dist": {
+      "shasum": "4183e4e8bf08bb6e05bbb2f7d2e0c8f712ca40e3",
+      "tarball": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz",
+      "fileCount": 7,
+      "integrity": "sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==",
+      "signatures": [
+        {
+          "sig": "MEQCIGvrVOcn7hI1H803c2vtwpp2SWqq+i4Io7slvfmq5ALwAiBUkAIGXz4UnL+r6Mp2H+OE2q0DUtrViYowDGL171hm5w==",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 32535,
+      "npm-signature": "-----BEGIN PGP SIGNATURE-----\r\nVersion: OpenPGP.js v4.10.10\r\nComment: https://openpgpjs.org\r\n\r\nwsFzBAEBCAAGBQJkE25LACEJED1NWxICdlZqFiEECWMYAoorWMhJKdjhPU1b\r\nEgJ2Vmo1Cw/+N8TlrsFr9s7NQc7VlIFHMU2rKzP4vToGXmp36eSQFnl6ovT2\r\nORy24D9wbXLJHjoK3OXXfJj05y29v8qiNIEVpSxrULuRhvK49Ck3KkOl8uCg\r\n8gmXQCDCnY3n4MsEQgiUH34r+xJHE1szyaO4asFcfoDWJzq+YkLX2bbNfgow\r\n2Qrv+cuqOJVT2jVXRieFhJd5FWCD9Y4U+nzzY39a+UzvJvpq30lhRgTqZfNW\r\nct6GJx6Td8Kvc5SQ+EwAiFTrp8DUfZrzqD+U+E/GuMLLj3bCczYCagndUU27\r\nf1PNUMkqeTFpjuduqsQQuyyoLFm6cvKU4llHOETAaVTZpUPS6iR9SE91cuQt\r\n+ABAuaxuGuEmLWWBSbaPeOI76+CJAQ4mjwwFEwRSPTUY7wfCuhis4YBzEISD\r\nrDwkGKXwQ2XpLymE9QMAAFc6mxO1WxRbnlaxgmZLBhJGKeRh7KRaQRtI0qIy\r\nPm6M2Tpp+JoFOFIKy5Q8AldLlWWL5zzo71jglrQrGytDwem1sYjGDozXfVgm\r\nfYFO4SV4y0gXeY2Z68y0g+S4BmP+JUWM5v4WCBJxm1gEmEzz4yLv7PXVx12R\r\n10binyrgUoOUUWC7qSeQaVwROIQI8dNhOjSvdOJ3Vlpk2+cebpStOgJ9/eyY\r\nX1M50AoJmZh/Yl4oqHc8jSU5i9HjwWGe4zE=\r\n=HvMs\r\n-----END PGP SIGNATURE-----\r\n"
+    }
+  },
+  {
+    "name": "has-property-descriptors",
+    "version": "1.0.2",
+    "gitHead": "69037fc06a4ec7a5a14e66ea029f2769e243c454",
+    "repository": {
+      "url": "git+https://github.com/inspect-js/has-property-descriptors.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "Jordan Harband",
+      "email": "ljharb@gmail.com"
+    },
+    "dist": {
+      "shasum": "963ed7d071dc7bf5f084c5bfbe0d1b6222586854",
+      "tarball": "https://registry.npmjs.org/has-property-descriptors/-/has-property-descriptors-1.0.2.tgz",
+      "fileCount": 9,
+      "integrity": "sha512-55JNKuIW+vq4Ke1BjOTjM2YctQIvCT7GFzHwmfZPGo5wnrgkid0YQtnAleFSqumZm4az3n2BS+erby5ipJdgrg==",
+      "signatures": [
+        {
+          "sig": "MEUCIQDCtkL5LIkaCy2mXt9GL1LlY/yTaqr/5rrwVyGA7bp4AQIgDSkpLGtRTtRBmEbqahCgrN64vKoBA5DQgLl97dhnR2c=",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 10911
+    }
+  },
+  {
+    "name": "js-yaml",
+    "version": "4.3.2",
+    "gitHead": "79ca68d90f333fbe6d9e42827527e62636200191",
+    "repository": {
+      "url": "git+https://github.com/nodeca/js-yaml.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "Vladimir Zapparov",
+      "email": "dervus.grim@gmail.com"
+    },
+    "dist": {
+      "shasum": "8e44fb14a2643c59726bb15787b5f1512cb3d3fb",
+      "tarball": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.3.2.tgz",
+      "fileCount": 36,
+      "integrity": "sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TIRejdH3rhR4EZMGoNx3/TP3O+wzWuiTFl4sqbltzA==",
+      "signatures": [
+        {
+          "sig": "MEQCIHX1fhXx2YLljlMVkO3TOGmUvdJwvGlSNbQ9JmgKmvnwAiBVGFiwLAM71Y7XkvHNNa3T0jiHvADOu5gHOSphe7Qreg==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEYCIQDQAOE9N7qMq0rqJ6J+D1LhKV6XD4f8/lF1RLPkvx6XqwIhAKc27B6CGAsT69+lN4wJvaJJz8b77DeYZMl76Ru/hsPO",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 960180
+    }
+  },
+  {
+    "name": "jsonfile",
+    "version": "6.2.1",
+    "gitHead": "97478af83f115359c331119330b418dfb7c5a6e7",
+    "repository": {
+      "url": "git+ssh://git@github.com/jprichardson/node-jsonfile.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "JP Richardson",
+      "email": "jprichardson@gmail.com"
+    },
+    "dist": {
+      "shasum": "b6e31717f22cc37330b081ce0051ed5de53af2f6",
+      "tarball": "https://registry.npmjs.org/jsonfile/-/jsonfile-6.2.1.tgz",
+      "fileCount": 5,
+      "integrity": "sha512-zwOTdL3rFQ/lRdBnntKVOX6k5cKJwEc1HdilT71BWEu7J41gXIB2MRp+vxduPSwZJPWBxEzv4yH1wYLJGUHX4Q==",
+      "signatures": [
+        {
+          "sig": "MEUCIFPA0YOuTi9B/i/Csjp8ZaB/taKie01VCoMp4QTDkU4BAiEAxm3/evE3NutYxxf4cI/CL8WJF6cwu4wdyhdmtVxSpPw=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 10943
+    }
+  },
+  {
+    "name": "lazy-val",
+    "version": "1.0.5",
+    "gitHead": "b69ad4119f1b19bdab13c61ee2fcc88d46b89071",
+    "repository": {
+      "url": "git+https://github.com/develar/lazy-val.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "Vladimir Krivosheev"
+    },
+    "dist": {
+      "shasum": "6cf3b9f5bc31cee7ee3e369c0832b7583dcd923d",
+      "tarball": "https://registry.npmjs.org/lazy-val/-/lazy-val-1.0.5.tgz",
+      "fileCount": 5,
+      "integrity": "sha512-0/BnGCCfyUMkBpeDgWihanIAF9JmZhHBgUhEqzvf+adhNGLoP6TaiI5oF8oyb3I45P+PcnrqihSf01M0l0G5+Q==",
+      "signatures": [
+        {
+          "sig": "MEYCIQDiWm3GFciFeTRrxCHjgrUcRaXbcIGdkP/QNGscItiZBAIhAIF296nwjD525xWPITX1K6As/jLHfotICDZ+C5mern96",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 2583,
+      "npm-signature": "-----BEGIN PGP SIGNATURE-----\r\nVersion: OpenPGP.js v3.0.13\r\nComment: https://openpgpjs.org\r\n\r\nwsFcBAEBCAAQBQJgng2jCRA9TVsSAnZWagAAAmsQAJm8H8fTTQGHOWLKaCg6\n9ZQXOVy9toGxIcdDvgdqpsTcm3W3ZP8s2+tqjxXQgq7dl0IX0FAGi++VzeLx\nq6blGtMMijCX/tvw+NRz7LWPm8jJfO8j0iBK4JoBwXD2qW1h25+N7UQYW4Ei\n1ZiAVZU8X2oLwY97zSPMsCyEOZoH4j+3fVXo8eV6JTdtN8cEep/si/qvI7Sv\nFFG5iv6cPyYfLc2p04bdcOKkINoWf/UHnmaLaK7BYrwvO0Bo7/qn8hMKfAwN\nRkaPuIMej3TArsYi/5OumZzevDwysOpwDWHna9lN6Z2JEDtvzlsrbUyXE0Ty\nhBUkENOqsb1Oo3iJb40osENHdCyR/kIUx/G8uLE65U+8kvJVUI8aP1Fbmp8y\niOAgnYMVfz0Y38dBHONHf1T2aSe31GmZtCcCcGrmXd5SLlUkjWVzfvLRNIqz\nZCx0CeAfmd77bvTMssn1dB53JXEgHHVHsq79rJgqbh1Drjovky04GkpZ4CLh\nrfY3X7Wn7teAlDKlnbU4d/fYjmMv9VYk6RFoSSOVU2RqI4XCgy1EmFZHFToe\n1j2BQ2pJCy9QsS4fiOPnY0W/THlVbViFH+yVCTN4zLBQ9cV5mMCiRuontX5X\n0UIDC2cj4WBJHWCmtbloKkZiqpCCWBgxStJZxrMiN0T+SP2PJBGOM4CIFsqM\nC+bO\r\n=NGda\r\n-----END PGP SIGNATURE-----\r\n"
+    }
+  },
+  {
+    "name": "lodash.escaperegexp",
+    "version": "4.1.2",
+    "repository": {
+      "url": "git+https://github.com/lodash/lodash.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "url": "http://allyoucanleet.com/",
+      "name": "John-David Dalton",
+      "email": "john.david.dalton@gmail.com"
+    },
+    "dist": {
+      "shasum": "64762c48618082518ac3df4ccf5d5886dae20347",
+      "tarball": "https://registry.npmjs.org/lodash.escaperegexp/-/lodash.escaperegexp-4.1.2.tgz",
+      "integrity": "sha512-TM9YBvyC84ZxE3rgfefxUWiQKLilstD6k7PTGt6wfbtXF8ixIJLOL3VYyV/z+ZiPLsVxAsKAFVwWlWeb2Y8Yyw==",
+      "signatures": [
+        {
+          "sig": "MEUCIQCPHEdQpPPD5wbabiGKfTn/NRdPLBHZxWowiCTCMeuHPQIgPM6DcnbnDiP+/kvbkQnm3lm0q7OhJ51BhzQv3pDiVWU=",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ]
+    }
+  },
+  {
+    "name": "lodash.isequal",
+    "version": "4.5.0",
+    "repository": {
+      "url": "git+https://github.com/lodash/lodash.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "url": "http://allyoucanleet.com/",
+      "name": "John-David Dalton",
+      "email": "john.david.dalton@gmail.com"
+    },
+    "dist": {
+      "shasum": "415c4478f2bcc30120c22ce10ed3226f7d3e18e0",
+      "tarball": "https://registry.npmjs.org/lodash.isequal/-/lodash.isequal-4.5.0.tgz",
+      "integrity": "sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==",
+      "signatures": [
+        {
+          "sig": "MEUCIAnCT9VkOcUM0jrqw1euBVpHxLnLNaE8558FbD4gSl9YAiEAsoDiLnoLjn1h71COpqvpE0OQYtZyAOtO/Y2nWanxh/k=",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ]
+    }
+  },
+  {
+    "name": "matcher",
+    "version": "4.0.0",
+    "gitHead": "1b92d11047336a5c1f55e26ec8518f99d8f1beec",
+    "repository": {
+      "url": "git+https://github.com/sindresorhus/matcher.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "url": "https://sindresorhus.com",
+      "name": "Sindre Sorhus",
+      "email": "sindresorhus@gmail.com"
+    },
+    "dist": {
+      "shasum": "a42a05a09aaed92e2d241eb91fddac689461ea51",
+      "tarball": "https://registry.npmjs.org/matcher/-/matcher-4.0.0.tgz",
+      "fileCount": 5,
+      "integrity": "sha512-S6x5wmcDmsDRRU/c2dkccDwQPXoFczc5+HpQ2lON8pnvHlnvHAHj5WlLVvw6n6vNyHuVugYrFohYxbS+pvFpKQ==",
+      "signatures": [
+        {
+          "sig": "MEUCIBw0eS2P7DqmpcG36MUEHgezM3dlxl8cWCkaoEZzsQmaAiEA5rptISl6H7PvqmD9P8ka2kn1C4rjn/0dFBAvLw+L3fk=",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 9956,
+      "npm-signature": "-----BEGIN PGP SIGNATURE-----\r\nVersion: OpenPGP.js v3.0.13\r\nComment: https://openpgpjs.org\r\n\r\nwsFcBAEBCAAQBQJgO3d6CRA9TVsSAnZWagAAS/4P/0LsGY2iFhlXPbTBYm6A\nXSTlRjLjiEEmqo9ftX8bVQoEP8xzhvdQf+GvNTELfm60Qjjj2VEMh36XQJh1\nw9Q8hLsrhqkDw6+Y3BPHfE5i5UiVmpsWi3YUA07451+mJ69IvirrbhuCrigt\n7Lpg37o5Fu2B9mqhlMtvG0LKgiVuE4dVNxrYYVdI2VB7jUj9JMkRB3b557Yt\n024KW5S9bn/4fS78qCR1VD2mo225MJpRfVmffJd4QOoRpQRG6GMpfspiRv8I\n4/Ahrgutoa++WQzenSSDXvvQ0vf7cYYkhXeS+79Um+eoAtOBsZ2QHwt0tG1m\nRyci/ws34AauIcSvucvCUeYkZkdwCHjmSVwcah/aJs37tsFzHbDMnoabv5Zr\nete+xRFsnZtg3Thfy8ox1TZM6RXT/dqU72OcUTBqyNXUu6bfydLJpzXomIYG\n09ISRccJa6Fgf2qHkmWGB/3cEiSSDIEAZwOqHyZ0wOrAWG7S+YmH7OH++Rrj\nGtR6VMrAc03tP1A4wjAAUFnTqkZRYr/FTvAwCRy9gjM9XcjBjqcQjuTirpW+\nO24mFymV3UDDA7F+6BsdrRGVnvLBKtc+gbj6Fu3Ue8/kB+tOZWVFoq2OJDhY\nnOwDII+rZxAfQ/IbDDdXT+eEuSxE/XSbAEjIfScnIXsbRiEkjPrL/dtczpZk\nDXel\r\n=yiBb\r\n-----END PGP SIGNATURE-----\r\n"
+    }
+  },
+  {
+    "name": "ms",
+    "version": "2.1.3",
+    "gitHead": "1c6264b795492e8fdecbc82cb8802fcfbfc08d26",
+    "repository": {
+      "url": "git+https://github.com/vercel/ms.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "dist": {
+      "shasum": "574c8138ce1d2b5861f0b44579dbadd60c6615b2",
+      "tarball": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+      "fileCount": 4,
+      "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==",
+      "signatures": [
+        {
+          "sig": "MEYCIQCpp8dz4QhYMwrrNgFARRXozR4wAyDcUVNXEBw0PmSj+wIhALlCZH2KJyCo9qv/3CfMFsvx9bXKQNQBOqmLstIPXP2L",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 6721,
+      "npm-signature": "-----BEGIN PGP SIGNATURE-----\r\nVersion: OpenPGP.js v3.0.13\r\nComment: https://openpgpjs.org\r\n\r\nwsFcBAEBCAAQBQJfz4WbCRA9TVsSAnZWagAA5A8P/jNowbVOl1ORENKivAXb\nQ3NncrkWHdRjUGeUhX89Ih3N+woNugnSTOEKACswARtqXMf5M1Iy8GODorDp\noz+pqU0HGU+KjLO/sL+TGxJJJAMfX3vhRZTHk5ZzKDi9s6iAM3nMeE5rwNUS\n7wprOzbKNE9hev82zLgfY8kF7UhxY09BH/GBS+kWGD3ViM8R5vl49JEfrvN9\nSKris0FTSP/YL1QrRNjvMMfGh9WhMOC/FLkJnIErcw2I8g/XmBOApjqM9KhG\n42/ls4gXuaUinNXC68wAbntxhHtJo2403NVmU7UJDDdulEBbTXZ18cKHt520\nUkRZp8piQb1m3QR8XPjvpnShlOutYdQJfjltY5z12Wfwj5OBVsurWeFtJRme\nBxn9pdrKW45doypT1Lc7LXoIftLBtToVtWRThEVihq4I9f4zpR9Uzc3qp1jU\nlEo9ndqf9rg9oVV8fSK+dIDuUUyp7NrI5uCfcUMfKEgwWortapNKNvMuHp7r\noZhuGRekRc1kG8YmsYfLKv3kRS8uiXa/jbwD4PkNGbev7KhEptCnGZm78z9k\nV0KOdaCU3Igo6rK23kgsAFhxDvMANHby3dLYQMbZOoqkZLv4qiPS/7raPOLc\n5q/ezwT2JZLWZlTbZnigAVuZ5aHmLb6QEuMLcIQaelDkH7XWCNpED8cM2pFX\nTllW\r\n=eZCP\r\n-----END PGP SIGNATURE-----\r\n"
+    }
+  },
+  {
+    "name": "object-keys",
+    "version": "1.1.1",
+    "gitHead": "ba2c1989270c7de969aa8498fc3b7c8e677806f3",
+    "repository": {
+      "url": "git://github.com/ljharb/object-keys.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "url": "http://ljharb.codes",
+      "name": "Jordan Harband",
+      "email": "ljharb@gmail.com"
+    },
+    "dist": {
+      "shasum": "1c47f272df277f3b1daf061677d9c82e2322c60e",
+      "tarball": "https://registry.npmjs.org/object-keys/-/object-keys-1.1.1.tgz",
+      "fileCount": 11,
+      "integrity": "sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==",
+      "signatures": [
+        {
+          "sig": "MEYCIQDEXnivOzyezLnJgG1VUzWQj/PurnTkz1ZGYX4uYuK0JgIhAKKg/wGdPhn67UneiElcVANcbwapE+3GGhHJftwDOncL",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 26544,
+      "npm-signature": "-----BEGIN PGP SIGNATURE-----\r\nVersion: OpenPGP.js v3.0.4\r\nComment: https://openpgpjs.org\r\n\r\nwsFcBAEBCAAQBQJcqWC7CRA9TVsSAnZWagAApOoQAIGgpq1xnaDCEe3hqJFt\n1fjwFbEKHTyK59hA/zVmvvR4ikMeltZc5KAIKNt5XyDBO4NtuRcA7E1b3D7C\nFX/IMtPwIq5OvZLWhEnGBNTmwlVq8PI9DwZ6AE2hWM4JAmkT5tay7QtjDAur\nYRdTEEB3eqWETNiaybnF9d1GLKuH4dKcM/v9yiHMp+qa9Ivpe9VtWRj7WTr+\nkxc39JZdSVGFbVYNCFkZ8oyj5VbLOtyMB++6JxbR9fYlZ06ibmT+XrFsz7CF\nr7hQ/XFHlyodg0pi34+YhlyDAsPIvk8DOxDoKGs4aFZ6EqZm3hVnWaAlKqgX\n3ikZAT9Z/4d9icoRkEhVMj7INySL4bSd7lFDIlwGruc4j6U6b6phhwgIlhQE\nMsnWmnLL7/AAaPB8oiNhb8Lt/9/jRJsAHwRBRH9NN/DH2VyP0F2hzp66L5dF\niIVw9YUIBCOzfRg5Gr0qd0GCGbIefcq4AomxsJEdBbV+3AFkJvj7dibMrSb7\nJcBVC/TwJCjNv+Ols7VZE+Yj6ZYbNrsuh5KbPkdFchg6qNgds1Dh1tH8GwrJ\nULdSyACz/0stHNGr8p+Boa85mDseApgozr42UUHdEQyohO1/meNonjDGJl9w\ncLlcHMcR7hnLzp4v54jcv+q74EDZa15iEk/ckLdYFoUXXhRhBJo0XyG43zf8\nEO6O\r\n=PzOq\r\n-----END PGP SIGNATURE-----\r\n"
+    }
+  },
+  {
+    "name": "onnxruntime-common",
+    "version": "1.30.0",
+    "repository": {
+      "url": "git+https://github.com/Microsoft/onnxruntime.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "fs-eire"
+    },
+    "dist": {
+      "shasum": "acbfc14f84a8cdfa087535212ae5f01255469441",
+      "tarball": "https://registry.npmjs.org/onnxruntime-common/-/onnxruntime-common-1.30.0.tgz",
+      "fileCount": 193,
+      "integrity": "sha512-7fdVWjAID1dVhH/G8qK3APARunV4VkBFoCQAP7qp4Wkab0mrorvmc+sqiT+mKXOzDqdjN5j+/Z9nb4gzNPWcyA==",
+      "signatures": [
+        {
+          "sig": "MEUCIDI5J6AUA7U23LCGXG4Z/fJULXD1XsC0xKyW5C5YhEuHAiEA4X+iVX+BsCsv23v+h0TYePwl7cvVLzxHnRWyF2gjqn4=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIH62dkRQysv6cemalnO6dsNgnSNND6wZvwrhQ8y1uVLfAiEA47xu72GIvlglP2Gjr+ddEpieEV3s5JHLsF1TndS1KJI=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 574567
+    }
+  },
+  {
+    "name": "onnxruntime-node",
+    "version": "1.30.0",
+    "repository": {
+      "url": "git+https://github.com/Microsoft/onnxruntime.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "fs-eire"
+    },
+    "dist": {
+      "shasum": "8d4c4a75f31088ec846f08cccb62f3272a7bf44a",
+      "tarball": "https://registry.npmjs.org/onnxruntime-node/-/onnxruntime-node-1.30.0.tgz",
+      "fileCount": 43,
+      "integrity": "sha512-twhs1C2C/BFkz1yc5OY0KIU2GUq6DURO7hD4bx5Q2Qy3nAMJwRXW8xU3NVczE29VA9lolLOYepoD8fjTGOfIqw==",
+      "signatures": [
+        {
+          "sig": "MEYCIQCFpcvyG7oLNu3/HAK3daP1Ol0gBPRsphpcsMeQ+zn9MAIhAM4aqxcogDCQACFfEg1k0dsjY/GDt9Q/ClmDJZwgmpF3",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIQD2Ic60Zq+DpaOqLP4c5JL4kx4woJBtqPPPECJM7Wqw1gIgb9DBZ6FMfOWLoNRtTYVkKza65dSuvtb2ZXpOpvGdwJw=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 301068136
+    }
+  },
+  {
+    "name": "react",
+    "version": "19.3.0",
+    "gitHead": "1d34f91dfde6bba84d08b683aaba164c7194dacb",
+    "repository": {
+      "url": "git+https://github.com/react/react.git",
+      "type": "git",
+      "directory": "packages/react"
+    },
+    "license": "MIT",
+    "dist": {
+      "shasum": "e20aa3a14687075ce863351b5878b0608c3fbfb2",
+      "tarball": "https://registry.npmjs.org/react/-/react-19.3.0.tgz",
+      "fileCount": 27,
+      "integrity": "sha512-E8LUcbtBWt20bbl2YoHfx4ZDBdxVTfOKtCZn9cDSJ4l6/nuoApcpIBcj47t2wZoVX8g2ZHuMHbiShgCR1T5Sog==",
+      "signatures": [
+        {
+          "sig": "MEUCIALru2uJjzTwQTeh/ax6FRZSyVBDySuUEr4k+TiaANpDAiEAgJVCX1upjcvo4FzKCrJW9vcVnWVJwMbuM4Wsc4UM61o=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEYCIQCLRI5uegHedldoJjX7BioMz8AnR5jZmFZB2+1PMyrFagIhAMlHH0dBWncX0Nq4vSqkVKZtP7Jolgae2aodnOtIRrQK",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/react@19.3.0",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 178663
+    }
+  },
+  {
+    "name": "react-dom",
+    "version": "19.3.0",
+    "gitHead": "1d34f91dfde6bba84d08b683aaba164c7194dacb",
+    "repository": {
+      "url": "git+https://github.com/react/react.git",
+      "type": "git",
+      "directory": "packages/react-dom"
+    },
+    "license": "MIT",
+    "dist": {
+      "shasum": "a0ff19161d7f4e9be5469a07278b0c06e00f9001",
+      "tarball": "https://registry.npmjs.org/react-dom/-/react-dom-19.3.0.tgz",
+      "fileCount": 43,
+      "integrity": "sha512-JDk8dgif51OjFoDE70+OT9ICyYr+69HlmihNwp1+Nsfbna3t5sIiCa9ZJktDmQ4/1b/rn26hIAR2uYXDMr5r0Q==",
+      "signatures": [
+        {
+          "sig": "MEUCIQDl7gfoVlOoqKLgPU325X6EcrNHIYuFJJX0R9PHDs9KygIgAQaRzlBCG57IDn6XBjaOL/adBCuf/oiguaTixpmBBjw=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIBJlBwP9e+XpqYfXpAJxCFTZ2i9tt8XCm9JYmuFMXsm1AiEAi9g3MN8fg6vModu7alAeUKmJ6iWO6untLGlvHfX1mb4=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/react-dom@19.3.0",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 8063782
+    }
+  },
+  {
+    "name": "sax",
+    "version": "1.6.1",
+    "gitHead": "961ceeefcc5186005466f2085aeb36f31b161e37",
+    "repository": {
+      "url": "git+ssh://git@github.com/isaacs/sax-js.git",
+      "type": "git"
+    },
+    "license": "BlueOak-1.0.0",
+    "author": {
+      "url": "http://blog.izs.me/",
+      "name": "Isaac Z. Schlueter",
+      "email": "i@izs.me"
+    },
+    "dist": {
+      "shasum": "4c23cf608c0b693ab54b4b5888e92cfe977b9843",
+      "tarball": "https://registry.npmjs.org/sax/-/sax-1.6.1.tgz",
+      "fileCount": 4,
+      "integrity": "sha512-42tBVwLWnaQvW5zc4HbZrTuWccECCZfBi92FDuwtqxasH+JbPB3/FOKb1m222K42R4WxuxzzMsTswfzgtSu64Q==",
+      "signatures": [
+        {
+          "sig": "MEUCIB+k0mpfjJIjr2u9QuOOK6ciGlHTS8piTh3WV5vzr7sZAiEAjpa4HelOFxn7nH2YkDiDyhk8msqN0v8AO6NY5fmGm2o=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCICWC2NbQKyxUf/8i5/Cb1SP8glnhWs1A++Xol7dgxTZxAiEAozGC8Zjhgw4C/wyCdP8EtEzaB2m7Lhzy9vhvUR0gJN4=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 61678
+    }
+  },
+  {
+    "name": "scheduler",
+    "version": "0.28.0",
+    "gitHead": "1d34f91dfde6bba84d08b683aaba164c7194dacb",
+    "repository": {
+      "url": "git+https://github.com/react/react.git",
+      "type": "git",
+      "directory": "packages/scheduler"
+    },
+    "license": "MIT",
+    "dist": {
+      "shasum": "03d3ca348aeaf8b7502f64468f217b27523f9695",
+      "tarball": "https://registry.npmjs.org/scheduler/-/scheduler-0.28.0.tgz",
+      "fileCount": 15,
+      "integrity": "sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw==",
+      "signatures": [
+        {
+          "sig": "MEYCIQCp6JhfBUG0bNJ0AX9+v90XqfYsRerL3xB93Bzc7rkJbgIhAMiUdDkiN+BQW2IGNWdRupf1NWrUv3kTeYWHkOcBj8SK",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIQCYs2BeSsTLmwCuhToI8CO7xqwUyKCKX9nYaB5TeoS7CwIgGbmyAGGhO+idI2DYBerRitZy2Sd3jAMKpUkFItyTyoY=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/scheduler@0.28.0",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 82659
+    }
+  },
+  {
+    "name": "semver",
+    "version": "7.7.4",
+    "gitHead": "5993c2e42bdf17c5f03e6360da51bc707fcee460",
+    "repository": {
+      "url": "git+https://github.com/npm/node-semver.git",
+      "type": "git"
+    },
+    "license": "ISC",
+    "author": {
+      "name": "GitHub Inc."
+    },
+    "dist": {
+      "shasum": "28464e36060e991fa7a11d0279d2d3f3b57a7e8a",
+      "tarball": "https://registry.npmjs.org/semver/-/semver-7.7.4.tgz",
+      "fileCount": 52,
+      "integrity": "sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA==",
+      "signatures": [
+        {
+          "sig": "MEUCIQDCtGLDNkM1R8FDGorCfRtY8NL1e4Bvp0JvegtgqkzeQAIgF4TquobI4rzb0RmeNjmO/PxJX8co8n2KXo9FJPO2WRU=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/semver@7.7.4",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 97799
+    }
+  },
+  {
+    "name": "semver",
+    "version": "7.8.5",
+    "gitHead": "6e05b7637396ac66522cff8731f07cfe0ef49a29",
+    "repository": {
+      "url": "git+https://github.com/npm/node-semver.git",
+      "type": "git"
+    },
+    "license": "ISC",
+    "author": {
+      "name": "GitHub Inc."
+    },
+    "dist": {
+      "shasum": "39b646037dd50c14fb451e7e4cac58ed8b863f69",
+      "tarball": "https://registry.npmjs.org/semver/-/semver-7.8.5.tgz",
+      "fileCount": 53,
+      "integrity": "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==",
+      "signatures": [
+        {
+          "sig": "MEQCIA1IMvQVanynk4boyVwPRYxqwVyNO88VINzVnIEactQlAiB/YQz4fEE45VLTLw/CEEHBWzh+hzED63yilqQQZPcQ1Q==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/semver@7.8.5",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 101065
+    }
+  },
+  {
+    "name": "serialize-error",
+    "version": "8.1.0",
+    "gitHead": "5a318e5e2335be394e5b3372e1ba6fd2832f390e",
+    "repository": {
+      "url": "git+https://github.com/sindresorhus/serialize-error.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "url": "https://sindresorhus.com",
+      "name": "Sindre Sorhus",
+      "email": "sindresorhus@gmail.com"
+    },
+    "dist": {
+      "shasum": "3a069970c712f78634942ddd50fbbc0eaebe2f67",
+      "tarball": "https://registry.npmjs.org/serialize-error/-/serialize-error-8.1.0.tgz",
+      "fileCount": 5,
+      "integrity": "sha512-3NnuWfM6vBYoy5gZFvHiYsVbafvI9vZv/+jlIigFn4oP4zjNPK3LhcY0xSCgeb1a5L8jO71Mit9LlNoi2UfDDQ==",
+      "signatures": [
+        {
+          "sig": "MEQCIHbGJxQMvEaEOossSZCRLxsSd5KIBqwYlpSNT/XVxPdUAiBdYi+ZZpKq14B7eI2MiPxfH2Cd1m7SnwR8xKEmfaHLDQ==",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 10301,
+      "npm-signature": "-----BEGIN PGP SIGNATURE-----\r\nVersion: OpenPGP.js v3.0.13\r\nComment: https://openpgpjs.org\r\n\r\nwsFcBAEBCAAQBQJgfVE/CRA9TVsSAnZWagAAySgP/jcWtqgdqYgmW/mf6/JK\nDSu702DeN5s1iyJDZ4vAmUM2KbT5l3UswvJlgHtg8PMdFzFgslLnvCzgjz2v\nYSBF2ytxZ8ZmYaUODVhaRfZ1g1wlxTIGwxqGf+YnfYIVy02fdUVQKvj5blsY\nU2JrlozYaf9bzrfTlNVHgUZF34bAARK4JcZMAKU9YdCIG76WwC9arede1bY7\nJYEFspsJrVDKdfLaMCvYqXiyg0BITevcfpU5g2DoQfyCRi5XnYyEvhoDRAfk\nBvNgNJdWo1LpbrsZgp7DImUnnilxGOgl8Qsy0o1pACUS69JAx3t/0lmQTFxO\nsPMuPau66ZpIQ5aGk/ThETuBkwvtDniKY2qnXENsixa5mNlvKc+j94no1jl+\nJ8bIm+tV6nEpWF0kyBn6LFPIXoF2mVzhCs/dXmE8QDUU7yrfi9E814zE206t\nBkiQDCcF6R0eR80nbbmUNLg9dOveFZzQyIpVPQhgv/wYcrIB+6vNj6Ouli3I\nttBlAtkx2ATty/RLOuHH9RHl5BrYrLgjZpijLBnZxvIHiZjZWFo9p/JsWges\nBaZPGDmZmmqXEDUJi0DKq8E6dYgDol0Md53EhEPUbeo3anPJX6TBlupTIFnC\n6B8njj75lTx47KJ6aFQzf8p9d43NRaF/33BbC1s7qNbuwjF5An7HDuYCT15a\n7d8E\r\n=DVSZ\r\n-----END PGP SIGNATURE-----\r\n"
+    }
+  },
+  {
+    "name": "sharp",
+    "version": "0.35.4",
+    "gitHead": "7f1a0a22cc285fe180766f4935d50b55af6e8432",
+    "repository": {
+      "url": "git+https://github.com/lovell/sharp.git",
+      "type": "git"
+    },
+    "license": "Apache-2.0",
+    "author": {
+      "name": "Lovell Fuller",
+      "email": "npm@lovell.info"
+    },
+    "dist": {
+      "shasum": "361df3b2959daeb380541289960456c6be0f92de",
+      "tarball": "https://registry.npmjs.org/sharp/-/sharp-0.35.4.tgz",
+      "fileCount": 47,
+      "integrity": "sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn0ImXqpGVv5zliDs0V9HbmbCQLpbuo2ej9rAoOQTvMDA==",
+      "signatures": [
+        {
+          "sig": "MEUCIDCUJqK5SizeEyDDsqFzyvrHumwcxPD00fjhtqGUk7/GAiEAisp4kyu4i7t9c/chacusdKGMlXfISSS+u74o0/V/Iok=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEYCIQCpt9y592NSK7thukTtceF5arkgjqMXLZ2ndIiFnYXQRAIhAOGvBZ5GKREZKH3pjKJXVisaxSERwH2LscQxpsFUXrcO",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/sharp@0.35.4",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 960214
+    }
+  },
+  {
+    "name": "tiny-typed-emitter",
+    "version": "2.1.0",
+    "gitHead": "66c1b66bc159675352a6f38911e4c6cf2117f3e4",
+    "repository": {
+      "url": "git+https://github.com/binier/tiny-typed-emitter.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "Zurab Benashvili",
+      "email": "zura.benashvili@gmail.com"
+    },
+    "dist": {
+      "shasum": "b3b027fdd389ff81a152c8e847ee2f5be9fad7b5",
+      "tarball": "https://registry.npmjs.org/tiny-typed-emitter/-/tiny-typed-emitter-2.1.0.tgz",
+      "fileCount": 5,
+      "integrity": "sha512-qVtvMxeXbVej0cQWKqVSSAHmKZEHAvxdF8HEUBFWts8h+xEo5m/lEiPakuyZ3BnCBjOD8i24kzNOiOLLgsSxhA==",
+      "signatures": [
+        {
+          "sig": "MEYCIQCxVB1YgL2aXTzH+tS/MdYx2DWw2Gm/Iy+Qr9CqY0Lb7wIhAI0a9Tdu8o/72ODmAvIC0XKjVQuhrtVXd1CyY0x9P7xU",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 5302,
+      "npm-signature": "-----BEGIN PGP SIGNATURE-----\r\nVersion: OpenPGP.js v3.0.13\r\nComment: https://openpgpjs.org\r\n\r\nwsFcBAEBCAAQBQJg+9WQCRA9TVsSAnZWagAA+kYQAJqZJACVLljSRYbWkocC\n9XO45bOIS3a+yUeURxTZhTpYDe+SVFY0czne6Ro5RQrbO2VkRe3VSwF+RDYx\nE5b6lkzMGMXomFSAKbZddlrc7/3vmy+E8SdZ/aYQavlk6CmEJ9+CmvUXaItn\nsxBLbm1BC4nydklz3QqdAZxzBi7SPBIEadr7Y+FF2qoZOY7KlFzCkilsF+Uq\n2n9xqEQ8nQtqcLJjjQ3D5Eozh9l7cOGq7TQuTQ3UcviwpCAHYpLikE3vwR7q\nA+tK+zb1Nt1hMxO+UlKWgS+S7I4ibSdBEnV9IBonD5Y79x8JwFU0dZi5Bg2t\nbuEtUXB5hliF8GHZbBPvYpjayDDEdjo4N5Jz44YHqJoJ9QdPKQdj3tukwj/T\nJsm8YMeno6Q3CHh4K0YfvWA2miyduM3Mnkdjm1i4OTbMNLG2UO3XuexQMbVq\nhl1rLGfbwyGiR0jkD7MrQ3+QaeYSYjhLgo+t08y2RK4uHw2b4ack6pDY+PrG\nOOTbS4lgjakHD8o3UgJO3mbY4QN98XlaEMj42jhHDa3NJDzJeUPEKuVd8sHN\nCADwmjWyYCBGuBctEap3h+Jd/RDTCeMbxMQok7tVBJuCHMQ416GfnjXnaVce\naH4fC4glAwleD+MdNBw0T3omweXhMg2tnPNSbQt0gwnZg4BfRBi35whPlP+L\nJxLY\r\n=LB0x\r\n-----END PGP SIGNATURE-----\r\n"
+    }
+  },
+  {
+    "name": "type-fest",
+    "version": "0.20.2",
+    "gitHead": "0337bcdebdad653915d35bf39428abf702ae5de5",
+    "repository": {
+      "url": "git+https://github.com/sindresorhus/type-fest.git",
+      "type": "git"
+    },
+    "license": "(MIT OR CC0-1.0)",
+    "author": {
+      "url": "https://sindresorhus.com",
+      "name": "Sindre Sorhus",
+      "email": "sindresorhus@gmail.com"
+    },
+    "dist": {
+      "shasum": "1bf207f4b28f91583666cb5fbd327887301cd5f4",
+      "tarball": "https://registry.npmjs.org/type-fest/-/type-fest-0.20.2.tgz",
+      "fileCount": 42,
+      "integrity": "sha512-Ne+eE4r0/iWnpAxD852z3A+N0Bt5RN//NjJwRd2VFHEmrywxf5vsZlh4R6lixl6B+wz/8d+maTSAkN1FIkI3LQ==",
+      "signatures": [
+        {
+          "sig": "MEQCIFQhBNZB0M7zjJ+L+RSqyml87iQ5+mWTDUO/yFPYa+vQAiBdmY3HoCer5WgTuYktiKMiy+Pu86GHqlnYLtp8+7WeyQ==",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 110590,
+      "npm-signature": "-----BEGIN PGP SIGNATURE-----\r\nVersion: OpenPGP.js v3.0.13\r\nComment: https://openpgpjs.org\r\n\r\nwsFcBAEBCAAQBQJfwMvsCRA9TVsSAnZWagAAFK4P/1xhVvs8GAjTc3fFGKrj\nyVBiieGROEbrE7aVRcjEMZXIrONRjxQPRwzwxeVehh/IJhVjL75NYhK+C8QH\nWazIZjIJYRgf6Pq70GSrSNug44hPebhIb3X7xrjj0mLvpUwezO24nN4jzTWi\nyC8/KgzIYK6/en3ZoG3OewfzO6xXomEs/j0xRKrgFXeEzGcxlBIHleGXdaSZ\ndeH4K45VPdSq3eccM0fcaILrRolL/EON20BN+dj7wYmMCX6ND+kmqcWYcmqV\n7IxOxYwq76dkPkI3bsg2aWbXYPIERWDlOkmZBijXiMYWral9fmdDl6BJUbZ2\nCzqCf5vMY5ZPbQTEJ+DhDf9soQf1oYFnMs4ytiynsdlyaRYufl2HSZnSbgY7\numUexWG6Ftt2D0UxFwdRX6uIXUvnEEUHiYRKaUuQccj7iSG7sNkDvExHeg7w\n5R/RIBzCFc/VVk1AVgIVPfe5e9POeqRwyNEjo02w45ybT/tE2J4YlS6kE6Wu\nIPKoHR1MI3LtgosNfULDc6tmbJH2VfjgdzfbHZY49xpu6fZKi7RAc3N1kSR9\njyVRBNwGO6F4ze8woXirRqaldAtppHk0DNr45EjdrlOdHfMroAre9PVT5MLD\nz7mg/tYQvriCxtyH0+ZA+hFFpOZAcbV8LQjattIod9OhT+6TY2D8L5k2IA7U\n5FyD\r\n=lUVY\r\n-----END PGP SIGNATURE-----\r\n"
+    }
+  },
+  {
+    "name": "universalify",
+    "version": "2.0.1",
+    "gitHead": "dc17e0e00fb39c8d52e97ce77e494cdadfa8d19c",
+    "repository": {
+      "url": "git+https://github.com/RyanZim/universalify.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "Ryan Zimmerman",
+      "email": "opensrc@ryanzim.com"
+    },
+    "dist": {
+      "shasum": "168efc2180964e6386d061e094df61afe239b18d",
+      "tarball": "https://registry.npmjs.org/universalify/-/universalify-2.0.1.tgz",
+      "fileCount": 4,
+      "integrity": "sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==",
+      "signatures": [
+        {
+          "sig": "MEUCIAUFWZO9ik+8IH55REhY6tJ/JfNYwYpdKIM3FXV7NX/7AiEAnLH4+tAcL1mGyIz4gVmPJVA16jBN25Z/HykKLkZFn84=",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "unpackedSize": 4675
+    }
+  },
+  {
+    "name": "zod",
+    "version": "4.6.5",
+    "repository": {
+      "url": "git+https://github.com/colinhacks/zod.git",
+      "type": "git"
+    },
+    "license": "MIT",
+    "author": "Colin McDonnell <zod@colinhacks.com>",
+    "dist": {
+      "shasum": "e3af3edbdc260239c52f73caad05dbbffe6e82cd",
+      "tarball": "https://registry.npmjs.org/zod/-/zod-4.6.5.tgz",
+      "fileCount": 840,
+      "integrity": "sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==",
+      "signatures": [
+        {
+          "sig": "MEUCIDtkjZOq6lmdtsdqBESzHORjYxE3jnbtCMlc6fp5KcXBAiEAx7qf7EGotCL3tQfTVb+gukRlzOmeGDbJR+8DrkwN+Vs=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEQCIBNNqEXGwMQtbIAF5A2Z8IDOhQQVSkHwQAkmsgywNJSCAiAfbEx/zArqNnn/f4OQedpGwu17tlhIWsBJ1+yBFjssqQ==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "attestations": {
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/zod@4.6.5",
+        "provenance": {
+          "predicateType": "https://slsa.dev/provenance/v1"
+        }
+      },
+      "unpackedSize": 6140311
+    }
+  }
+]

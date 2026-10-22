@@ -1,0 +1,18 @@
+[
+  {
+    "name": "electron-builder-nsis",
+    "version": "3.0.4.1",
+    "file": "nsis-3.0.4.1.7z",
+    "url": "https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-3.0.4.1/nsis-3.0.4.1.7z",
+    "sha256": "9877df902530f96357d13a7a31ae2b9df67f48b11ffc9a1700a7c961574ec5fa",
+    "bytes": 1287512
+  },
+  {
+    "name": "electron-builder-nsis-resources",
+    "version": "3.4.1",
+    "file": "nsis-resources-3.4.1.7z",
+    "url": "https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-resources-3.4.1/nsis-resources-3.4.1.7z",
+    "sha256": "593a9a92ef958321293ac6a2ee61e64bf1bd543142a5bd6b3d310709cc924103",
+    "bytes": 730800
+  }
+]

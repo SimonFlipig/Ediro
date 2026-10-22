@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-22T09:59:01.474Z",
+  "fixture": "D:\\Ediro\\.local\\shell-integration-rN1OuE",
+  "template": "D:\\Ediro\\.local\\nsis-templates\\264ce807098c8900f0e420305ac45fcadf89f27a42dd95396076b6f2c9d0c1d6",
+  "appId": "io.github.simonflipig.ediro.shelltest.f9f35bae-91db-492d-9e07-7a6317a03b44",
+  "results": {
+    "SetAUMI": "0",
+    "Register0": "preserved-0",
+    "Register1": "preserved-1",
+    "Register2": "preserved-2",
+    "Stack": "preserved-stack",
+    "Unpin": "1",
+    "CustomList": "0",
+    "RecentList": "0",
+    "MissingLink": "-2147024894"
+  },
+  "shortcut": {
+    "appId": "io.github.simonflipig.ediro.shelltest.f9f35bae-91db-492d-9e07-7a6317a03b44",
+    "target": "C:\\Windows\\System32\\cmd.exe",
+    "arguments": "/c exit 0",
+    "description": "Ediro temporary Shell validation",
+    "workingDirectory": "D:\\Ediro\\.local\\shell-integration-rN1OuE",
+    "iconLocation": "C:\\WINDOWS\\system32\\cmd.exe,0"
+  },
+  "scope": "A temporary shortcut and random AppUserModelID only. Invokes cleanup APIs on an unpinned shortcut and isolated ID; does not claim a populated Jump List or user-pinned item was removed. Existing Ediro installations and shortcuts are untouched."
+}

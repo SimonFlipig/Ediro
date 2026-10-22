@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-22T09:55:08.873Z",
+  "installer": {
+    "path": "D:\\Ediro\\.local\\shell-template-build-JL1cLq\\Ediro-Shell-Validation-setup.exe",
+    "bytes": 142747979,
+    "sha256": "3371d52e661ebf3921762c70307e085e3c8365f3d429579de0d4aec4611b5632"
+  },
+  "uninstaller": {
+    "path": "$R0/Uninstall Ediro Shell Validation.exe",
+    "bytes": 136022,
+    "sha256": "c94ef119a6f1b3365e0e28f1fdb5a8c416fb6074a255d8f3bc379f21703852bf"
+  },
+  "setupPlugins": [
+    {
+      "path": "$PLUGINSDIR/StdUtils.dll",
+      "bytes": 102400,
+      "sha256": "b72e9013a6204e9f01076dc38dabbf30870d44dfc66962adbf73619d4331601e"
+    },
+    {
+      "path": "$PLUGINSDIR/System.dll",
+      "bytes": 12288,
+      "sha256": "3eb38ae99653a7dbc724132ee240f6e5c4af4bfe7c01d31d23faf373f9f2eaca"
+    },
+    {
+      "path": "$PLUGINSDIR/UAC.dll",
+      "bytes": 14848,
+      "sha256": "2f7f8fc05dc4fd0d5cda501b47e4433357e887bbfed7292c028d99c73b52dc08"
+    },
+    {
+      "path": "$PLUGINSDIR/nsDialogs.dll",
+      "bytes": 9728,
+      "sha256": "1e40211af65923c2f4fd02ce021458a7745d28e2f383835e3015e96575632172"
+    },
+    {
+      "path": "$PLUGINSDIR/nsExec.dll",
+      "bytes": 6656,
+      "sha256": "5d9ceb1ce5f35aea5f9e5a0c0edeeec04dfefe0c77890c80c70e98209b58b962"
+    },
+    {
+      "path": "$PLUGINSDIR/nsis7z.dll",
+      "bytes": 434176,
+      "sha256": "b393f05e8ff919ef071181050e1873c9a776e1a0ae8329aefff7007d0cadf592"
+    }
+  ],
+  "uninstallerPlugins": [
+    {
+      "path": "$PLUGINSDIR/StdUtils.dll",
+      "bytes": 102400,
+      "sha256": "b72e9013a6204e9f01076dc38dabbf30870d44dfc66962adbf73619d4331601e"
+    },
+    {
+      "path": "$PLUGINSDIR/System.dll",
+      "bytes": 12288,
+      "sha256": "3eb38ae99653a7dbc724132ee240f6e5c4af4bfe7c01d31d23faf373f9f2eaca"
+    },
+    {
+      "path": "$PLUGINSDIR/UAC.dll",
+      "bytes": 14848,
+      "sha256": "2f7f8fc05dc4fd0d5cda501b47e4433357e887bbfed7292c028d99c73b52dc08"
+    },
+    {
+      "path": "$PLUGINSDIR/nsDialogs.dll",
+      "bytes": 9728,
+      "sha256": "1e40211af65923c2f4fd02ce021458a7745d28e2f383835e3015e96575632172"
+    },
+    {
+      "path": "$PLUGINSDIR/nsExec.dll",
+      "bytes": 6656,
+      "sha256": "5d9ceb1ce5f35aea5f9e5a0c0edeeec04dfefe0c77890c80c70e98209b58b962"
+    }
+  ],
+  "winShellAbsent": true,
+  "scope": "Static extraction of both installer stages; no installation, upgrade or uninstallation is executed.",
+  "evidenceDirectory": "D:\\Ediro\\.local\\installer-shell-verification-6FjrKB",
+  "appId": "io.github.simonflipig.ediro.shelltest.a1ef855a-4477-4544-aa2e-32acbadc122f",
+  "template": "D:\\Ediro\\.local\\nsis-templates\\264ce807098c8900f0e420305ac45fcadf89f27a42dd95396076b6f2c9d0c1d6"
+}

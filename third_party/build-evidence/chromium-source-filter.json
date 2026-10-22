@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "type": "chromium-source-only-v1",
+  "root": "chromium-152.0.7977.78",
+  "sourceUrl": "https://commondatastorage.googleapis.com/chromium-browser-official/chromium-152.0.7977.78.tar.xz",
+  "sourceBytes": 5916191748,
+  "sourceSha256": "16bb4164faa455d1e6a43320b3c0e4c895a93138e892a1bbf7e801863dc4bc74",
+  "excludedTrees": [
+    "third_party/instrumented_libs/binaries",
+    "third_party/llvm-build-tools",
+    "third_party/llvm-build",
+    "third_party/llvm-libclang",
+    "third_party/rust-toolchain",
+    "third_party/node/linux",
+    "third_party/node/mac",
+    "third_party/node/win",
+    "third_party/apache-linux",
+    "third_party/apache-mac",
+    "third_party/dawn/tools/golang",
+    "third_party/openscreen/src/third_party/llvm-build",
+    "third_party/catapult/third_party/vinn/third_party/v8",
+    "third_party/siso/cipd",
+    "third_party/checkstyle/cipd",
+    "third_party/google-java-format/cipd",
+    "tools/luci-go"
+  ],
+  "excludedPathPatterns": ["^build/linux/[^/]*[-_]sysroot(?:/|$)", "^chrome/build/pgo_profiles/.*\\.profdata$"],
+  "reason": "Remove identified downloaded toolchain and Linux system-root trees, plus files with confirmed executable/archive bytecode magic. Do not classify arbitrary files by extension: .obj may be authored mesh data and .aar may be a gzip source-data fragment. Preserve authored sources, build recipes, patches, licenses and ordinary resources; this is not a claim that all test fixtures contain text only. External compilers and SDKs follow retained upstream instructions.",
+  "requiredAnchors": [
+    "DEPS", "BUILD.gn", ".gn", "LICENSE",
+    "third_party/blink/renderer/core/dom/document.cc",
+    "v8/include/v8.h", "third_party/skia/src/core/SkCanvas.cpp",
+    "third_party/angle/src/libANGLE/Context.cpp", "third_party/webrtc/api/peer_connection_interface.h",
+    "third_party/boringssl/src/include/openssl/ssl.h", "third_party/dawn/src/dawn/native/Instance.cpp",
+    "third_party/ffmpeg/libavcodec/avcodec.h", "third_party/icu/source/common/unicode/utypes.h",
+    "third_party/swiftshader/src/Vulkan/VkDevice.cpp", "third_party/eigen3/src/Eigen/Core",
+    "third_party/hunspell/src/hunspell/hunspell.cxx", "base/third_party/nspr/prtime.cc",
+    "net/third_party/mozilla_security_manager/nsNSSCertificateDB.cpp",
+    "net/third_party/mozilla_win/cert/win_util.cc", "third_party/isimpledom/ISimpleDOMNode.idl",
+    "tools/clang/scripts/update.py", "tools/rust/update_rust.py",
+    "third_party/tflite/src/third_party/icu/data/icu_conversion_data.c.gz.aar"
+  ]
+}

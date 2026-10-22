@@ -6229,5 +6229,22 @@
         "sha256": "7939f4c45423cec4a18236ad0a88570e33508dd7462e07b1038001f90ece65fb"
       }
     ]
+  },
+  {
+    "name": "chromium-ffmpeg",
+    "version": "2b68d2babae73714846961fb0ee47e3b3d2e39a9",
+    "archive": "ffmpeg-2b68d2babae73714846961fb0ee47e3b3d2e39a9.tar.gz",
+    "files": [
+      {
+        "archivePath": "LICENSE.md",
+        "file": "licenses/chromium-ffmpeg-2b68d2b/LICENSE.md",
+        "sha256": "36f6e2cb63f6a40a72b5c1b6169fb03f338d7eccd336fb3ccd4dcc0b49116dd1"
+      },
+      {
+        "archivePath": "COPYING.LGPLv2.1",
+        "file": "licenses/chromium-ffmpeg-2b68d2b/COPYING.LGPLv2.1",
+        "sha256": "37828f96b745455c387a19946bc005b5e0b7c4cef782bbd67e9de5130d7d0bdc"
+      }
+    ]
   }
 ]

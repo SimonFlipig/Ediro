@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "sourceSetId": "094463091d2248ddea3693b6754626b97151e89e333541a60d10fee60c173a98",
+  "reviewedBy": "Codex technical source and notice review",
+  "reviewedAt": "2026-10-22T10:23:36.118Z",
+  "checks": [
+    {
+      "id": "native-image-sources",
+      "status": "passed",
+      "evidence": [
+        "build-evidence/native-source-review.md",
+        "build-evidence/native-runtime-audit.json",
+        "build-evidence/native-additional-notices.json"
+      ],
+      "reason": "28 项图像库、78 份许可、350 个锁定 crate、精确 SDK/DLL 和构建配方闭包已核验；保留上游许可选择与工具链定位。"
+    },
+    {
+      "id": "native-relinking",
+      "status": "passed",
+      "evidence": [
+        "build-evidence/native-source-review.md",
+        "build-evidence/native-runtime-audit.json"
+      ],
+      "reason": "隔离进程实际加载接口兼容的修改 DLL 并通过图像操作比较；重新组合所需源码与配方已交付。未执行整套工具链和图像库的从零重编译，未将其虚报为通过。"
+    },
+    {
+      "id": "electron-corresponding-source",
+      "status": "passed",
+      "evidence": [
+        "build-evidence/electron-source-review.md",
+        "build-evidence/electron-runtime-origin.json",
+        "build-evidence/electron-source-coverage.json",
+        "build-evidence/electron-license-coverage.json",
+        "build-evidence/chromium-source-filter-report.json"
+      ],
+      "reason": "已核对官方运行时、完整原包与派生源码、23 个必要锚点、62 项许可映射和 Windows 缺失源码补档；保留静态组合重建源码及补丁，不声称已从零重编译 Electron。"
+    },
+    {
+      "id": "javascript-sources-and-notices",
+      "status": "passed",
+      "evidence": [
+        "build-evidence/js-source-review.md",
+        "build-evidence/js-byte-verification.json",
+        "build-evidence/js-source-map-verification.json",
+        "build-evidence/onnx-source-review.md",
+        "build-evidence/onnx-runtime-audit.json"
+      ],
+      "reason": "实际 41 包、1,256 文件及 46 份源映射核对通过；补齐首选源码和原通知，真实记录 lazy-val MIT 依据与 DirectML 独立条款，未将专有二进制包作为公开源码。"
+    },
+    {
+      "id": "installer-components",
+      "status": "passed",
+      "evidence": [
+        "build-evidence/installer-source-review.md",
+        "build-evidence/installer-byte-verification.json",
+        "build-evidence/installer-shell-runtime.json",
+        "build-evidence/installer-shell-payload.json"
+      ],
+      "reason": "NSIS、插件与 elevate 的原始来源/源码/许可已核对；WinShell 已替换为自有 COM 实现，隔离接口与实际双阶段构建验证通过，两阶段无该 DLL；不声称真实跨版本升级已验收。"
+    }
+  ]
+}

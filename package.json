@@ -1,6 +1,6 @@
 {
   "name": "ediro",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "license": "GPL-3.0-only",
   "private": true,
   "description": "Ediro · 面向电商视觉设计的 AI 图像工作台",
@@ -16,6 +16,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.host.json",
     "build": "node scripts/build-state.mjs --begin && npm run typecheck && vite build && tsc -p tsconfig.host.json && node scripts/preload.mjs && node scripts/build-state.mjs --record",
     "package:win": "npm run build && node scripts/package-windows.mjs",
+    "sources:pack": "node scripts/package-third-party-sources.mjs",
+    "release:verify": "node scripts/verify-release-sources.mjs",
+    "release:publish": "node scripts/verify-release-sources.mjs --publish",
     "start": "electron .",
     "preview:check": "node scripts/preview.mjs",
     "test": "node scripts/test.mjs",
@@ -23,6 +26,7 @@
   },
   "dependencies": {
     "electron-updater": "6.8.9",
+    "onnxruntime-node": "1.30.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "sharp": "0.35.4",

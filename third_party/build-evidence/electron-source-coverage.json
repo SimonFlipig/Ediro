@@ -1,0 +1,2106 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-22T09:53:36.539Z",
+  "electronVersion": "44.4.1",
+  "chromiumVersion": "152.0.7977.78",
+  "nodeVersion": "24.21.0",
+  "fullArchive": {
+    "bytes": 5916191748,
+    "sha256": "16bb4164faa455d1e6a43320b3c0e4c895a93138e892a1bbf7e801863dc4bc74",
+    "md5": "05ca2357a502e917ea82b9db18b65f36",
+    "officialMd5Matched": true,
+    "tarIntegrity": true,
+    "tarReader": "Python tarfile + lzma, including XZ trailer; Windows bsdtar could not decode a member name",
+    "entries": 1306305,
+    "rootPrefix": "chromium-152.0.7977.78"
+  },
+  "anchors": {
+    "DEPS": true,
+    "BUILD.gn": true,
+    ".gn": true,
+    "LICENSE": true,
+    "third_party/blink/renderer/core/dom/document.cc": true,
+    "v8/include/v8.h": true,
+    "third_party/skia/src/core/SkCanvas.cpp": true,
+    "third_party/angle/src/libANGLE/Context.cpp": true,
+    "third_party/webrtc/api/peer_connection_interface.h": true,
+    "third_party/boringssl/src/include/openssl/ssl.h": true,
+    "third_party/dawn/src/dawn/native/Instance.cpp": true,
+    "third_party/ffmpeg/libavcodec/avcodec.h": true,
+    "third_party/icu/source/common/unicode/utypes.h": true,
+    "third_party/swiftshader/src/Vulkan/VkDevice.cpp": true,
+    "third_party/eigen3/src/Eigen/Core": true,
+    "third_party/hunspell/src/hunspell/hunspell.cxx": true,
+    "base/third_party/nspr/prtime.cc": true,
+    "net/third_party/mozilla_security_manager/nsNSSCertificateDB.cpp": true,
+    "net/third_party/mozilla_win/cert/win_util.cc": true,
+    "third_party/isimpledom/ISimpleDOMNode.idl": true
+  },
+  "gitDependencyPaths": {
+    "third_party/clang-format/script": {
+      "files": 13,
+      "sourceFiles": 5
+    },
+    "chrome/browser/resources/preinstalled_web_apps/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/compiler-rt/src": {
+      "files": 4832,
+      "sourceFiles": 4282
+    },
+    "third_party/libc++/src": {
+      "files": 3641,
+      "sourceFiles": 3121
+    },
+    "third_party/libc++abi/src": {
+      "files": 161,
+      "sourceFiles": 112
+    },
+    "third_party/libunwind/src": {
+      "files": 80,
+      "sourceFiles": 56
+    },
+    "third_party/llvm-libc/src": {
+      "files": 7987,
+      "sourceFiles": 7270
+    },
+    "chrome/test/data/autofill/captured_sites/artifacts": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/test/data/password/captured_sites/artifacts": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/test/data/perf/canvas_bench": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/test/data/perf/frame_rate/content": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/test/data/xr/webvr_info": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "clank": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "docs/website": {
+      "files": 2845,
+      "sourceFiles": 31
+    },
+    "ios/third_party/earl_grey2/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "ios/third_party/edo/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "ios/third_party/gtx/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "ios/third_party/lottie/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "ios/third_party/webkit/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "media/cdm/api": {
+      "files": 6,
+      "sourceFiles": 3
+    },
+    "net/third_party/quiche/src": {
+      "files": 1788,
+      "sourceFiles": 1753
+    },
+    "testing/libfuzzer/fuzzers/wasm_corpus": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/androidx/third_party/ink/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/androidx_javascriptengine/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/angle": {
+      "files": 13455,
+      "sourceFiles": 7398
+    },
+    "third_party/anonymous_tokens/src": {
+      "files": 91,
+      "sourceFiles": 60
+    },
+    "third_party/aria-practices/src": {
+      "files": 518,
+      "sourceFiles": 184
+    },
+    "third_party/readability/src": {
+      "files": 416,
+      "sourceFiles": 12
+    },
+    "third_party/content_analysis_sdk/src": {
+      "files": 61,
+      "sourceFiles": 50
+    },
+    "third_party/dav1d/libdav1d": {
+      "files": 359,
+      "sourceFiles": 312
+    },
+    "third_party/dawn": {
+      "files": 48546,
+      "sourceFiles": 12099
+    },
+    "third_party/disarm/src": {
+      "files": 43,
+      "sourceFiles": 32
+    },
+    "third_party/fadec/src": {
+      "files": 25,
+      "sourceFiles": 15
+    },
+    "third_party/highway/src": {
+      "files": 278,
+      "sourceFiles": 217
+    },
+    "third_party/apache-portable-runtime/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/google_benchmark/src": {
+      "files": 210,
+      "sourceFiles": 125
+    },
+    "third_party/libpfm4/src": {
+      "files": 548,
+      "sourceFiles": 375
+    },
+    "third_party/boringssl/src": {
+      "files": 8175,
+      "sourceFiles": 1530
+    },
+    "third_party/breakpad/breakpad": {
+      "files": 845,
+      "sourceFiles": 619
+    },
+    "third_party/cast_core/public/src": {
+      "files": 39,
+      "sourceFiles": 36
+    },
+    "third_party/catapult": {
+      "files": 7992,
+      "sourceFiles": 3774
+    },
+    "third_party/ced/src": {
+      "files": 28,
+      "sourceFiles": 23
+    },
+    "third_party/chromevox/third_party/sre/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/chromite": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/cld_3/src": {
+      "files": 87,
+      "sourceFiles": 75
+    },
+    "third_party/colorama/src": {
+      "files": 49,
+      "sourceFiles": 23
+    },
+    "third_party/cpu_features/src": {
+      "files": 127,
+      "sourceFiles": 59
+    },
+    "third_party/cpuinfo/src": {
+      "files": 567,
+      "sourceFiles": 262
+    },
+    "third_party/crc32c/src": {
+      "files": 37,
+      "sourceFiles": 25
+    },
+    "third_party/cros_system_api": {
+      "files": 258,
+      "sourceFiles": 180
+    },
+    "third_party/crossbench": {
+      "files": 1231,
+      "sourceFiles": 921
+    },
+    "third_party/crossbench-web-tests": {
+      "files": 740,
+      "sourceFiles": 59
+    },
+    "third_party/depot_tools": {
+      "files": 4184,
+      "sourceFiles": 2336
+    },
+    "third_party/devtools-frontend/src": {
+      "files": 30309,
+      "sourceFiles": 19848
+    },
+    "third_party/dom_distiller_js/dist": {
+      "files": 5,
+      "sourceFiles": 4
+    },
+    "third_party/dragonbox/src": {
+      "files": 92,
+      "sourceFiles": 45
+    },
+    "third_party/eigen3/src": {
+      "files": 1972,
+      "sourceFiles": 1573
+    },
+    "third_party/emoji-metadata/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/farmhash/src": {
+      "files": 70,
+      "sourceFiles": 19
+    },
+    "third_party/fast_float/src": {
+      "files": 117,
+      "sourceFiles": 59
+    },
+    "third_party/federated_compute/src": {
+      "files": 606,
+      "sourceFiles": 511
+    },
+    "third_party/ffmpeg": {
+      "files": 11015,
+      "sourceFiles": 5626
+    },
+    "third_party/flac": {
+      "files": 94,
+      "sourceFiles": 82
+    },
+    "third_party/flatbuffers/src": {
+      "files": 1909,
+      "sourceFiles": 888
+    },
+    "third_party/fontconfig/src": {
+      "files": 681,
+      "sourceFiles": 131
+    },
+    "third_party/fp16/src": {
+      "files": 31,
+      "sourceFiles": 24
+    },
+    "third_party/gemmlowp/src": {
+      "files": 145,
+      "sourceFiles": 102
+    },
+    "third_party/glib/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/gsettings-desktop-schemas/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/gvdb/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/freetype/src": {
+      "files": 746,
+      "sourceFiles": 520
+    },
+    "third_party/fxdiv/src": {
+      "files": 21,
+      "sourceFiles": 9
+    },
+    "third_party/harfbuzz/src": {
+      "files": 3725,
+      "sourceFiles": 370
+    },
+    "third_party/ink/src": {
+      "files": 567,
+      "sourceFiles": 496
+    },
+    "third_party/instrumented_libs": {
+      "files": 2653,
+      "sourceFiles": 44
+    },
+    "third_party/emoji-segmenter/src": {
+      "files": 7,
+      "sourceFiles": 1
+    },
+    "third_party/oak/src": {
+      "files": 1993,
+      "sourceFiles": 945
+    },
+    "third_party/ots/src": {
+      "files": 126,
+      "sourceFiles": 100
+    },
+    "third_party/libgav1/src": {
+      "files": 386,
+      "sourceFiles": 350
+    },
+    "third_party/google-truth/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/googletest/src": {
+      "files": 251,
+      "sourceFiles": 189
+    },
+    "third_party/gperf": {
+      "files": 4,
+      "sourceFiles": 0
+    },
+    "third_party/cardboard/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/arcore-android-sdk/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/hunspell_dictionaries": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/icu": {
+      "files": 7118,
+      "sourceFiles": 1705
+    },
+    "third_party/javalang/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/nlohmann_json/src": {
+      "files": 1226,
+      "sourceFiles": 504
+    },
+    "third_party/jsoncpp/source": {
+      "files": 264,
+      "sourceFiles": 38
+    },
+    "third_party/junit/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/leveldatabase/src": {
+      "files": 152,
+      "sourceFiles": 133
+    },
+    "third_party/libFuzzer/src": {
+      "files": 61,
+      "sourceFiles": 55
+    },
+    "third_party/fuzztest/src": {
+      "files": 536,
+      "sourceFiles": 426
+    },
+    "third_party/domato/src": {
+      "files": 53,
+      "sourceFiles": 14
+    },
+    "third_party/libaddressinput/src": {
+      "files": 226,
+      "sourceFiles": 118
+    },
+    "third_party/libaom/source/libaom": {
+      "files": 1520,
+      "sourceFiles": 1336
+    },
+    "third_party/crabbyavif/src": {
+      "files": 302,
+      "sourceFiles": 118
+    },
+    "third_party/nearby/src": {
+      "files": 3060,
+      "sourceFiles": 2770
+    },
+    "third_party/securemessage/src": {
+      "files": 43,
+      "sourceFiles": 24
+    },
+    "third_party/jetstream/main": {
+      "files": 960,
+      "sourceFiles": 568
+    },
+    "third_party/jetstream/v2.2": {
+      "files": 485,
+      "sourceFiles": 439
+    },
+    "third_party/speedometer/main": {
+      "files": 2754,
+      "sourceFiles": 485
+    },
+    "third_party/speedometer/v3.1": {
+      "files": 1118,
+      "sourceFiles": 421
+    },
+    "third_party/speedometer/v3.0": {
+      "files": 1118,
+      "sourceFiles": 421
+    },
+    "third_party/speedometer/v2.1": {
+      "files": 566,
+      "sourceFiles": 289
+    },
+    "third_party/speedometer/v2.0": {
+      "files": 566,
+      "sourceFiles": 289
+    },
+    "third_party/ukey2/src": {
+      "files": 74,
+      "sourceFiles": 18
+    },
+    "third_party/cros-components/src": {
+      "files": 73,
+      "sourceFiles": 61
+    },
+    "third_party/libdisplay-info/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/libdrm/src": {
+      "files": 319,
+      "sourceFiles": 200
+    },
+    "third_party/libgudev/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/libinput/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/expat/src": {
+      "files": 207,
+      "sourceFiles": 85
+    },
+    "third_party/libipp/libipp": {
+      "files": 43,
+      "sourceFiles": 37
+    },
+    "third_party/libjpeg_turbo": {
+      "files": 307,
+      "sourceFiles": 260
+    },
+    "third_party/liblouis/src": {
+      "files": 854,
+      "sourceFiles": 164
+    },
+    "third_party/libphonenumber/src": {
+      "files": 3758,
+      "sourceFiles": 136
+    },
+    "third_party/libprotobuf-mutator/src": {
+      "files": 59,
+      "sourceFiles": 36
+    },
+    "third_party/libsrtp": {
+      "files": 75,
+      "sourceFiles": 62
+    },
+    "third_party/libsync/src": {
+      "files": 10,
+      "sourceFiles": 6
+    },
+    "third_party/libunwindstack": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/libva-fake-driver/src": {
+      "files": 37,
+      "sourceFiles": 33
+    },
+    "third_party/libvpx/source/libvpx": {
+      "files": 1259,
+      "sourceFiles": 1136
+    },
+    "third_party/libwebm/source": {
+      "files": 904,
+      "sourceFiles": 224
+    },
+    "third_party/libwebp/src": {
+      "files": 348,
+      "sourceFiles": 254
+    },
+    "third_party/libyuv": {
+      "files": 191,
+      "sourceFiles": 119
+    },
+    "third_party/lss": {
+      "files": 22,
+      "sourceFiles": 13
+    },
+    "third_party/material_color_utilities/src": {
+      "files": 385,
+      "sourceFiles": 133
+    },
+    "third_party/microsoft_dxheaders/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/microsoft_webauthn/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/minigbm/src": {
+      "files": 93,
+      "sourceFiles": 66
+    },
+    "third_party/mutter/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/pipewire/src": {
+      "files": 1348,
+      "sourceFiles": 977
+    },
+    "third_party/nasm": {
+      "files": 1355,
+      "sourceFiles": 649
+    },
+    "third_party/neon_2_sse/src": {
+      "files": 9,
+      "sourceFiles": 1
+    },
+    "third_party/netty-tcnative/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/netty4/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/openh264/src": {
+      "files": 682,
+      "sourceFiles": 402
+    },
+    "third_party/openscreen/src": {
+      "files": 3468,
+      "sourceFiles": 2591
+    },
+    "third_party/openxr/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/pdfium": {
+      "files": 5352,
+      "sourceFiles": 2870
+    },
+    "third_party/perfetto": {
+      "files": 12402,
+      "sourceFiles": 5166
+    },
+    "third_party/perl": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/protobuf-javascript/src": {
+      "files": 221,
+      "sourceFiles": 192
+    },
+    "third_party/pthreadpool/src": {
+      "files": 44,
+      "sourceFiles": 18
+    },
+    "third_party/pyelftools": {
+      "files": 129,
+      "sourceFiles": 75
+    },
+    "third_party/quic_trace/src": {
+      "files": 64,
+      "sourceFiles": 32
+    },
+    "third_party/pywebsocket3/src": {
+      "files": 81,
+      "sourceFiles": 61
+    },
+    "third_party/re2/src": {
+      "files": 139,
+      "sourceFiles": 89
+    },
+    "third_party/requests/src": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/ruy/src": {
+      "files": 143,
+      "sourceFiles": 109
+    },
+    "third_party/search_engines_data/resources": {
+      "files": 2,
+      "sourceFiles": 0
+    },
+    "third_party/search_engines_data/resources_internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/sframe/src": {
+      "files": 35,
+      "sourceFiles": 20
+    },
+    "third_party/skia": {
+      "files": 12278,
+      "sourceFiles": 6437
+    },
+    "third_party/smhasher/src": {
+      "files": 47,
+      "sourceFiles": 43
+    },
+    "third_party/snappy/src": {
+      "files": 52,
+      "sourceFiles": 18
+    },
+    "third_party/sqlite/src": {
+      "files": 929,
+      "sourceFiles": 368
+    },
+    "third_party/swiftshader": {
+      "files": 14224,
+      "sourceFiles": 11853
+    },
+    "third_party/text-fragments-polyfill/src": {
+      "files": 58,
+      "sourceFiles": 10
+    },
+    "third_party/tflite/src": {
+      "files": 36380,
+      "sourceFiles": 20498
+    },
+    "third_party/litert/src": {
+      "files": 8741,
+      "sourceFiles": 5740
+    },
+    "third_party/vulkan-deps": {
+      "files": 29,
+      "sourceFiles": 1
+    },
+    "third_party/glslang/src": {
+      "files": 248,
+      "sourceFiles": 163
+    },
+    "third_party/spirv-cross/src": {
+      "files": 4343,
+      "sourceFiles": 50
+    },
+    "third_party/spirv-headers/src": {
+      "files": 120,
+      "sourceFiles": 51
+    },
+    "third_party/spirv-tools/src": {
+      "files": 1743,
+      "sourceFiles": 1416
+    },
+    "third_party/vulkan-headers/src": {
+      "files": 89,
+      "sourceFiles": 64
+    },
+    "third_party/vulkan-loader/src": {
+      "files": 287,
+      "sourceFiles": 133
+    },
+    "third_party/vulkan-tools/src": {
+      "files": 133,
+      "sourceFiles": 54
+    },
+    "third_party/vulkan-utility-libraries/src": {
+      "files": 85,
+      "sourceFiles": 56
+    },
+    "third_party/vulkan-validation-layers/src": {
+      "files": 1025,
+      "sourceFiles": 870
+    },
+    "third_party/vulkan_memory_allocator": {
+      "files": 300,
+      "sourceFiles": 74
+    },
+    "third_party/wayland/src": {
+      "files": 157,
+      "sourceFiles": 78
+    },
+    "third_party/wayland-protocols/src": {
+      "files": 138,
+      "sourceFiles": 1
+    },
+    "third_party/wayland-protocols/kde": {
+      "files": 39,
+      "sourceFiles": 0
+    },
+    "third_party/wayland-protocols/gtk": {
+      "files": 5488,
+      "sourceFiles": 2271
+    },
+    "third_party/webdriver/pylib": {
+      "files": 279,
+      "sourceFiles": 255
+    },
+    "third_party/webgl/src": {
+      "files": 16004,
+      "sourceFiles": 931
+    },
+    "third_party/webgpu-cts/src": {
+      "files": 1327,
+      "sourceFiles": 1036
+    },
+    "third_party/webpagereplay": {
+      "files": 11556,
+      "sourceFiles": 203
+    },
+    "third_party/webrtc": {
+      "files": 7567,
+      "sourceFiles": 5845
+    },
+    "third_party/wuffs/src": {
+      "files": 14,
+      "sourceFiles": 3
+    },
+    "third_party/weston/src": {
+      "files": 582,
+      "sourceFiles": 311
+    },
+    "third_party/xnnpack/src": {
+      "files": 12166,
+      "sourceFiles": 10898
+    },
+    "third_party/libei/src": {
+      "files": 167,
+      "sourceFiles": 125
+    },
+    "third_party/zstd/src": {
+      "files": 658,
+      "sourceFiles": 289
+    },
+    "v8": {
+      "files": 5169,
+      "sourceFiles": 4027
+    },
+    "internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "agents/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "agents/shared": {
+      "files": 45,
+      "sourceFiles": 10
+    },
+    "third_party/android_prebuilts/build_tools": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chromeos/ash/resources/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chromeos/assistant/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/app/theme/default_100_percent/google_chrome": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/app/theme/default_200_percent/google_chrome": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/app/theme/google_chrome": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/actor/resources/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/cpu_performance_internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/enterprise/connectors/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/glic/resources/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/glic/e2e_test/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/indigo/resources/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/google/linkdoctor_internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/media/engagement_internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/nearby_sharing/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/platform_experience/win": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/resources/downloads/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/resources/history/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/resources/settings/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/resources/webui_browser/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/resources/webui_toolbar/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/ttc/resources/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/browser/spellchecker/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/common/request_header_integrity/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/elevation_service/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/installer/mac/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/test/data/firefox3_profile/searchplugins": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/test/data/firefox3_searchplugins": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/test/data/gpu/vt": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/test/data/perf/frame_rate/private": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/test/data/perf/private": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/test/data/pdf_private": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/test/media_router/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/tools/memory": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/services/speech/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "chrome/updater/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/accessibility/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/activity_reporter/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/autofill/core/browser/geo/chrome_alternative_state_name_maps": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/autofill/core/browser/form_parsing/internal_resources": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/crash/core/app/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/metrics/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/ntp_tiles/resources/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/optimization_guide/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/personal_context/core/resources/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/plus_addresses/core/browser/resources/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/record_replay/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/resources/default_100_percent/google_chrome": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/resources/default_200_percent/google_chrome": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/resources/default_300_percent/google_chrome": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/safe_browsing/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/site_isolation/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/test/data/autofill/heuristics-json/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/test/data/autofill/label-doms/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "components/vector_icons/google_chrome": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "content/test/data/plugin": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "google_apis/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "ios_internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "remoting/host/installer/linux/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "remoting/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "remoting/test/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "remoting/tools/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "services/shape_detection/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "signing_keys": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "clusterfuzz-data": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/widevine/cdm/chromeos": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/widevine/cdm/linux": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/widevine/cdm/mac": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/widevine/cdm/win": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/widevine/scripts": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "third_party/wix": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "tools/perf/data": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "ui/file_manager/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "ui/webui/internal": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "webkit/data/bmp_decoder": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "webkit/data/ico_decoder": {
+      "files": 0,
+      "sourceFiles": 0
+    },
+    "webkit/data/test_shell/plugins": {
+      "files": 0,
+      "sourceFiles": 0
+    }
+  },
+  "missingGitDependencyPaths": [
+    "chrome/browser/resources/preinstalled_web_apps/internal",
+    "chrome/test/data/autofill/captured_sites/artifacts",
+    "chrome/test/data/password/captured_sites/artifacts",
+    "chrome/test/data/perf/canvas_bench",
+    "chrome/test/data/perf/frame_rate/content",
+    "chrome/test/data/xr/webvr_info",
+    "clank",
+    "ios/third_party/earl_grey2/src",
+    "ios/third_party/edo/src",
+    "ios/third_party/gtx/src",
+    "ios/third_party/lottie/src",
+    "ios/third_party/webkit/src",
+    "testing/libfuzzer/fuzzers/wasm_corpus",
+    "third_party/androidx/third_party/ink/src",
+    "third_party/androidx_javascriptengine/src",
+    "third_party/apache-portable-runtime/src",
+    "third_party/chromevox/third_party/sre/src",
+    "third_party/chromite",
+    "third_party/emoji-metadata/src",
+    "third_party/glib/src",
+    "third_party/gsettings-desktop-schemas/src",
+    "third_party/gvdb/src",
+    "third_party/google-truth/src",
+    "third_party/cardboard/src",
+    "third_party/arcore-android-sdk/src",
+    "third_party/hunspell_dictionaries",
+    "third_party/javalang/src",
+    "third_party/junit/src",
+    "third_party/libdisplay-info/src",
+    "third_party/libgudev/src",
+    "third_party/libinput/src",
+    "third_party/libunwindstack",
+    "third_party/microsoft_dxheaders/src",
+    "third_party/microsoft_webauthn/src",
+    "third_party/mutter/src",
+    "third_party/netty-tcnative/src",
+    "third_party/netty4/src",
+    "third_party/openxr/src",
+    "third_party/perl",
+    "third_party/requests/src",
+    "third_party/search_engines_data/resources_internal",
+    "internal",
+    "agents/internal",
+    "third_party/android_prebuilts/build_tools",
+    "chromeos/ash/resources/internal",
+    "chromeos/assistant/internal",
+    "chrome/app/theme/default_100_percent/google_chrome",
+    "chrome/app/theme/default_200_percent/google_chrome",
+    "chrome/app/theme/google_chrome",
+    "chrome/browser/actor/resources/internal",
+    "chrome/browser/cpu_performance_internal",
+    "chrome/browser/enterprise/connectors/internal",
+    "chrome/browser/glic/resources/internal",
+    "chrome/browser/glic/e2e_test/internal",
+    "chrome/browser/indigo/resources/internal",
+    "chrome/browser/google/linkdoctor_internal",
+    "chrome/browser/internal",
+    "chrome/browser/media/engagement_internal",
+    "chrome/browser/nearby_sharing/internal",
+    "chrome/browser/platform_experience/win",
+    "chrome/browser/resources/downloads/internal",
+    "chrome/browser/resources/history/internal",
+    "chrome/browser/resources/settings/internal",
+    "chrome/browser/resources/webui_browser/internal",
+    "chrome/browser/resources/webui_toolbar/internal",
+    "chrome/browser/ttc/resources/internal",
+    "chrome/browser/spellchecker/internal",
+    "chrome/common/request_header_integrity/internal",
+    "chrome/elevation_service/internal",
+    "chrome/installer/mac/internal",
+    "chrome/test/data/firefox3_profile/searchplugins",
+    "chrome/test/data/firefox3_searchplugins",
+    "chrome/test/data/gpu/vt",
+    "chrome/test/data/perf/frame_rate/private",
+    "chrome/test/data/perf/private",
+    "chrome/test/data/pdf_private",
+    "chrome/test/media_router/internal",
+    "chrome/tools/memory",
+    "chrome/services/speech/internal",
+    "chrome/updater/internal",
+    "components/accessibility/internal",
+    "components/activity_reporter/internal",
+    "components/autofill/core/browser/geo/chrome_alternative_state_name_maps",
+    "components/autofill/core/browser/form_parsing/internal_resources",
+    "components/crash/core/app/internal",
+    "components/internal",
+    "components/metrics/internal",
+    "components/ntp_tiles/resources/internal",
+    "components/optimization_guide/internal",
+    "components/personal_context/core/resources/internal",
+    "components/plus_addresses/core/browser/resources/internal",
+    "components/record_replay/internal",
+    "components/resources/default_100_percent/google_chrome",
+    "components/resources/default_200_percent/google_chrome",
+    "components/resources/default_300_percent/google_chrome",
+    "components/safe_browsing/internal",
+    "components/site_isolation/internal",
+    "components/test/data/autofill/heuristics-json/internal",
+    "components/test/data/autofill/label-doms/internal",
+    "components/vector_icons/google_chrome",
+    "content/test/data/plugin",
+    "google_apis/internal",
+    "ios_internal",
+    "remoting/host/installer/linux/internal",
+    "remoting/internal",
+    "remoting/test/internal",
+    "remoting/tools/internal",
+    "services/shape_detection/internal",
+    "signing_keys",
+    "clusterfuzz-data",
+    "third_party/widevine/cdm/chromeos",
+    "third_party/widevine/cdm/linux",
+    "third_party/widevine/cdm/mac",
+    "third_party/widevine/cdm/win",
+    "third_party/widevine/scripts",
+    "third_party/wix",
+    "tools/perf/data",
+    "ui/file_manager/internal",
+    "ui/webui/internal",
+    "webkit/data/bmp_decoder",
+    "webkit/data/ico_decoder",
+    "webkit/data/test_shell/plugins"
+  ],
+  "nodeOfficialSha256Matched": true,
+  "archives": 46,
+  "downloadedBytes": 6167125525,
+  "fullNativeRebuildPerformed": false,
+  "missingPathReview": [
+    {
+      "path": "chrome/browser/resources/preinstalled_web_apps/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components/default_apps",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/test/data/autofill/captured_sites/artifacts",
+      "condition": "checkout_chromium_autofill_test_dependencies",
+      "url": "https://chrome-internal.googlesource.com/chrome/test/captured_sites/autofill",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/test/data/password/captured_sites/artifacts",
+      "condition": "checkout_chromium_password_manager_test_dependencies",
+      "url": "https://chrome-internal.googlesource.com/chrome/test/captured_sites/password",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/test/data/perf/canvas_bench",
+      "condition": null,
+      "url": "https://chromium.googlesource.com/chromium/canvas_bench",
+      "status": "excluded-test-data",
+      "reason": "Browser benchmark/fuzzer test fixtures, not target runtime source or build input for the Electron distribution."
+    },
+    {
+      "path": "chrome/test/data/perf/frame_rate/content",
+      "condition": null,
+      "url": "https://chromium.googlesource.com/chromium/frame_rate/content",
+      "status": "excluded-test-data",
+      "reason": "Browser benchmark/fuzzer test fixtures, not target runtime source or build input for the Electron distribution."
+    },
+    {
+      "path": "chrome/test/data/xr/webvr_info",
+      "condition": null,
+      "url": "https://chromium.googlesource.com/external/github.com/toji/webvr.info",
+      "status": "excluded-test-data",
+      "reason": "Browser benchmark/fuzzer test fixtures, not target runtime source or build input for the Electron distribution."
+    },
+    {
+      "path": "clank",
+      "condition": "checkout_android and checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/clank/internal/apps",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "ios/third_party/earl_grey2/src",
+      "condition": "checkout_ios",
+      "url": "https://chromium.googlesource.com/external/github.com/google/EarlGrey",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "ios/third_party/edo/src",
+      "condition": "checkout_ios",
+      "url": "https://chromium.googlesource.com/external/github.com/google/eDistantObject",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "ios/third_party/gtx/src",
+      "condition": "checkout_ios",
+      "url": "https://chromium.googlesource.com/external/github.com/google/GTXiLib",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "ios/third_party/lottie/src",
+      "condition": "checkout_ios",
+      "url": "https://chromium.googlesource.com/external/github.com/airbnb/lottie-ios",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "ios/third_party/webkit/src",
+      "condition": "checkout_ios and checkout_ios_webkit",
+      "url": "https://chromium.googlesource.com/external/github.com/WebKit/webkit",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "testing/libfuzzer/fuzzers/wasm_corpus",
+      "condition": null,
+      "url": "https://chromium.googlesource.com/v8/fuzzer_wasm_corpus",
+      "status": "excluded-test-data",
+      "reason": "Browser benchmark/fuzzer test fixtures, not target runtime source or build input for the Electron distribution."
+    },
+    {
+      "path": "third_party/androidx/third_party/ink/src",
+      "condition": "checkout_android and non_git_source",
+      "url": "https://chromium.googlesource.com/external/github.com/google/ink",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/androidx_javascriptengine/src",
+      "condition": "checkout_android",
+      "url": "https://chromium.googlesource.com/aosp/platform/frameworks/support/javascriptengine/javascriptengine/src",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/apache-portable-runtime/src",
+      "condition": "checkout_android",
+      "url": "https://chromium.googlesource.com/external/apache-portable-runtime",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/chromevox/third_party/sre/src",
+      "condition": "checkout_chromeos",
+      "url": "https://chromium.googlesource.com/external/github.com/zorkow/speech-rule-engine",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/chromite",
+      "condition": "checkout_chromeos",
+      "url": "https://chromium.googlesource.com/chromiumos/chromite",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/emoji-metadata/src",
+      "condition": "checkout_chromeos",
+      "url": "https://chromium.googlesource.com/external/github.com/googlefonts/emoji-metadata",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/glib/src",
+      "condition": "checkout_linux and checkout_mutter",
+      "url": "https://chromium.googlesource.com/external/gitlab.gnome.org/GNOME/glib",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/gsettings-desktop-schemas/src",
+      "condition": "checkout_linux and checkout_mutter",
+      "url": "https://chromium.googlesource.com/external/gitlab.gnome.org/GNOME/gsettings-desktop-schemas",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/gvdb/src",
+      "condition": "checkout_linux and checkout_mutter",
+      "url": "https://chromium.googlesource.com/external/gitlab.gnome.org/GNOME/gvdb",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/google-truth/src",
+      "condition": "checkout_android",
+      "url": "https://chromium.googlesource.com/external/github.com/google/truth",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/cardboard/src",
+      "condition": "checkout_android",
+      "url": "https://chromium.googlesource.com/external/github.com/googlevr/cardboard",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/arcore-android-sdk/src",
+      "condition": "checkout_android",
+      "url": "https://chromium.googlesource.com/external/github.com/google-ar/arcore-android-sdk",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/hunspell_dictionaries",
+      "condition": null,
+      "url": "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries",
+      "status": "supplement-archived",
+      "archive": "hunspell-dictionaries-cccf64a8acc9.tar.gz"
+    },
+    {
+      "path": "third_party/javalang/src",
+      "condition": "checkout_android",
+      "url": "https://chromium.googlesource.com/external/github.com/c2nes/javalang",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/junit/src",
+      "condition": "checkout_android",
+      "url": "https://chromium.googlesource.com/external/junit",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/libdisplay-info/src",
+      "condition": "checkout_linux and checkout_mutter",
+      "url": "https://chromium.googlesource.com/external/gitlab.freedesktop.org/emersion/libdisplay-info",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/libgudev/src",
+      "condition": "checkout_linux and checkout_mutter",
+      "url": "https://chromium.googlesource.com/external/gitlab.gnome.org/GNOME/libgudev",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/libinput/src",
+      "condition": "checkout_linux and checkout_mutter",
+      "url": "https://chromium.googlesource.com/external/gitlab.freedesktop.org/libinput/libinput",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/libunwindstack",
+      "condition": "checkout_android",
+      "url": "https://chromium.googlesource.com/chromium/src/third_party/libunwindstack",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/microsoft_dxheaders/src",
+      "condition": "checkout_win",
+      "url": "https://chromium.googlesource.com/external/github.com/microsoft/DirectX-Headers",
+      "status": "supplement-archived",
+      "archive": "microsoft-dxheaders-62c23d5ec700.tar.gz"
+    },
+    {
+      "path": "third_party/microsoft_webauthn/src",
+      "condition": "checkout_win",
+      "url": "https://chromium.googlesource.com/external/github.com/microsoft/webauthn",
+      "status": "supplement-archived",
+      "archive": "microsoft-webauthn-ef82c157125a.tar.gz"
+    },
+    {
+      "path": "third_party/mutter/src",
+      "condition": "checkout_linux and checkout_mutter",
+      "url": "https://chromium.googlesource.com/external/gitlab.gnome.org/GNOME/mutter",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/netty-tcnative/src",
+      "condition": "checkout_android",
+      "url": "https://chromium.googlesource.com/external/netty-tcnative",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/netty4/src",
+      "condition": "checkout_android",
+      "url": "https://chromium.googlesource.com/external/netty4",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/openxr/src",
+      "condition": "checkout_openxr",
+      "url": "https://chromium.googlesource.com/external/github.com/KhronosGroup/OpenXR-SDK",
+      "status": "excluded-disabled-feature",
+      "reason": "Electron v44.4.1 DEPS explicitly sets checkout_openxr=False."
+    },
+    {
+      "path": "third_party/perl",
+      "condition": "checkout_win",
+      "url": "https://chromium.googlesource.com/chromium/deps/perl",
+      "status": "external-build-interpreter",
+      "reason": "General-purpose Perl build interpreter, not code linked into or distributed with Electron Windows. Install a compatible host Perl when building; this missing prebuilt tool repository is not claimed to be source material."
+    },
+    {
+      "path": "third_party/requests/src",
+      "condition": "checkout_android",
+      "url": "https://chromium.googlesource.com/external/github.com/kennethreitz/requests",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "third_party/search_engines_data/resources_internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/external/search_engines_data_internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "internal",
+      "condition": "checkout_src_internal or checkout_src_internal_infra",
+      "url": "https://chrome-internal.googlesource.com/chrome/src-internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "agents/internal",
+      "condition": "checkout_src_internal or checkout_src_internal_infra",
+      "url": "https://chrome-internal.googlesource.com/chrome/agents-internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "third_party/android_prebuilts/build_tools",
+      "condition": "checkout_android_prebuilts_build_tools",
+      "url": "https://android.googlesource.com/platform/prebuilts/build-tools",
+      "status": "excluded-other-platform",
+      "reason": "DEPS platform condition is not selected for the Windows x64 Electron target."
+    },
+    {
+      "path": "chromeos/ash/resources/internal",
+      "condition": "checkout_src_internal and checkout_chromeos",
+      "url": "https://chrome-internal.googlesource.com/chrome/chromeos/ash/resources/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chromeos/assistant/internal",
+      "condition": "checkout_src_internal and checkout_chromeos",
+      "url": "https://chrome-internal.googlesource.com/chrome/assistant",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/app/theme/default_100_percent/google_chrome",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/theme/default_100_percent/google_chrome",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/app/theme/default_200_percent/google_chrome",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/theme/default_200_percent/google_chrome",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/app/theme/google_chrome",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/theme/google_chrome",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/actor/resources/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/actor/resources/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/cpu_performance_internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/cpu_performance_internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/enterprise/connectors/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/enterprise/connectors/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/glic/resources/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/glic/resources/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/glic/e2e_test/internal",
+      "condition": "checkout_glic_e2e_tests",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/glic/test/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/indigo/resources/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/indigo/resources/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/google/linkdoctor_internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/linkdoctor",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser_internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/media/engagement_internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/media/engagement_internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/nearby_sharing/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/nearby_sharing/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/platform_experience/win",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/platform_experience/win",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/resources/downloads/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/resources/downloads_internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/resources/history/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/resources/history/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/resources/settings/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/resources/settings_internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/resources/webui_browser/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/resources/webui_browser/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/resources/webui_toolbar/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/resources/webui_toolbar/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/ttc/resources/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/ttc/resources/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/browser/spellchecker/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/spellchecker/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/common/request_header_integrity/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/browser/request_header_integrity/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/elevation_service/internal",
+      "condition": "checkout_src_internal and checkout_win",
+      "url": "https://chrome-internal.googlesource.com/chrome/elevation_service/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/installer/mac/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/installer/mac/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/test/data/firefox3_profile/searchplugins",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/data/osdd/firefox3_profile_searchplugins",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/test/data/firefox3_searchplugins",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/data/osdd/firefox3_searchplugins",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/test/data/gpu/vt",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/data/vectortown_endurance/vectortownstatic-20121022",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/test/data/perf/frame_rate/private",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/data/frame_rate_tests",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/test/data/perf/private",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/data/perf_tests",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/test/data/pdf_private",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/data/pdf_private",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/test/media_router/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/test/media_router/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/tools/memory",
+      "condition": "checkout_win and checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/tools/memory",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/services/speech/internal",
+      "condition": "checkout_chromeos and checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chromeos/speech",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "chrome/updater/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/updater/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/accessibility/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome-accessibility",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/activity_reporter/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/activity_reporter_internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/autofill/core/browser/geo/chrome_alternative_state_name_maps",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components/autofill_alternative_state_name_maps",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/autofill/core/browser/form_parsing/internal_resources",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components/autofill_regex_patterns",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/crash/core/app/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components/crash",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/metrics/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components/metrics/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/ntp_tiles/resources/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components/ntp_tiles/resources",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/optimization_guide/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components/optimization_guide",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/personal_context/core/resources/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components/personal_context/core/resources/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/plus_addresses/core/browser/resources/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components/plus_addresses/resources",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/record_replay/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components/record_replay",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/resources/default_100_percent/google_chrome",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components/default_100_percent/google_chrome",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/resources/default_200_percent/google_chrome",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components/default_200_percent/google_chrome",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/resources/default_300_percent/google_chrome",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components/default_300_percent/google_chrome",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/safe_browsing/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components/safe_browsing/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/site_isolation/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/components/site_isolation",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/test/data/autofill/heuristics-json/internal",
+      "condition": "checkout_chromium_autofill_test_dependencies",
+      "url": "https://chrome-internal.googlesource.com/chrome/test/autofill/structured_forms",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/test/data/autofill/label-doms/internal",
+      "condition": "checkout_chromium_autofill_test_dependencies",
+      "url": "https://chrome-internal.googlesource.com/chrome/test/autofill/field_labels",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "components/vector_icons/google_chrome",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/vector_icons/google_chrome",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "content/test/data/plugin",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/data/chrome_plugin_tests",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "google_apis/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/google_apis/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "ios_internal",
+      "condition": "checkout_ios and checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/ios_internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "remoting/host/installer/linux/internal",
+      "condition": "checkout_linux and checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/remoting/host/installer/linux/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "remoting/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/remoting/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "remoting/test/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/remoting/test/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "remoting/tools/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/remoting/tools/internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "services/shape_detection/internal",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/services/shape_detection",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "signing_keys",
+      "condition": "checkout_android and checkout_google_internal and checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/clank/apptestkey",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "clusterfuzz-data",
+      "condition": "checkout_clusterfuzz_data and checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/tools/clusterfuzz-data",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "third_party/widevine/cdm/chromeos",
+      "condition": "(checkout_chromeos or checkout_linux) and checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/deps/widevine/cdm/chromeos",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "third_party/widevine/cdm/linux",
+      "condition": "checkout_linux and checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/deps/widevine/cdm/linux",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "third_party/widevine/cdm/mac",
+      "condition": "checkout_mac and checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/deps/widevine/cdm/mac",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "third_party/widevine/cdm/win",
+      "condition": "checkout_win and checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/deps/widevine/cdm/win",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "third_party/widevine/scripts",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/deps/widevine/scripts",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "third_party/wix",
+      "condition": "checkout_win and checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/deps/wix/v3_5_2519",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "tools/perf/data",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/tools/perf/data",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "ui/file_manager/internal",
+      "condition": "(checkout_chromeos or checkout_linux) and checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/file_manager",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "ui/webui/internal",
+      "condition": "checkout_chromeos and checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/ui-webui-internal",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "webkit/data/bmp_decoder",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/data/bmp_decoder",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "webkit/data/ico_decoder",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/data/ico_decoder",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    },
+    {
+      "path": "webkit/data/test_shell/plugins",
+      "condition": "checkout_src_internal",
+      "url": "https://chrome-internal.googlesource.com/chrome/data/webkit_plugin_tests",
+      "status": "excluded-private-chrome",
+      "reason": "Google Chrome internal/branding/test component, not part of the unbranded public Electron target."
+    }
+  ],
+  "unresolvedWindowsGitDependencyPaths": []
+}

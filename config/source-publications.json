@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "sourceSetId": "094463091d2248ddea3693b6754626b97151e89e333541a60d10fee60c173a98",
+      "name": "ediro-third-party-094463091d2248ddea3693b6754626b97151e89e333541a60d10fee60c173a98.zip",
+      "bytes": 4095400359,
+      "sha256": "8e07404b3aa37514b3dd87bc764738e77c428e9f8427cf0b20bef59248a2e920",
+      "url": "https://github.com/SimonFlipig/Ediro-Third-Party-Sources/releases/tag/sources-094463091d2248ddea3693b6754626b97151e89e333541a60d10fee60c173a98",
+      "parts": [
+        {
+          "name": "ediro-third-party-094463091d2248ddea3693b6754626b97151e89e333541a60d10fee60c173a98.zip.001",
+          "bytes": 1900000000,
+          "sha256": "4e6f639661fe91ef11af1c0242fbb2a32c1b08179a77532d489e72054021ea0b",
+          "url": "https://github.com/SimonFlipig/Ediro-Third-Party-Sources/releases/download/sources-094463091d2248ddea3693b6754626b97151e89e333541a60d10fee60c173a98/ediro-third-party-094463091d2248ddea3693b6754626b97151e89e333541a60d10fee60c173a98.zip.001",
+          "assetApiUrl": "https://api.github.com/repos/SimonFlipig/Ediro-Third-Party-Sources/releases/assets/665517617"
+        },
+        {
+          "name": "ediro-third-party-094463091d2248ddea3693b6754626b97151e89e333541a60d10fee60c173a98.zip.002",
+          "bytes": 1900000000,
+          "sha256": "ec29d3461d47fb00a5761c3d637cf40775519dc18439fd48ca303d7b642edf98",
+          "url": "https://github.com/SimonFlipig/Ediro-Third-Party-Sources/releases/download/sources-094463091d2248ddea3693b6754626b97151e89e333541a60d10fee60c173a98/ediro-third-party-094463091d2248ddea3693b6754626b97151e89e333541a60d10fee60c173a98.zip.002",
+          "assetApiUrl": "https://api.github.com/repos/SimonFlipig/Ediro-Third-Party-Sources/releases/assets/665549563"
+        },
+        {
+          "name": "ediro-third-party-094463091d2248ddea3693b6754626b97151e89e333541a60d10fee60c173a98.zip.003",
+          "bytes": 295400359,
+          "sha256": "1655d18bf9c659775a3cc9d1dd51bac903067199e038d400e311602342cbe0ea",
+          "url": "https://github.com/SimonFlipig/Ediro-Third-Party-Sources/releases/download/sources-094463091d2248ddea3693b6754626b97151e89e333541a60d10fee60c173a98/ediro-third-party-094463091d2248ddea3693b6754626b97151e89e333541a60d10fee60c173a98.zip.003",
+          "assetApiUrl": "https://api.github.com/repos/SimonFlipig/Ediro-Third-Party-Sources/releases/assets/665583190"
+        }
+      ]
+    }
+  ]
+}

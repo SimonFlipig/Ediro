@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "transform": "chromium-source-only-v1",
+  "sourceUrl": "https://commondatastorage.googleapis.com/chromium-browser-official/chromium-152.0.7977.78.tar.xz",
+  "original": {
+    "bytes": 5916191748,
+    "sha256": "16bb4164faa455d1e6a43320b3c0e4c895a93138e892a1bbf7e801863dc4bc74"
+  },
+  "derived": {
+    "bytes": 15779153920,
+    "sha256": "500c308174e7b2eb2eccb4e79dcdcc039743d9e364630092efe43ff203ee6ff1"
+  },
+  "membersRead": 1306305,
+  "membersKept": 1140334,
+  "membersExcluded": 165971,
+  "exclusions": [
+    {
+      "rule": "compiled-magic",
+      "members": 1716,
+      "bytes": 638302947
+    },
+    {
+      "rule": "pattern:^build/linux/[^/]*[-_]sysroot(?:/|$)",
+      "members": 41593,
+      "bytes": 384412285
+    },
+    {
+      "rule": "pattern:^chrome/build/pgo_profiles/.*\\.profdata$",
+      "members": 1,
+      "bytes": 313239984
+    },
+    {
+      "rule": "tree:third_party/apache-linux",
+      "members": 38,
+      "bytes": 60754315
+    },
+    {
+      "rule": "tree:third_party/catapult/third_party/vinn/third_party/v8",
+      "members": 131,
+      "bytes": 233032921
+    },
+    {
+      "rule": "tree:third_party/checkstyle/cipd",
+      "members": 2,
+      "bytes": 16782428
+    },
+    {
+      "rule": "tree:third_party/dawn/tools/golang",
+      "members": 24589,
+      "bytes": 373805216
+    },
+    {
+      "rule": "tree:third_party/google-java-format/cipd",
+      "members": 2,
+      "bytes": 3613619
+    },
+    {
+      "rule": "tree:third_party/instrumented_libs/binaries",
+      "members": 2987,
+      "bytes": 2336410293
+    },
+    {
+      "rule": "tree:third_party/llvm-build",
+      "members": 486,
+      "bytes": 470741280
+    },
+    {
+      "rule": "tree:third_party/llvm-build-tools",
+      "members": 82195,
+      "bytes": 2593548807
+    },
+    {
+      "rule": "tree:third_party/llvm-libclang",
+      "members": 27,
+      "bytes": 132069484
+    },
+    {
+      "rule": "tree:third_party/node/linux",
+      "members": 3346,
+      "bytes": 236326469
+    },
+    {
+      "rule": "tree:third_party/openscreen/src/third_party/llvm-build",
+      "members": 464,
+      "bytes": 445749924
+    },
+    {
+      "rule": "tree:third_party/rust-toolchain",
+      "members": 8382,
+      "bytes": 1734654440
+    },
+    {
+      "rule": "tree:third_party/siso/cipd",
+      "members": 4,
+      "bytes": 62115388
+    },
+    {
+      "rule": "tree:tools/luci-go",
+      "members": 8,
+      "bytes": 79759634
+    }
+  ],
+  "requiredAnchors": {
+    "DEPS": true,
+    "BUILD.gn": true,
+    ".gn": true,
+    "LICENSE": true,
+    "third_party/blink/renderer/core/dom/document.cc": true,
+    "v8/include/v8.h": true,
+    "third_party/skia/src/core/SkCanvas.cpp": true,
+    "third_party/angle/src/libANGLE/Context.cpp": true,
+    "third_party/webrtc/api/peer_connection_interface.h": true,
+    "third_party/boringssl/src/include/openssl/ssl.h": true,
+    "third_party/dawn/src/dawn/native/Instance.cpp": true,
+    "third_party/ffmpeg/libavcodec/avcodec.h": true,
+    "third_party/icu/source/common/unicode/utypes.h": true,
+    "third_party/swiftshader/src/Vulkan/VkDevice.cpp": true,
+    "third_party/eigen3/src/Eigen/Core": true,
+    "third_party/hunspell/src/hunspell/hunspell.cxx": true,
+    "base/third_party/nspr/prtime.cc": true,
+    "net/third_party/mozilla_security_manager/nsNSSCertificateDB.cpp": true,
+    "net/third_party/mozilla_win/cert/win_util.cc": true,
+    "third_party/isimpledom/ISimpleDOMNode.idl": true,
+    "tools/clang/scripts/update.py": true,
+    "tools/rust/update_rust.py": true,
+    "third_party/tflite/src/third_party/icu/data/icu_conversion_data.c.gz.aar": true
+  },
+  "fileContentsModified": false,
+  "scope": "Source-tree filtering only; no compiler or toolchain rebuild performed."
+}

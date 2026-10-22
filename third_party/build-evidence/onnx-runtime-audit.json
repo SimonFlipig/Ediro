@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "candidate": "0.1.3-2026-10-22T08-59-44-637Z",
+  "files": [
+    {
+      "file": "node_modules/onnxruntime-node/bin/napi-v6/win32/x64/DirectML.dll",
+      "sha256": "234e8898778cdec88d3cb0539508273494082812c968699f3de665a018971625",
+      "bytes": 18527584
+    },
+    {
+      "file": "node_modules/onnxruntime-node/bin/napi-v6/win32/x64/dxcompiler.dll",
+      "sha256": "593d42df78c7f9cbd97c1374af107cfe20985759f98b77afc1448fe41ee3cc76",
+      "bytes": 17986360
+    },
+    {
+      "file": "node_modules/onnxruntime-node/bin/napi-v6/win32/x64/dxil.dll",
+      "sha256": "cf9a3981263f8ec30c9905d136eeaf4b4573209c602198671b958ec86905dea8",
+      "bytes": 1508664
+    },
+    {
+      "file": "node_modules/onnxruntime-node/bin/napi-v6/win32/x64/onnxruntime.dll",
+      "sha256": "508c362f5673483dd3a086379c392795b2e42d10d5e6f3f90ebd7ac21c97af67",
+      "bytes": 28754232
+    },
+    {
+      "file": "node_modules/onnxruntime-node/bin/napi-v6/win32/x64/onnxruntime_binding.node",
+      "sha256": "ddd428464069b84414d34ec1796c7c2a69c33a976e4b0390692629e394f92fa1",
+      "bytes": 298848
+    }
+  ],
+  "onnxVersion": "1.30.0.20260909.4.f2c39fe",
+  "onnxSource": "f2c39fe2f838cf35ce7da92824f5a5e3ee6e88a7",
+  "directmlVersion": "1.15.4+241025-1615.1.dml-1.15.fac7597",
+  "directml": {
+    "npmSha256": "234e8898778cdec88d3cb0539508273494082812c968699f3de665a018971625",
+    "nugetSha256": "9c9e6d822561c6c41b90e6994b3e8857cf1d66dbfb1e0c4c799c7c89b4e92da1",
+    "npmBytes": 18527584,
+    "nugetBytes": 18527776,
+    "allPESectionsMatch": true,
+    "sections": [
+      {
+        "name": ".text",
+        "bytes": 3696640,
+        "sha256": "2b6769e33b135d29abe159cbfca35822922fe82bfa7fa22a7a64c13ba83770f1"
+      },
+      {
+        "name": ".rdata",
+        "bytes": 7053312,
+        "sha256": "3b697fbe1cdd2fb00baa7d659cdf2f037e2630da0efb678610ccf75dfc3050c2"
+      },
+      {
+        "name": ".data",
+        "bytes": 87552,
+        "sha256": "55156054296a4ab2cfcef4d719a9de6177b3b392643c4587a62757931022ec13"
+      },
+      {
+        "name": ".pdata",
+        "bytes": 165376,
+        "sha256": "bd72e6b84494be7307ba135a6310c0d01def6702204528e8905cf81f30f3b388"
+      },
+      {
+        "name": ".rsrc",
+        "bytes": 7470080,
+        "sha256": "27e2fdfc7491e52008e38c985c3ad00bd9df972d5ee54c5ef035029ed6d41684"
+      },
+      {
+        "name": ".reloc",
+        "bytes": 43520,
+        "sha256": "79722ea1236a0a6b8dc98c38016210921fed1eb0f75cad9e7f8cc3c852e5b83d"
+      }
+    ],
+    "note": "Whole DLL files differ; all loaded PE sections are checked separately. No claim of whole-file identity."
+  },
+  "dxcVersion": "1.8.2502.8 (b4711839e)",
+  "dxcSource": "b4711839eb9a87da7c3436d9b212e0492359fbbd",
+  "licenseBoundary": "ONNX MIT; DXC LLVM/NCSA plus component notices; DirectML separately licensed Microsoft redistributable, not open-source. The DirectML NuGet and onnxruntime-node binary npm tarball are audit-only and excluded from public source archives."
+}

@@ -13,7 +13,7 @@ const included = [
   'README.md', 'README.en.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
   'Ediro.vbs', '启动 Ediro.cmd', '启动 Ediro.ps1',
   '启动浏览器验证.cmd', '启动浏览器验证.ps1',
-  'docs/Windows发布与数据目录.md', 'docs/单文件工程_v1.md',
+  'docs/Windows发布与数据目录.md', 'docs/单文件工程_v1.md', 'docs/核心指令自定义.md',
   ...(await readdir(path.join(root, 'docs'))).filter(name => /^RELEASE_NOTES_v\d+\.\d+\.\d+\.md$/.test(name)).sort().map(name => `docs/${name}`),
   'docs/screenshots',
 ];

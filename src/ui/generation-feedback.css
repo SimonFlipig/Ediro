@@ -1,0 +1,41 @@
+.generate-button.is-busy {position:relative;isolation:isolate;overflow:hidden;}
+.generate-button.is-busy::before {content:'';position:absolute;z-index:-1;inset:0;background:linear-gradient(105deg,transparent 20%,#b7d7ac30 48%,transparent 76%);transform:translateX(-100%);animation:generation-button-sweep 2.6s ease-in-out infinite;pointer-events:none;}
+.generate-button>.generation-button-label {display:flex;align-items:center;justify-content:center;gap:8px;}
+.generation-spinner {display:inline-block;width:13px;height:13px;flex:0 0 13px;border:2px solid #ffffff45;border-top-color:#fff;border-right-color:#dcebd8;border-radius:50%;animation:generation-spin .9s linear infinite;}
+.generation-mosaic {position:relative;display:block;width:100%;height:100%;overflow:hidden;background:#dbe3d1;}
+.generation-mosaic-source {display:block;width:100%;height:100%;image-rendering:pixelated;}
+.generation-mosaic-grid {position:absolute;inset:0;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(6,1fr);gap:1px;}
+.generation-mosaic-cell {display:block;min-width:0;min-height:0;background:#f4f8ef;opacity:.07;}
+.generation-mosaic.is-animating .generation-mosaic-cell {animation:generation-tile-pulse 2s ease-in-out infinite;}
+.result-task-thumb {border-color:#9eae8d;background:#e5ebde;}
+.result-task-thumb[data-status='failed'] {border-color:#b99273;}
+.result-task-thumb[data-status='failed']>.generation-task-label {background:#906548e6;}
+.result-task-thumb[data-status='cancelled']>.generation-task-label {background:#687267dd;}
+.result-task-thumb .generation-task-mark {position:absolute;top:3px;right:3px;display:grid;place-items:center;width:13px;height:13px;border-radius:50%;background:#fff6e8;color:#9b6845;font-size:10px;font-style:normal;font-weight:700;}
+.result-thumb:focus-visible {outline:2px solid #62865c;outline-offset:2px;}
+.generation-task-preview {position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px 24px 40px;text-align:center;overflow:auto;}
+.generation-task-preview>.generation-mosaic {width:144px;height:144px;min-height:144px;flex-shrink:0;border-radius:10px;box-shadow:0 10px 30px #3c54351a;}
+.generation-task-preview h2 {font-size:18px;color:#536d4b;margin:4px 0 0;}
+.generation-task-preview p {max-width:440px;color:#77866b;font-size:12px;line-height:1.6;overflow-wrap:anywhere;margin:0;}
+.generation-task-preview small {color:#99a48f;font-size:10px;}
+.generation-task-preview .generation-task-error {color:#9a6a4e;max-height:5em;overflow:auto;}
+@keyframes generation-spin {to {transform:rotate(360deg);}}
+@keyframes generation-button-sweep {0%,12% {transform:translateX(-100%);}88%,100% {transform:translateX(100%);}}
+@keyframes generation-tile-pulse {0%,100% {opacity:.07;}45% {opacity:.66;}65% {opacity:.25;}}
+@media (prefers-reduced-motion:reduce) {
+  .generate-button.is-busy::before,.generation-spinner,.generation-mosaic.is-animating .generation-mosaic-cell {animation:none;}
+  .generate-button.is-busy::before {transform:none;opacity:.35;}
+}
+@media (max-height:870px) {.generation-task-preview {gap:8px;padding:14px 16px 30px;}.generation-task-preview>.generation-mosaic {width:96px;height:96px;min-height:96px;}.generation-task-preview h2 {font-size:15px;}}
+.task-progress progress::-webkit-progress-value {transition:width .3s linear;}
+.task-progress progress.is-indeterminate {border-radius:4px;overflow:hidden;background:linear-gradient(90deg,#e6ebdf 20%,#9db68f 45%,#9db68f 55%,#e6ebdf 80%);background-size:250% 100%;animation:generation-progress-wait 1.8s ease-in-out infinite;}
+.task-progress progress.is-indeterminate::-webkit-progress-bar {background:transparent;}
+.task-progress .generation-timing-row {display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;}
+.task-progress .generation-timing {margin:0;color:#849578;font-size:9px;font-variant-numeric:tabular-nums;line-height:1.5;white-space:nowrap;}
+.task-progress .generation-percentage {color:var(--green);font-weight:600;}
+.task-progress .generation-timing-row .text-button {flex-shrink:0;margin:0;font-size:9px;}
+@keyframes generation-progress-wait {from {background-position:100% 0;}to {background-position:-60% 0;}}
+@media (prefers-reduced-motion:reduce) {
+  .task-progress progress::-webkit-progress-value {transition:none;}
+  .task-progress progress.is-indeterminate {animation:none;}
+}

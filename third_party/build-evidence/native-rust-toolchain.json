@@ -1,0 +1,5 @@
+{
+  "manifest": "https://static.rust-lang.org/dist/2026-06-05/channel-rust-nightly.toml",
+  "commit": "e7815e522ecc746592fee32f50478f521333b503",
+  "manifestSha256": "476d9dcded64e8cca5c66723279a418e278fceb0d7839e28faaee3b9ed5b2a2a"
+}

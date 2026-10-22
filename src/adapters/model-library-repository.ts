@@ -7,13 +7,15 @@ import { seedModels } from '../core/models.js';
 import { migrateGenerationModel } from '../protocols/legacy-generation.js';
 import { atomicJson } from './project-repository.js';
 import { migrateModelSettings } from '../core/model-settings.js';
+import { familyForModel } from '../protocols/model-catalog.js';
+import { initializeModelOrigins } from '../core/model-visibility.js';
 
 export const modelLibraryFilename='model-library.v3.json';
 
 async function openLegacyLibrary(directory:string) {
   const file=path.join(directory,'model-library.v1.json');
   try {
-    const data=librarySchema.parse(JSON.parse(await readFile(file,'utf8')));
+    const data=initializeModelOrigins(librarySchema.parse(JSON.parse(await readFile(file,'utf8'))));
     // Only the old adapter identifier triggers migration; never infer protocol from a hostname.
     if(data.models.some(m=>m.adapter_id==='kuai-images')){
       try{await copyFile(file,path.join(directory,'model-library.pre-images-protocol-v1.json'),2);}catch(e){if((e as NodeJS.ErrnoException).code!=='EEXIST')throw e;}
@@ -27,7 +29,7 @@ async function openLegacyLibrary(directory:string) {
   let models;
   try { models=z.array(modelConfigSchema).parse(JSON.parse(await readFile(legacy,'utf8')));await copyFile(legacy,path.join(directory,'models.pre-library-v1.json'),2); }
   catch(e) { if((e as NodeJS.ErrnoException).code==='EEXIST') { models=z.array(modelConfigSchema).parse(JSON.parse(await readFile(legacy,'utf8'))); }
-    else if((e as NodeJS.ErrnoException).code==='ENOENT')models=seedModels();else throw new Error('旧模型配置无效或无法备份；迁移未完成，不会覆盖原配置。'); }
+    else if((e as NodeJS.ErrnoException).code==='ENOENT')models=seedModels().map(m=>m.kind==='cloud'?{...m,family:familyForModel(m),independent_defaults:true}:m);else throw new Error('旧模型配置无效或无法备份；迁移未完成，不会覆盖原配置。'); }
   const data=migrateModels(models);await atomicJson(file,data);
   return librarySchema.parse(JSON.parse(await readFile(file,'utf8')));
 }

@@ -120,9 +120,9 @@ test('首次安装使用发布提示词，两种输入模式均展开模块及�
   const dir=await mkdtemp(path.join(tmpdir(),'ediro-release-prompts-'));
   try{
     const config=await loadPromptConfig(dir),registry=new ModuleRegistry(undefined,config);
-    const subject=registry.create('subject'),angle=registry.create('viewpoint'),prompt=registry.create('prompt');
-    subject.asset_ids=['asset_subject'];angle.asset_ids=['asset_angle'];
-    const recipe:Recipe={recipe_id:'recipe_release',schema_version:1,modules:[subject,angle,prompt],model_config_id:'model_mock_native',core_parameters:{...defaultParameters}};
+    const subject=registry.create('subject'),angle=registry.create('viewpoint'),style=registry.create('style'),prompt=registry.create('prompt');
+    subject.asset_ids=['asset_subject'];angle.asset_ids=['asset_angle'];style.asset_ids=['asset_style'];
+    const recipe:Recipe={recipe_id:'recipe_release',schema_version:1,modules:[subject,angle,style,prompt],model_config_id:'model_mock_native',core_parameters:{...defaultParameters}};
     const chain=compileRecipe(recipe,registry),flat=adaptChain(chain,seedModels()[1]);
     const native=adaptChain(chain,seedModels()[0]).blocks!.filter(b=>b.type==='text').map(b=>b.text).join('');
     for(const text of [native,flat.prompt!]){
@@ -130,9 +130,12 @@ test('首次安装使用发布提示词，两种输入模式均展开模块及�
       assert.match(text,/Preserve the subject's structure, colors, and proportions as shown in image_1/);
       assert.match(text,/## 2\./);
       assert.match(text,/Adjust the camera viewpoint to "/);
+      assert.match(text,/environment type, props, accessories, color palette, and lighting/);
+      assert.match(text,/composition, object placement, relative scale, or spatial relationships/);
       assert.doesNotMatch(text,/\{(?:viewpoint|images|module_number|module)\}/);
     }
-    assert.deepEqual(flat.image_asset_ids,['asset_subject','asset_angle']);
+    assert.match(flat.prompt!,/Use image_3 only as references/);
+    assert.deepEqual(flat.image_asset_ids,['asset_subject','asset_angle','asset_style']);
     assert.deepEqual(chain.prompt_config,config);
     config.modules.subject.native_instruction='Local-only instruction';
     assert.notEqual((await loadPromptConfig(dir)).modules.subject.native_instruction,config.modules.subject.native_instruction);

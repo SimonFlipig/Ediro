@@ -22,6 +22,36 @@ export const promptOptimizationTask: ModuleInferenceTask = {
   output_instruction: '返回优化后可直接替换当前文字的完整提示词。',
 };
 
+export const compositionDescriptionTask: ModuleInferenceTask = {
+  action_label: '提取构图描述',
+  description: '只提取布局、取景、元素位置、相对占比和空间关系。',
+  context_scope: 'target',
+  requires_text: false,
+  requires_images: true,
+  instruction: 'Extract only layout, framing, placement, relative scale, and spatial relationships from the reference images. Do not extract product identity or visual style. Preserve explicit user requirements.',
+  output_instruction: 'Return a concise, concrete composition description ready for image generation, not extraction instructions or image references.',
+};
+
+export const styleDescriptionTask: ModuleInferenceTask = {
+  action_label: '提取风格描述',
+  description: '只提取环境类型、道具、配饰、色调和光线。',
+  context_scope: 'target',
+  requires_text: false,
+  requires_images: true,
+  instruction: 'Extract only environment type, props, accessories, color palette, and lighting from the reference images. Ignore composition, object placement, relative scale, and spatial relationships. Preserve explicit user requirements.',
+  output_instruction: 'Return a concise, concrete environment and style description ready for image generation, not extraction instructions or image references.',
+};
+
+export const automaticPromptTask: ModuleInferenceTask = {
+  action_label: '自动推理',
+  description: '结合启用模块的条件与参考图片，生成可编辑的完整提示词。',
+  context_scope: 'enabled_modules',
+  requires_text: false,
+  requires_images: false,
+  instruction: 'Write the final image-generation prompt for the target using all enabled modules as constraints. Interpret each reference only within its reference_scope. For text_only references, extract the permitted concrete information and integrate it into the prompt; those images will not reach the image generator. For image_text references, respect their permitted role without replacing the subject. Explicit user requirements override reference details. Preserve subject identity, user intent, quantities, negations, and requested text; reconcile constraints without inventing product features.',
+  output_instruction: 'Return only a concise, complete generation prompt in the user\'s language (Chinese if unspecified). State the resulting visual requirements, not extraction instructions or analysis. Do not use image_N references, whose numbering is unavailable to generation.',
+};
+
 export const subjectAnalysisTask: ModuleInferenceTask = {
   action_label: '分析主体特征',
   description: '仅分析当前主体模块的图片和文字，描述结构、材质外观、颜色、比例及当前状态。',

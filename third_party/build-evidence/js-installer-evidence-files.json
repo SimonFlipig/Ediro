@@ -1,0 +1,348 @@
+[
+  {
+    "file": "js-lazy-val-package.json",
+    "sha256": "a642078ae0684963e5747e9499487a4c649c150bbddbfdfd8eb357bfcbf9c1c2",
+    "bytes": 475,
+    "source": {
+      "archive": "lazy-val-1.0.5-b69ad411.tar.gz",
+      "member": "package.json"
+    }
+  },
+  {
+    "file": "js-lazy-val-main.ts",
+    "sha256": "4c5c04b8ba7bf0349ec0ac17b90b308c8fff6915d441a76227a6a4be3a207e55",
+    "bytes": 504,
+    "source": {
+      "archive": "lazy-val-1.0.5-b69ad411.tar.gz",
+      "member": "src/main.ts"
+    }
+  },
+  {
+    "file": "js-lazy-val-MIT-reference.txt",
+    "sha256": "b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5",
+    "bytes": 1078,
+    "source": {
+      "url": "https://raw.githubusercontent.com/spdx/license-list-data/v3.27.0/text/MIT.txt",
+      "note": "Standard text, not an upstream lazy-val LICENSE. Placeholders are retained."
+    }
+  },
+  {
+    "file": "js-colour-notices/color-LICENSE",
+    "sha256": "4c0844caafd3db9a4b643ea493558873710f4e9c8b257887ba066e5e80557848",
+    "bytes": 1059,
+    "source": {
+      "archive": "npm-color-5.0.3.tgz",
+      "member": "LICENSE"
+    }
+  },
+  {
+    "file": "js-colour-notices/color-package.json",
+    "sha256": "e056a5ef1ac8bd65d4a19eb544b2b3dfb69e21da39543e3f58456d6f1793019e",
+    "bytes": 1021,
+    "source": {
+      "archive": "npm-color-5.0.3.tgz",
+      "member": "package.json"
+    }
+  },
+  {
+    "file": "js-colour-notices/color-convert-LICENSE",
+    "sha256": "fa0eb15e44179d20f3fc2c7bb60835f781c278ae6774ce6ad8e21069d88e4853",
+    "bytes": 1140,
+    "source": {
+      "archive": "npm-color-convert-3.1.3.tgz",
+      "member": "LICENSE"
+    }
+  },
+  {
+    "file": "js-colour-notices/color-convert-package.json",
+    "sha256": "2ca1a776fdacc56b2c1463045e8b2edcc7ff31490c362ee84e258cc905b90e73",
+    "bytes": 1113,
+    "source": {
+      "archive": "npm-color-convert-3.1.3.tgz",
+      "member": "package.json"
+    }
+  },
+  {
+    "file": "js-colour-notices/color-name-LICENSE",
+    "sha256": "7357445bac398c76c0aef75a587009fe406d40de6a79789eb5b7ecbbad317ef2",
+    "bytes": 1078,
+    "source": {
+      "archive": "npm-color-name-2.1.0.tgz",
+      "member": "LICENSE"
+    }
+  },
+  {
+    "file": "js-colour-notices/color-name-package.json",
+    "sha256": "816c067d75efb40e8daf99d11a40029c95cb3634bbaf8ba1a09505c56705ab5e",
+    "bytes": 651,
+    "source": {
+      "archive": "npm-color-name-2.1.0.tgz",
+      "member": "package.json"
+    }
+  },
+  {
+    "file": "js-colour-notices/color-string-LICENSE",
+    "sha256": "8984783ab2478bbee455f0eb6c375b5b62c57c86d4a55f6bf96dfd08e8d48a10",
+    "bytes": 1082,
+    "source": {
+      "archive": "npm-color-string-2.1.4.tgz",
+      "member": "LICENSE"
+    }
+  },
+  {
+    "file": "js-colour-notices/color-string-package.json",
+    "sha256": "c07e159e468107920cf59dc92a06185593c180c2bbf12cd6baf9494da68c8d35",
+    "bytes": 952,
+    "source": {
+      "archive": "npm-color-string-2.1.4.tgz",
+      "member": "package.json"
+    }
+  },
+  {
+    "file": "installer-NSIS-COPYING",
+    "sha256": "3c8de989f6504d52f5f8dfafedb6668cd47201f5d01f1319570727c091425dd6",
+    "bytes": 15488,
+    "source": {
+      "archive": "nsis-3.04-25cf71ac.tar.gz",
+      "member": "COPYING"
+    }
+  },
+  {
+    "file": "installer-StdUtils-blake2-COPYING.txt",
+    "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+    "bytes": 7048,
+    "source": {
+      "archive": "nsis-stdutils-1.1.4-4e111732.tar.gz",
+      "member": "Contrib/StdUtils/src/blake2/COPYING.txt"
+    }
+  },
+  {
+    "file": "installer-StdUtils-rhash-COPYING.txt",
+    "sha256": "8cf876d3406a2eed6c17ae804c8958bd78d3a0f63c30d6e2e789ab575e9fde40",
+    "bytes": 751,
+    "source": {
+      "archive": "nsis-stdutils-1.1.4-4e111732.tar.gz",
+      "member": "Contrib/StdUtils/src/rhash/COPYING.txt"
+    }
+  },
+  {
+    "file": "installer-StdUtils-LGPL.txt",
+    "sha256": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551",
+    "bytes": 26530,
+    "source": {
+      "archive": "nsis-stdutils-1.1.4-4e111732.tar.gz",
+      "member": "LGPL.txt"
+    }
+  },
+  {
+    "file": "installer-StdUtils-LGPL-CLARIFICATION.txt",
+    "sha256": "49287ffa37d51910a8cb595d7ab64ebd2d42525384b16d4322783a0e57a77194",
+    "bytes": 2703,
+    "source": {
+      "archive": "nsis-stdutils-1.1.4-4e111732.tar.gz",
+      "member": "LGPL_CLARIFICATION.txt"
+    }
+  },
+  {
+    "file": "installer-StdUtils-ReadMe.txt",
+    "sha256": "7d1b40bfdf3d6ef857b361929f8bfa3de38f53968ab1c084fac50ce0086e23f1",
+    "bytes": 1350,
+    "source": {
+      "archive": "nsis-stdutils-1.1.4-4e111732.tar.gz",
+      "member": "ReadMe.txt"
+    }
+  },
+  {
+    "file": "installer-Elevate-version.rc",
+    "sha256": "01749e2800f82985013d6e0282934e738806d0c22c74ddc5fa61a88ed4936d3b",
+    "bytes": 2317,
+    "source": {
+      "archive": "elevate-1.0.0.2894-d5cfc93d.tar.gz",
+      "member": "Elevate/Elevate.rc"
+    }
+  },
+  {
+    "file": "installer-Elevate-LICENSE.md",
+    "sha256": "9f72cd8204854a7c5049209eb4ae1552613f3116d97dd2e737f94c21c80d3fdf",
+    "bytes": 1099,
+    "source": {
+      "archive": "elevate-1.0.0.2894-d5cfc93d.tar.gz",
+      "member": "LICENSE.md"
+    }
+  },
+  {
+    "file": "onnx-DXC-LICENSE.TXT",
+    "sha256": "27a49e35d1da96eba18fba54bc882667ff0ff8c0254f16f2b6e165d605ba7df8",
+    "bytes": 29241,
+    "source": {
+      "archive": "directx-shader-compiler-1.8.2502.8-b4711839.tar.gz",
+      "member": "LICENSE.TXT"
+    }
+  },
+  {
+    "file": "onnx-DXC-ThirdPartyNotices.txt",
+    "sha256": "19512a5d0a015ef16d167272c164da49a604614a786206212a80ad486ed0be6d",
+    "bytes": 11256,
+    "source": {
+      "archive": "directx-shader-compiler-1.8.2502.8-b4711839.tar.gz",
+      "member": "ThirdPartyNotices.txt"
+    }
+  },
+  {
+    "file": "onnx-DXC-DxilCompression-LICENSE.TXT",
+    "sha256": "6f20fa7672b00e2e975c291df737cf227addf3ad32e36fef3fe0f416e4664d3d",
+    "bytes": 1162,
+    "source": {
+      "archive": "directx-shader-compiler-1.8.2502.8-b4711839.tar.gz",
+      "member": "lib/DxilCompression/LICENSE.TXT"
+    }
+  },
+  {
+    "file": "onnx-Runtime-LICENSE",
+    "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+    "bytes": 1073,
+    "source": {
+      "archive": "onnxruntime-1.30.0-f2c39fe2.tar.gz",
+      "member": "LICENSE"
+    }
+  },
+  {
+    "file": "onnx-Runtime-ThirdPartyNotices.txt",
+    "sha256": "143764b952fdb1a7c69ce653bfba74a7744d6a8a573bfb73e235fba356c83de3",
+    "bytes": 338088,
+    "source": {
+      "archive": "onnxruntime-1.30.0-f2c39fe2.tar.gz",
+      "member": "ThirdPartyNotices.txt"
+    }
+  },
+  {
+    "file": "onnx-build-dml.cmake",
+    "sha256": "63955bc5296908d3f5ed06b03938e9797d6bd8f8ea60432d6bc679d47e6f034e",
+    "bytes": 5014,
+    "source": {
+      "archive": "onnxruntime-1.30.0-f2c39fe2.tar.gz",
+      "member": "cmake/external/dml.cmake"
+    }
+  },
+  {
+    "file": "onnx-build-packages.config",
+    "sha256": "1f9ded83d5df5b9f6b205d15b72b60fa64311f8b95efcd4f16b43b9cba7aebad",
+    "bytes": 325,
+    "source": {
+      "archive": "onnxruntime-1.30.0-f2c39fe2.tar.gz",
+      "member": "packages.config"
+    }
+  },
+  {
+    "file": "installer-UAC-License.txt",
+    "sha256": "997fd014643f27a2f240faf9b9b54a98371775c63eb38134829154794f7326fa",
+    "bytes": 956,
+    "source": {
+      "localAuditSource": "official-uac/License.txt"
+    }
+  },
+  {
+    "file": "installer-Nsis7z-License.txt",
+    "sha256": "63fcfe54826809b5a9f9df8a8ff53c04330122319ec67a2dd815085586adaf0e",
+    "bytes": 476,
+    "source": {
+      "localAuditSource": "official-nsis7z/Contrib/nsis7z/DOC/License.txt"
+    }
+  },
+  {
+    "file": "installer-Nsis7z-build-and-license.txt",
+    "sha256": "881f8ba4da0a0c30e281d324408baa596f14211b03d1f3bf99fe18c4621916c3",
+    "bytes": 5875,
+    "source": {
+      "localAuditSource": "official-nsis7z/Contrib/nsis7z/DOC/nsis7z.txt"
+    }
+  },
+  {
+    "file": "onnx-DirectML-LICENSE.txt",
+    "sha256": "a05138e3a085ff60a44881eedfa58dccb03ecc1d7b1f6ae888418e8c2fec4b8d",
+    "bytes": 10439,
+    "source": {
+      "localAuditSource": "directml-materials/LICENSE.txt"
+    }
+  },
+  {
+    "file": "onnx-DirectML-ThirdPartyNotices.txt",
+    "sha256": "2c95795c13ff48a58b6ed916f37901c23d964b5d9d601af422f17ad2172e7950",
+    "bytes": 4577,
+    "source": {
+      "localAuditSource": "directml-materials/ThirdPartyNotices.txt"
+    }
+  },
+  {
+    "file": "installer-nsis-build-upstream.sh",
+    "sha256": "76ce544de8f73fcaad2be3a3bdc6222562a445fb9e2ee2c30d7f9a59a81146dd",
+    "bytes": 632,
+    "source": {
+      "localAuditSource": "nsis-3.0.4.1-build-script.sh"
+    }
+  },
+  {
+    "file": "installer-nsis-resources-upstream.sh",
+    "sha256": "45ccae5f9f043bbb31f9b56abb23fc71b3dffc5d83c046e1740500d7ffe29f9c",
+    "bytes": 1645,
+    "source": {
+      "localAuditSource": "nsis-resources-3.4.1-prepare.sh"
+    }
+  },
+  {
+    "file": "installer-WinShell-declaration.html",
+    "sha256": "ba048c30004b8923a0107c005eca3139d27d073bb68d3cb7f10e6ce1b2747ecf",
+    "bytes": 22562,
+    "source": {
+      "localAuditSource": "WinShell-license-declaration-oldid-25687.html"
+    }
+  },
+  {
+    "file": "installer-plugin-license-guidance.html",
+    "sha256": "49ae52cc063db51a93310780a55510f2bf906c6ef7acb03ef501853279a0d91a",
+    "bytes": 4524,
+    "source": {
+      "localAuditSource": "NSIS-plugin-licenses-Anders-20120822.html"
+    }
+  },
+  {
+    "file": "js-byte-verification.json",
+    "sha256": "286cfe3c2bbdba54cfc9fe6dc4438fc7f411bdc20fff691b383375a361d76e21",
+    "bytes": 5947,
+    "source": {
+      "localAuditSource": "javascript-byte-verification.json"
+    }
+  },
+  {
+    "file": "js-npm-metadata.json",
+    "sha256": "09c11e41d1295afba2395f0656f9052443f90c12a23ca41d2429234cdde3bdaa",
+    "bytes": 52050,
+    "source": {
+      "localAuditSource": "npm-metadata.json"
+    }
+  },
+  {
+    "file": "installer-binary-origin.json",
+    "sha256": "62e769996990192ba4e83d738c5885eabf859acf78794088005df0b78a1d7340",
+    "bytes": 694,
+    "source": {
+      "localAuditSource": "nsis-binary-origin.json"
+    }
+  },
+  {
+    "file": "js-packaged-inventory.json",
+    "sha256": "00f6f247c82b7e50faeeb85644806bb31d17f076e04accf16213fb4ff709075b",
+    "bytes": 17359,
+    "source": {
+      "method": "@electron/asar listPackage/extractFile"
+    }
+  },
+  {
+    "file": "js-installer-source-archives.json",
+    "sha256": "e50c4ca1ac76fa7a01928748a46b5e14ea733fd3c762a47c19d59c2cd667aa5f",
+    "bytes": 19495,
+    "source": {
+      "method": "Downloaded originals, SHA256 computed over complete files"
+    }
+  }
+]

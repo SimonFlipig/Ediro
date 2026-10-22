@@ -2,8 +2,18 @@ import { z } from 'zod';
 import { idSchema, recipeSchema } from '../core/domain.js';
 import { connectionSchema, modelEntrySchema } from '../core/model-library.js';
 import { maskDraftSchema,maskModeSchema,maskStrokesSchema } from '../core/mask.js';
+import { moduleSettingsSchema, referenceSettingsSchema } from '../core/module-settings.js';
+import { promptRoleSchema } from '../core/prompt-roles.js';
+import { promptCustomizationsSchema } from '../core/prompt-customization.js';
 
 export const commandSchema = z.discriminatedUnion('type', [
+  z.object({type:z.literal('prompt-customizations:save'),customizations:promptCustomizationsSchema}),
+  z.object({type:z.literal('prompt-customizations:import')}),
+  z.object({type:z.literal('prompt-customizations:export'),customizations:promptCustomizationsSchema}),
+  z.object({type:z.literal('reference:preview'),request_id:idSchema,project_id:idSchema,asset_id:idSchema,reference_type:z.enum(['composition','style']),module_id:idSchema.optional(),settings:referenceSettingsSchema.optional()}),
+  z.object({type:z.literal('reference:cancel-preview'),request_id:idSchema}),
+  z.object({type:z.literal('reference-model:prepare'),kind:z.enum(['depth','segment'])}),
+  z.object({type:z.literal('module-settings:save'),settings:moduleSettingsSchema}),
   z.object({type:z.literal('mask:save-composite'),project_id:idSchema,task_id:idSchema,strokes:maskStrokesSchema}),
   z.object({type:z.literal('mask:preview'),project_id:idSchema,task_id:idSchema,mode:maskModeSchema,feather:z.number().int().min(0).max(64),composite_strokes:maskStrokesSchema.optional()}),
   z.object({type:z.literal('mask:save-draft'),project_id:idSchema,draft:maskDraftSchema}),
@@ -11,7 +21,7 @@ export const commandSchema = z.discriminatedUnion('type', [
   z.object({type:z.literal('mask:reprocess'),project_id:idSchema,task_id:idSchema,mode:maskModeSchema,feather:z.number().int().min(0).max(64),composite_strokes:maskStrokesSchema.optional()}),
   z.object({type:z.literal('recipe:select-model'),model_config_id:idSchema}),
   z.object({type:z.literal('recipe:reset-parameters')}),
-  z.object({type:z.literal('module:infer'),request_id:idSchema,project_id:idSchema,module_id:idSchema,model_config_id:idSchema,text:z.string().max(32000),allow_text_only:z.boolean()}),
+  z.object({type:z.literal('module:infer'),request_id:idSchema,project_id:idSchema,module_id:idSchema,model_config_id:idSchema,text:z.string().max(32000),allow_text_only:z.boolean(),automatic:z.boolean().optional(),prompt_role:promptRoleSchema.optional()}),
   z.object({type:z.literal('module:cancel-inference'),request_id:idSchema}),
   z.object({type:z.literal('job:model-input'),task_id:idSchema}),
   z.object({type:z.literal('model:test'),model_config_id:idSchema}),
@@ -27,6 +37,8 @@ export const commandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('asset:hide'), asset_id:idSchema }),
   z.object({ type: z.literal('result:trash'), asset_id:idSchema }),
   z.object({ type: z.literal('result:restore'), project_id:idSchema, asset_id:idSchema }),
+  z.object({ type: z.literal('job:restore-recipe'), project_id:idSchema, task_id:idSchema }),
+  z.object({ type: z.literal('job:hide-result'), project_id:idSchema, task_id:idSchema }),
   z.object({ type: z.literal('workspace:remove'), id:z.string().regex(/^(work-[a-zA-Z0-9]{6}|file-[a-f0-9]{12})$/) }),
   z.object({ type: z.literal('workspace:rename'), id:z.string().regex(/^(work-[a-zA-Z0-9]{6}|file-[a-f0-9]{12})$/),name:z.string().trim().min(1).max(100) }),
   z.object({ type: z.literal('output:open') }),

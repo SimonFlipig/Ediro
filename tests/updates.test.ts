@@ -15,6 +15,11 @@ function fixture(mode: 'installed' | 'portable' | 'development' = 'installed', r
   const service = new UpdateService(mode, '0.1.0', mode === 'development' ? undefined : driver, state => states.push(state.status), restart, async url => {opened.push(url);});
   return {service, driver, opened, states};
 }
+test('尚未检测更新时也能取得当前安装版本的说明与源码', async () => {
+  const {service, opened} = fixture();
+  await service.command('release');
+  assert.deepEqual(opened, [`${releasesUrl}/tag/v0.1.0`]);
+});
 test('检测不自动下载；下载校验完成后仅明确重启操作可启动安装', async () => {
   let requested = 0;
   const {service, driver} = fixture('installed', () => requested++);

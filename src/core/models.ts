@@ -1,12 +1,14 @@
 import { type ModelConfig, type PublicModel } from './domain.js';
 import { librarySchema, migrateModels, mockDescription, modelEntrySchema, connectionSchema, type LibraryData, type Connection, type ModelEntry, type AdapterDescription } from './model-library.js';
-export { seedModels } from '../protocols/model-presets.js';
+import { seedModels } from '../protocols/model-presets.js';
+export { seedModels };
 import { newId } from './domain.js';
 import { maskEditMethod } from './mask-request.js';
 import { normalizeParameters,validateGenerationParameters } from './generation-parameters.js';
 import type { ModelTestRecord } from './model-tests.js';
-import { findPreset } from '../protocols/model-catalog.js';
+import { findPreset, familiesForAdapter } from '../protocols/model-catalog.js';
 import { migrateModelSettings, snapshotParameters } from './model-settings.js';
+import { initializeModelOrigins, hasUserModels, isModelVisible } from './model-visibility.js';
 
 export interface SecretStore {
   has(ref: string): Promise<boolean>;
@@ -15,13 +17,31 @@ export interface SecretStore {
 }
 export class ModelLibrary {
   private data: LibraryData;
-  constructor(data: ModelConfig[] | LibraryData, private persist: (data: LibraryData) => Promise<void>, private secrets: SecretStore, readonly adapters: AdapterDescription[] = [mockDescription]) { this.data = migrateModelSettings(librarySchema.parse(Array.isArray(data) ? migrateModels(data) : data)); }
+  constructor(data: ModelConfig[] | LibraryData, private persist: (data: LibraryData) => Promise<void>, private secrets: SecretStore, readonly adapters: AdapterDescription[] = [mockDescription]) {
+    this.data = initializeModelOrigins(migrateModelSettings(librarySchema.parse(Array.isArray(data) ? migrateModels(data) : data)));
+    // Older versions allowed removing the demos. Keep both bundled entries
+    // available for when the user's library is empty again.
+    for(const model of seedModels().filter(m=>m.kind==='mock'))if(!this.data.models.some(m=>m.model_config_id===model.model_config_id))this.data.models.push(modelEntrySchema.parse({...model,origin:'builtin'}));
+  }
   snapshot() { return structuredClone(this.data); }
-  defaultModel() { return this.data.assignments.generation_default; }
+  effectiveAssignments(): LibraryData['assignments'] {
+    const assignments:LibraryData['assignments']={};
+    for(const purpose of ['generation','understanding','editing'] as const){
+      const id=this.data.assignments[`${purpose}_default`],model=this.data.models.find(m=>m.model_config_id===id);
+      if(model?.enabled&&isModelVisible(model,this.data)&&(purpose==='editing'?!!maskEditMethod(this.resolve(model.model_config_id)):model.purpose===purpose))assignments[`${purpose}_default`]=model.model_config_id;
+    }
+    // Restoring the bundled demo is free. A real billing channel is only a
+    // default after the user explicitly assigns it.
+    if(!assignments.generation_default&&!hasUserModels(this.data))assignments.generation_default=this.data.models.find(m=>m.kind==='mock'&&m.enabled&&m.purpose==='generation')?.model_config_id;
+    return assignments;
+  }
+  defaultModel() { return this.effectiveAssignments().generation_default; }
   private async save(data: LibraryData) { const parsed = librarySchema.parse(data); await this.persist(parsed); this.data = parsed; }
   resolve(id: string) {
+    if(id==='model_unselected')throw new Error('请先选择生图模型。');
     const m = this.data.models.find(m => m.model_config_id === id);
     if (!m) throw new Error('模型配置不存在，请在本机模型库重新绑定。');
+    if(!isModelVisible(m,this.data))throw new Error('已入库真实模型，请重新选择模型。');
     if (!m.enabled) throw new Error('模型配置已停用。');
     const c = this.data.connections.find(c => c.connection_id === m.connection_id);
     const a = this.adapters.find(a => a.adapter_id === m.adapter_id);
@@ -36,21 +56,21 @@ export class ModelLibrary {
 
     for(const p of m.purpose==='understanding'?[]:a?.parameters??[]){if(p.key==='aspect_ratio'&&p.values)capabilities.aspect_ratios=capabilities.aspect_ratios.filter(v=>p.values!.includes(v));if(p.key==='quality'&&p.values)capabilities.qualities=capabilities.qualities.filter(v=>p.values!.includes(v));if(p.key==='output_format'&&p.values)capabilities.formats=capabilities.formats.filter(v=>p.values!.includes(v));if(p.key==='count'&&p.maximum)capabilities.max_count=Math.min(capabilities.max_count,p.maximum);}
     const preset=findPreset(m.preset_id);
-    const generation_contract=structuredClone(preset?.config.adapter_id===m.adapter_id?preset.config.generation_contract:a?.generation_contract??m.generation_contract);
+    const generation_contract=structuredClone(preset?.config.adapter_id===m.adapter_id?preset.config.generation_contract:m.family?m.generation_contract??a?.generation_contract:a?.generation_contract??m.generation_contract);
     if(generation_contract){
       generation_contract.features=generation_contract.features.filter(f=>(m.capabilities.features??[]).includes(f));
       if(generation_contract.legacy_resolution_quality)generation_contract.tiers=generation_contract.tiers.filter(v=>capabilities.qualities.includes(v));
       if(generation_contract.max_images!==undefined)capabilities.max_images=Math.min(capabilities.max_images,generation_contract.max_images);
     }
     const validation_status=!m.validation?'untested':m.validation.model_revision===m.revision&&m.validation.connection_revision===(c?.revision??0)&&m.validation.adapter_version===a?.version?'passed':'stale';
-    const defaults=normalizeParameters(!m.legacy_defaults_pending&&m.preset_id?this.data.defaults_by_model?.[m.preset_id]??m.defaults:m.defaults,{...m,capabilities,generation_contract} as ModelConfig);
+    const defaults=normalizeParameters(!m.independent_defaults&&!m.legacy_defaults_pending&&m.preset_id?this.data.defaults_by_model?.[m.preset_id]??m.defaults:m.defaults,{...m,capabilities,generation_contract} as ModelConfig);
     return structuredClone({ ...m,defaults,capabilities,generation_contract,validation_status,geometry_support:a?.geometry_support, endpoint:c?.endpoint??'',credential_ref:c?.credential_ref,connection_revision:c?.revision,adapter_version:a?.version,
       executable:valid && (m.kind!=='cloud'||!!c?.enabled&&!!c.endpoint&&(!a?.requires_credential||!!c.credential_ref)) }) as ModelConfig;
   }
   async execution(id:string) { const m=this.resolve(id); if(!m.executable)throw new Error('模型未就绪：请检查连接、凭据、用途与适配器能力。'); if(m.credential_ref && !await this.secrets.has(m.credential_ref))throw new Error('模型连接凭据缺失，请重新设置。'); return m; }
-  async credential(model:ModelConfig){if(!model.credential_ref||!this.secrets.resolve)throw new Error('模型凭据不可用。');return this.secrets.resolve(model.credential_ref);}
+  async credential(model:Pick<ModelConfig,'credential_ref'>){if(!model.credential_ref||!this.secrets.resolve)throw new Error('模型凭据不可用。');return this.secrets.resolve(model.credential_ref);}
   async list(): Promise<PublicModel[]> {
-    return Promise.all(this.data.models.map(async entry => {
+    return Promise.all(this.data.models.filter(entry=>isModelVisible(entry,this.data)).map(async entry => {
       const model = entry.enabled ? this.resolve(entry.model_config_id) : {...entry,endpoint:this.data.connections.find(c=>c.connection_id===entry.connection_id)?.endpoint??'',executable:false};
       const ref = this.data.connections.find(c=>c.connection_id===entry.connection_id)?.credential_ref;
       const { credential_ref, ...rest } = structuredClone(model) as ModelConfig;
@@ -77,18 +97,25 @@ export class ModelLibrary {
     const c=connectionSchema.parse({...input,revision:(old?.revision??0)+1,credential_ref:clear?undefined:old?.credential_ref});
     if(secret&&clear)throw new Error('不能同时设置和清除凭据。');
     if(secret){c.credential_ref=newId('credential');await this.secrets.set(c.credential_ref,secret);}
-    const index=next.connections.findIndex(item=>item.connection_id===c.connection_id);if(index<0)next.connections.push(c);else next.connections[index]=c;await this.save(next);
+    const index=next.connections.findIndex(item=>item.connection_id===c.connection_id);if(index<0)next.connections.push(c);else next.connections[index]=c;
+    if(secret)for(const model of next.models)if(model.kind==='cloud'&&model.connection_id===c.connection_id)model.origin='user';
+    await this.save(next);
   }
   async saveModel(input: Omit<ModelEntry,'revision'>) {
     const next=this.snapshot(),old=next.models.find(m=>m.model_config_id===input.model_config_id);
     const model=modelEntrySchema.parse({...input,revision:(old?.revision??0)+1});
+    const configured=next.connections.some(c=>c.connection_id===model.connection_id&&!!c.credential_ref);
+    model.origin=model.kind==='mock'?'builtin':!old||old.origin==='user'||configured||old.model!==model.model||old.adapter_id!==model.adapter_id||old.connection_id!==model.connection_id?'user':'builtin';
+    if(old?.independent_defaults)model.independent_defaults=true;
+    if(model.family&&(!familiesForAdapter(model.adapter_id).some(f=>f.id===model.family)||(model.family==='reasoning')!==(model.purpose==='understanding')))throw new Error('模型家族与接口协议或用途不匹配。');
     const preset=findPreset(model.preset_id);
     if(model.preset_id&&!preset)throw new Error('模型预设不存在。');
     if(preset){
       if(preset.config.adapter_id!==model.adapter_id||preset.purpose!==model.purpose)throw new Error('模型预设与接口协议或用途不匹配。');
       model.generation_contract=structuredClone(preset.config.generation_contract);
       // New channels inherit existing model defaults, never overwrite them.
-      if(!old&&next.defaults_by_model?.[preset.id])model.defaults=structuredClone(next.defaults_by_model[preset.id]);
+      if(model.family&&model.family!==preset.family)throw new Error('模型家族与型号不匹配。');
+      if(!old&&!model.independent_defaults&&next.defaults_by_model?.[preset.id])model.defaults=structuredClone(next.defaults_by_model[preset.id]);
     }
     if((!old||old.connection_id!==model.connection_id||old.model!==model.model||old.adapter_id!==model.adapter_id)&&next.models.some(m=>m.model_config_id!==model.model_config_id&&m.connection_id===model.connection_id&&m.model===model.model&&m.adapter_id===model.adapter_id))throw new Error('此接口的该模型已入库。');
     delete model.validation;
@@ -105,13 +132,14 @@ export class ModelLibrary {
     const resolved={...model,generation_contract:model.generation_contract??a.generation_contract,endpoint:'',executable:false} as ModelConfig;
     model.defaults=snapshotParameters(model.defaults,resolved);
     validateGenerationParameters(model.defaults,resolved);
-    if(preset){
+    if(preset&&!model.independent_defaults){
       next.defaults_by_model={...next.defaults_by_model,[preset.id]:structuredClone(model.defaults)};
       delete model.legacy_defaults_pending;
-      for(const peer of old?next.models.filter(m=>m.preset_id===preset.id&&m.model_config_id!==model.model_config_id):[]){
+      for(const peer of old?next.models.filter(m=>!m.independent_defaults&&m.preset_id===preset.id&&m.model_config_id!==model.model_config_id):[]){
         peer.defaults=structuredClone(model.defaults);delete peer.legacy_defaults_pending;peer.revision++;delete peer.validation;
       }
     }
+    if(model.independent_defaults)delete model.legacy_defaults_pending;
     const index=next.models.findIndex(m=>m.model_config_id===model.model_config_id);if(index<0)next.models.push(model);else next.models[index]=model;await this.save(next);
   }
   async acceptTest(record:ModelTestRecord){
@@ -123,10 +151,17 @@ export class ModelLibrary {
     await this.save(next);
   }
   async deleteConnection(id:string) { const next=this.snapshot();if(next.models.some(m=>m.connection_id===id))throw new Error('此连接仍有关联模型，请先删除模型或重新绑定连接。');next.connections=next.connections.filter(c=>c.connection_id!==id);await this.save(next); }
-  async deleteModel(id:string) { const next=this.snapshot();if(Object.values(next.assignments).includes(id))throw new Error('请先更换默认功能模型再删除。');next.models=next.models.filter(m=>m.model_config_id!==id);await this.save(next); }
+  async deleteModel(id:string) {
+    const next=this.snapshot();
+    if(next.models.find(m=>m.model_config_id===id)?.kind==='mock')throw new Error('内置模拟引擎会在模型库清空后恢复，不能移除。');
+    next.models=next.models.filter(m=>m.model_config_id!==id);
+    for(const purpose of ['generation','understanding','editing'] as const)if(next.assignments[`${purpose}_default`]===id)delete next.assignments[`${purpose}_default`];
+    await this.save(next);
+  }
   async assign(purpose:ModelEntry['purpose']|'editing',id:string) {
     const next=this.snapshot(),model=next.models.find(m=>m.model_config_id===id);
-    if(!model?.enabled||(purpose==='editing'?!maskEditMethod(this.resolve(id)):model.purpose!==purpose))throw new Error('默认模型用途不匹配或已停用。');
+    if(!model?.enabled||!isModelVisible(model,next)||(purpose==='editing'?!maskEditMethod(this.resolve(id)):model.purpose!==purpose))throw new Error('默认模型用途不匹配、已停用或已隐藏。');
+    if(model.kind!=='mock')model.origin='user';
     next.assignments[`${purpose}_default`]=id;await this.save(next);
   }
   async update(id: string, patch: { title: string; endpoint: string; enabled: boolean }, secret?: string) {
@@ -134,6 +169,7 @@ export class ModelLibrary {
     const next=this.snapshot(),m=next.models.find(m=>m.model_config_id===id);if(!m)throw new Error('模型配置不存在。');
     m.title=patch.title;m.enabled=patch.enabled;m.revision++;
     const c=next.connections.find(c=>c.connection_id===m.connection_id);
+    if(m.kind!=='mock'&&(secret||c?.credential_ref))m.origin='user';
     if(c){const validated=connectionSchema.parse({...c,endpoint:patch.endpoint,revision:c.revision+1});Object.assign(c,validated);if(secret){c.credential_ref=newId('credential');await this.secrets.set(c.credential_ref,secret);}}
     else if(secret)throw new Error('只有云端模型可保存 API Key。');
     await this.save(next);

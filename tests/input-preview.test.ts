@@ -48,3 +48,18 @@ test('已有模块的卡片核心语义与发送预览统一采用最新定义�
   assert.equal((preview.chain!.blocks[0] as {text:string}).text,`subject:\n${current.base_instruction}`);
   assert.deepEqual(state,before);
 });
+
+test('自动提示词状态跟随当前配方，手改结果不失效，生图模型缺失不阻止起草',()=>{
+  const state=fixture(),target=state.project!.recipe.modules[1];target.auto_prompt=true;
+  let preview=synchronizeInputPreview(state);
+  assert.equal(preview.auto_prompt?.needs_inference,true);
+  target.auto_prompt_input_key=preview.auto_prompt!.input_key;
+  target.user_instruction='用户修改后的最终文字';
+  preview=synchronizeInputPreview(state);
+  assert.equal(preview.auto_prompt?.needs_inference,false);
+  state.project!.recipe.modules[0].user_instruction='新主体要求';state.models=[];
+  preview=synchronizeInputPreview(state);
+  assert.equal(preview.auto_prompt?.needs_inference,true);
+  assert.ok(preview.adaptation_error);
+  assert.equal(synchronizeInputPreview({...preview,project:null}).auto_prompt,undefined);
+});

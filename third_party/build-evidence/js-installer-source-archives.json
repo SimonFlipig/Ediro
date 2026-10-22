@@ -1,0 +1,533 @@
+[
+  {
+    "name": "adm-zip",
+    "version": "0.6.1",
+    "file": "npm-adm-zip-0.6.1.tgz",
+    "url": "https://registry.npmjs.org/adm-zip/-/adm-zip-0.6.1.tgz",
+    "sha256": "8625031e89912267a5a093fc1e322022d5028b73b45c3274781bc1cf74ee4e82",
+    "bytes": 35489,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "argparse",
+    "version": "2.0.1",
+    "file": "npm-argparse-2.0.1.tgz",
+    "url": "https://registry.npmjs.org/argparse/-/argparse-2.0.1.tgz",
+    "sha256": "27903847fc8215e6fc5a33e81490f7baba66403f8aade33771b988cca097728c",
+    "bytes": 39740,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "builder-util-runtime",
+    "version": "9.7.0",
+    "file": "npm-builder-util-runtime-9.7.0.tgz",
+    "url": "https://registry.npmjs.org/builder-util-runtime/-/builder-util-runtime-9.7.0.tgz",
+    "sha256": "6b1f079463c7ddb2992c10ceea45761ef9be63a8e2290105fea918d869c23498",
+    "bytes": 49937,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "debug",
+    "version": "4.4.3",
+    "file": "npm-debug-4.4.3.tgz",
+    "url": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
+    "sha256": "89c1ac9c946ee8905a875837114528e97eeae35e03be3190584b2216af43e4a7",
+    "bytes": 13449,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "define-data-property",
+    "version": "1.1.4",
+    "file": "npm-define-data-property-1.1.4.tgz",
+    "url": "https://registry.npmjs.org/define-data-property/-/define-data-property-1.1.4.tgz",
+    "sha256": "16304ad73df1364ca8623c28a8969de01cd7189b4f9b05668fadb598f110e4d2",
+    "bytes": 8913,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "define-properties",
+    "version": "1.2.1",
+    "file": "npm-define-properties-1.2.1.tgz",
+    "url": "https://registry.npmjs.org/define-properties/-/define-properties-1.2.1.tgz",
+    "sha256": "5de7e3804fadee9d773cd494b695e6efedfee8837e751fd9b9b77c3e9c6b40f4",
+    "bytes": 5203,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "detect-libc",
+    "version": "2.1.2",
+    "file": "npm-detect-libc-2.1.2.tgz",
+    "url": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz",
+    "sha256": "270dec0fc06cff86481da8af2dd8f18dee6b602790b14ef0e1c2c18d7da39427",
+    "bytes": 7776,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "electron-updater",
+    "version": "6.8.9",
+    "file": "npm-electron-updater-6.8.9.tgz",
+    "url": "https://registry.npmjs.org/electron-updater/-/electron-updater-6.8.9.tgz",
+    "sha256": "0b95d12dde27a0979eb8911f29559daab89580d884904dcf7b4a78b89513288b",
+    "bytes": 136914,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "es-define-property",
+    "version": "1.0.1",
+    "file": "npm-es-define-property-1.0.1.tgz",
+    "url": "https://registry.npmjs.org/es-define-property/-/es-define-property-1.0.1.tgz",
+    "sha256": "5986b8b13121340a8b0d5c7d8f0f961aa80ef3a74515ca9cb7a78d86ed0385f7",
+    "bytes": 4431,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "es-errors",
+    "version": "1.3.0",
+    "file": "npm-es-errors-1.3.0.tgz",
+    "url": "https://registry.npmjs.org/es-errors/-/es-errors-1.3.0.tgz",
+    "sha256": "d14dd1c35b4bd3b8aca3219fd3627eb7f3eb49cf6b4c8a7ca58b91fd7a190993",
+    "bytes": 5338,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "escape-string-regexp",
+    "version": "4.0.0",
+    "file": "npm-escape-string-regexp-4.0.0.tgz",
+    "url": "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz",
+    "sha256": "4b44a14da6987a3c0585c2ff16b3800425732ff35cad710c65e72d7f8e33b11b",
+    "bytes": 2017,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "fs-extra",
+    "version": "10.1.0",
+    "file": "npm-fs-extra-10.1.0.tgz",
+    "url": "https://registry.npmjs.org/fs-extra/-/fs-extra-10.1.0.tgz",
+    "sha256": "50aa67852e866bb06b35c23f83fd07fc21b06c21ac96283956d0480922971fea",
+    "bytes": 16920,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "global-agent",
+    "version": "4.1.3",
+    "file": "npm-global-agent-4.1.3.tgz",
+    "url": "https://registry.npmjs.org/global-agent/-/global-agent-4.1.3.tgz",
+    "sha256": "478ca4fff13292091adabb7f8ef985bf952f809cbf53ee5f9828ebd49b47a0a8",
+    "bytes": 18140,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "globalthis",
+    "version": "1.0.4",
+    "file": "npm-globalthis-1.0.4.tgz",
+    "url": "https://registry.npmjs.org/globalthis/-/globalthis-1.0.4.tgz",
+    "sha256": "de98da383c6f5c2ae39c847cedd2a2e4fd4ba344312c4309d8cee6a3a07076eb",
+    "bytes": 8504,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "gopd",
+    "version": "1.2.0",
+    "file": "npm-gopd-1.2.0.tgz",
+    "url": "https://registry.npmjs.org/gopd/-/gopd-1.2.0.tgz",
+    "sha256": "d536d0de4dd285dc1468fbb7f39334a47ee0eec9c27f9b626a6e71466c9fda82",
+    "bytes": 4584,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "graceful-fs",
+    "version": "4.2.11",
+    "file": "npm-graceful-fs-4.2.11.tgz",
+    "url": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz",
+    "sha256": "3961374aa161e6fed80d6f4b6aaf2fb7eafd2c9e5be34e865b375f0114dd099c",
+    "bytes": 9804,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "has-property-descriptors",
+    "version": "1.0.2",
+    "file": "npm-has-property-descriptors-1.0.2.tgz",
+    "url": "https://registry.npmjs.org/has-property-descriptors/-/has-property-descriptors-1.0.2.tgz",
+    "sha256": "0219bbd8f32e268eeb6efff55a2c6ff2d502098f49c583ff023b2d9d5a8bfa87",
+    "bytes": 4429,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "@img/colour",
+    "version": "1.1.0",
+    "file": "npm-img-colour-1.1.0.tgz",
+    "url": "https://registry.npmjs.org/@img/colour/-/colour-1.1.0.tgz",
+    "sha256": "6c2df3ac33d4b8647191ad8942a579e6004be00c25846677eab85f04702d85b1",
+    "bytes": 17410,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "js-yaml",
+    "version": "4.3.2",
+    "file": "npm-js-yaml-4.3.2.tgz",
+    "url": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.3.2.tgz",
+    "sha256": "c7b241d2224cf9253ff53854aa4cee87da91bd889c4d0fa3a3ffd1041ecee5b1",
+    "bytes": 227545,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "jsonfile",
+    "version": "6.2.1",
+    "file": "npm-jsonfile-6.2.1.tgz",
+    "url": "https://registry.npmjs.org/jsonfile/-/jsonfile-6.2.1.tgz",
+    "sha256": "6c1ae1dbfc6c518b10858d2e37c31d31e1fb39eaf32d77c10f1d84c573540d36",
+    "bytes": 3519,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "lazy-val",
+    "version": "1.0.5",
+    "file": "npm-lazy-val-1.0.5.tgz",
+    "url": "https://registry.npmjs.org/lazy-val/-/lazy-val-1.0.5.tgz",
+    "sha256": "7d8602ad98db3d19fbd5b46fbf3831dd996197a013ef1ff7badc205e41435372",
+    "bytes": 1182,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "lodash.escaperegexp",
+    "version": "4.1.2",
+    "file": "npm-lodash.escaperegexp-4.1.2.tgz",
+    "url": "https://registry.npmjs.org/lodash.escaperegexp/-/lodash.escaperegexp-4.1.2.tgz",
+    "sha256": "17e49a4288031a39d917abaecd2ad41919240806799dbea7f26b72748a8c483a",
+    "bytes": 3265,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "lodash.isequal",
+    "version": "4.5.0",
+    "file": "npm-lodash.isequal-4.5.0.tgz",
+    "url": "https://registry.npmjs.org/lodash.isequal/-/lodash.isequal-4.5.0.tgz",
+    "sha256": "a3b534a55485caad0c28ce56779eb4faea13d3c23a55691eaedca6a0b9834278",
+    "bytes": 12308,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "matcher",
+    "version": "4.0.0",
+    "file": "npm-matcher-4.0.0.tgz",
+    "url": "https://registry.npmjs.org/matcher/-/matcher-4.0.0.tgz",
+    "sha256": "2c318d57c8cb40d219c95c1a5699a85ac7555839332208a559cc3c0157be160e",
+    "bytes": 3483,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "ms",
+    "version": "2.1.3",
+    "file": "npm-ms-2.1.3.tgz",
+    "url": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+    "sha256": "f6616e15e530ed552f9daa2d3ce71963947c6bc7c98c9b64fd3e673fd02622c6",
+    "bytes": 2967,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "object-keys",
+    "version": "1.1.1",
+    "file": "npm-object-keys-1.1.1.tgz",
+    "url": "https://registry.npmjs.org/object-keys/-/object-keys-1.1.1.tgz",
+    "sha256": "9678d9055619767c8a134033709e88a6e0a19600f3d3f2cda40acdfd75e7f212",
+    "bytes": 7677,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "onnxruntime-common",
+    "version": "1.30.0",
+    "file": "npm-onnxruntime-common-1.30.0.tgz",
+    "url": "https://registry.npmjs.org/onnxruntime-common/-/onnxruntime-common-1.30.0.tgz",
+    "sha256": "7906c439e0d3e0f4048caa23b64cdfadc0f455c377f579ce1ab2a4b778f07d5f",
+    "bytes": 66795,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "react",
+    "version": "19.3.0",
+    "file": "npm-react-19.3.0.tgz",
+    "url": "https://registry.npmjs.org/react/-/react-19.3.0.tgz",
+    "sha256": "5a4024110c49476e1538a70fd65b9e59d038fcc280b78eb933c24e10453afbf9",
+    "bytes": 26394,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "react-dom",
+    "version": "19.3.0",
+    "file": "npm-react-dom-19.3.0.tgz",
+    "url": "https://registry.npmjs.org/react-dom/-/react-dom-19.3.0.tgz",
+    "sha256": "dbeffb1e6cdbbbba07f799da4635333d0e20c210a32278dded85441ec4cb6a17",
+    "bytes": 1409226,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "sax",
+    "version": "1.6.1",
+    "file": "npm-sax-1.6.1.tgz",
+    "url": "https://registry.npmjs.org/sax/-/sax-1.6.1.tgz",
+    "sha256": "6e9abf03478608b80894bb8b6421271a0e583504f785f749a700d6bb35be85bd",
+    "bytes": 16800,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "scheduler",
+    "version": "0.28.0",
+    "file": "npm-scheduler-0.28.0.tgz",
+    "url": "https://registry.npmjs.org/scheduler/-/scheduler-0.28.0.tgz",
+    "sha256": "302995d590e3c0a11eeb40d1d0f299c1df1800135d599d85cdd5faeb614f32d6",
+    "bytes": 10011,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "semver",
+    "version": "7.7.4",
+    "file": "npm-semver-7.7.4.tgz",
+    "url": "https://registry.npmjs.org/semver/-/semver-7.7.4.tgz",
+    "sha256": "09267ad08cfe300e6790c9b8dc3db079103b4700cc465a67779b15662fe9418c",
+    "bytes": 28442,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "semver",
+    "version": "7.8.5",
+    "file": "npm-semver-7.8.5.tgz",
+    "url": "https://registry.npmjs.org/semver/-/semver-7.8.5.tgz",
+    "sha256": "d85045d4300d7d57c891336b95df532e73f34c22ffcd222452b6d08b9d127d5d",
+    "bytes": 29399,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "serialize-error",
+    "version": "8.1.0",
+    "file": "npm-serialize-error-8.1.0.tgz",
+    "url": "https://registry.npmjs.org/serialize-error/-/serialize-error-8.1.0.tgz",
+    "sha256": "09092ee9990c5609ef691eca7de26e4b4bde285920ceef40fd806edd5ccc017f",
+    "bytes": 3479,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "sharp",
+    "version": "0.35.4",
+    "file": "npm-sharp-0.35.4.tgz",
+    "url": "https://registry.npmjs.org/sharp/-/sharp-0.35.4.tgz",
+    "sha256": "6ebef10290372c7309d9e22e3ecb9e32ca6a3aa6e07f3d83aa904df8ae4f6a5a",
+    "bytes": 214415,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "tiny-typed-emitter",
+    "version": "2.1.0",
+    "file": "npm-tiny-typed-emitter-2.1.0.tgz",
+    "url": "https://registry.npmjs.org/tiny-typed-emitter/-/tiny-typed-emitter-2.1.0.tgz",
+    "sha256": "3987c8bf8c418a308d1031d0ac7d0539c7ae9d85a1c383eab449cc8507e6ab3a",
+    "bytes": 2378,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "type-fest",
+    "version": "0.20.2",
+    "file": "npm-type-fest-0.20.2.tgz",
+    "url": "https://registry.npmjs.org/type-fest/-/type-fest-0.20.2.tgz",
+    "sha256": "b9d5d4fc05287af1445030152284e7def803976beb4b23ae4dc26824e79465a2",
+    "bytes": 37225,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "universalify",
+    "version": "2.0.1",
+    "file": "npm-universalify-2.0.1.tgz",
+    "url": "https://registry.npmjs.org/universalify/-/universalify-2.0.1.tgz",
+    "sha256": "7d07313bb61836a12f0ba5485e67673334a3ee955e7aefb3c4b3fc5a1b7b7865",
+    "bytes": 2068,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "zod",
+    "version": "4.6.5",
+    "file": "npm-zod-4.6.5.tgz",
+    "url": "https://registry.npmjs.org/zod/-/zod-4.6.5.tgz",
+    "sha256": "a78c0c533de30dc1c4afc259ac43ac06e390cb0da8d2e32eae355301b50b36fc",
+    "bytes": 1052733,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "react",
+    "version": "19.3.0",
+    "file": "react-19.3.0-1d34f91d.tar.gz",
+    "url": "https://codeload.github.com/react/react/tar.gz/1d34f91dfde6bba84d08b683aaba164c7194dacb",
+    "sha256": "ef34c2ad2fe4af769cdc8a067d827fbba8fde677d83f5befaa8a8cc5c3a8c6be",
+    "bytes": 10252630,
+    "kind": "javascript-upstream-source",
+    "commit": "1d34f91dfde6bba84d08b683aaba164c7194dacb"
+  },
+  {
+    "name": "electron-builder",
+    "version": "26.15.3",
+    "file": "electron-builder-26.15.3-512a57ec.tar.gz",
+    "url": "https://codeload.github.com/electron-userland/electron-builder/tar.gz/512a57ec9bcda593d3e0970bd2b9a33a63beeb57",
+    "sha256": "228b56ec4616f82650d6f20107e209c5d7f0e2585d6148244939acbb1c21c46e",
+    "bytes": 3220715,
+    "kind": "javascript-upstream-source",
+    "commit": "512a57ec9bcda593d3e0970bd2b9a33a63beeb57"
+  },
+  {
+    "name": "electron-updater",
+    "version": "6.8.9",
+    "file": "electron-updater-6.8.9-bed3a9c4.tar.gz",
+    "url": "https://codeload.github.com/electron-userland/electron-builder/tar.gz/bed3a9c421a8a05c49f36a2af5d7ae3598cb1b95",
+    "sha256": "bc1e3908d017c020003d4fe9b616967844f92e99444f0cb0ebf00d7fb4540e83",
+    "bytes": 3209592,
+    "kind": "javascript-upstream-source",
+    "commit": "bed3a9c421a8a05c49f36a2af5d7ae3598cb1b95"
+  },
+  {
+    "name": "global-agent",
+    "version": "4.1.3",
+    "file": "global-agent-4.1.3-e9138f65.tar.gz",
+    "url": "https://codeload.github.com/gajus/global-agent/tar.gz/e9138f654826f9a82e0ac4f3abdb9541ac988286",
+    "sha256": "a4dcf64e8f9065bf8a8e76ddcd6a382044b384baaede3db273057d3b12f16c85",
+    "bytes": 123020,
+    "kind": "javascript-upstream-source",
+    "commit": "e9138f654826f9a82e0ac4f3abdb9541ac988286"
+  },
+  {
+    "name": "lazy-val",
+    "version": "1.0.5",
+    "file": "lazy-val-1.0.5-b69ad411.tar.gz",
+    "url": "https://codeload.github.com/develar/lazy-val/tar.gz/b69ad4119f1b19bdab13c61ee2fcc88d46b89071",
+    "sha256": "74a0570ef04860e20b2068db1087968ea6d4d9f596d68bbe9936960958f832a1",
+    "bytes": 1922,
+    "kind": "javascript-upstream-source",
+    "commit": "b69ad4119f1b19bdab13c61ee2fcc88d46b89071"
+  },
+  {
+    "name": "tiny-typed-emitter",
+    "version": "2.1.0",
+    "file": "tiny-typed-emitter-2.1.0-66c1b66b.tar.gz",
+    "url": "https://codeload.github.com/binier/tiny-typed-emitter/tar.gz/66c1b66bc159675352a6f38911e4c6cf2117f3e4",
+    "sha256": "91ec74b6af14d9b71066cdcfebe8fc8062e24e08fe3d8f508f11930eb5e888f7",
+    "bytes": 2920,
+    "kind": "javascript-upstream-source",
+    "commit": "66c1b66bc159675352a6f38911e4c6cf2117f3e4"
+  },
+  {
+    "name": "onnxruntime",
+    "version": "1.30.0",
+    "file": "onnxruntime-1.30.0-f2c39fe2.tar.gz",
+    "url": "https://codeload.github.com/microsoft/onnxruntime/tar.gz/f2c39fe2f838cf35ce7da92824f5a5e3ee6e88a7",
+    "sha256": "1b4ec55fa26ee8fe622ea256894dfe9381bdfa99d41489994a1961720f556c48",
+    "bytes": 278646793,
+    "kind": "native-source",
+    "commit": "f2c39fe2f838cf35ce7da92824f5a5e3ee6e88a7"
+  },
+  {
+    "name": "@img/colour",
+    "version": "1.1.0",
+    "file": "colour-1.1.0-179fa91f.tar.gz",
+    "url": "https://codeload.github.com/lovell/colour/tar.gz/179fa91fbdb8786b661f6bfb2b6de2885d4860f8",
+    "sha256": "5d0d5e7259175e0b63859ca53113357bad8226b1045a56b2b37a7aa911bf670d",
+    "bytes": 18703,
+    "kind": "javascript-upstream-source"
+  },
+  {
+    "name": "color",
+    "version": "5.0.3",
+    "file": "npm-color-5.0.3.tgz",
+    "url": "https://registry.npmjs.org/color/-/color-5.0.3.tgz",
+    "sha256": "4e763a3e3a83462779c5f7aca532bad119101190cba52dedac753a1a43d31c51",
+    "bytes": 7306,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "color-convert",
+    "version": "3.1.3",
+    "file": "npm-color-convert-3.1.3.tgz",
+    "url": "https://registry.npmjs.org/color-convert/-/color-convert-3.1.3.tgz",
+    "sha256": "0b484d5fc8b8104e1f6a65fa83f87af79cfd9f2e6094559476092ea6bce011c3",
+    "bytes": 13047,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "color-name",
+    "version": "2.1.0",
+    "file": "npm-color-name-2.1.0.tgz",
+    "url": "https://registry.npmjs.org/color-name/-/color-name-2.1.0.tgz",
+    "sha256": "5171f0556db01e150be78372aa6635c364458aadb768be4b4a9f652c0d474044",
+    "bytes": 2851,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "color-string",
+    "version": "2.1.4",
+    "file": "npm-color-string-2.1.4.tgz",
+    "url": "https://registry.npmjs.org/color-string/-/color-string-2.1.4.tgz",
+    "sha256": "8d2ce81ed139eaf39d209aa7f494a205b42e8a9b029ff254ed013503b7ddf925",
+    "bytes": 3638,
+    "kind": "javascript-package-source"
+  },
+  {
+    "name": "nsis",
+    "version": "3.04",
+    "file": "nsis-3.04-25cf71ac.tar.gz",
+    "url": "https://codeload.github.com/kichik/nsis/tar.gz/25cf71ac318c73016d0706add96f25ef70ccd4f7",
+    "commit": "25cf71ac318c73016d0706add96f25ef70ccd4f7",
+    "kind": "installer-source",
+    "sha256": "9f3caca52677c050a0952d6e41709c028bbd233e0fcf86bf0e3c1cc1f11f2ef4",
+    "bytes": 1772939
+  },
+  {
+    "name": "nsis-stdutils",
+    "version": "1.1.4",
+    "file": "nsis-stdutils-1.1.4-4e111732.tar.gz",
+    "url": "https://codeload.github.com/lordmulder/stdutils/tar.gz/4e1117321001e54dcd2c52f72d3c359d5215e426",
+    "commit": "4e1117321001e54dcd2c52f72d3c359d5215e426",
+    "kind": "installer-source",
+    "sha256": "3687ab4e09005a8a0b93c1a07a36285d93466070e94b8bf6f12781fb53c419e1",
+    "bytes": 222751
+  },
+  {
+    "name": "nsis7z",
+    "version": "19.00",
+    "file": "Nsis7z_19.00.7z",
+    "url": "https://nsis.sourceforge.io/mediawiki/images/6/69/Nsis7z_19.00.7z",
+    "kind": "installer-source",
+    "sha256": "6f2f3730049926f40442ee0c8b7d3e3dee7ace544d82467ff8059ea3f4201c58",
+    "bytes": 461078
+  },
+  {
+    "name": "nsis-uac",
+    "version": "0.2.4c",
+    "file": "nsis-UAC-0.2.4c.zip",
+    "url": "https://nsis.sourceforge.io/mediawiki/images/8/8f/UAC.zip",
+    "kind": "installer-source",
+    "sha256": "20e3192af5598568887c16d88de59a52c2ce4a26e42c5fb8bee8105dcbbd1760",
+    "bytes": 52034
+  },
+  {
+    "name": "directx-shader-compiler",
+    "version": "1.8.2502.8",
+    "file": "directx-shader-compiler-1.8.2502.8-b4711839.tar.gz",
+    "url": "https://codeload.github.com/microsoft/DirectXShaderCompiler/tar.gz/b4711839eb9a87da7c3436d9b212e0492359fbbd",
+    "kind": "native-source",
+    "sha256": "63b4cb23bbd13b5cf3abca66881b4835915f613566962a740b0733f78fcc46b3",
+    "bytes": 24462874
+  },
+  {
+    "name": "elevate",
+    "version": "1.0.0.2894",
+    "file": "elevate-1.0.0.2894-d5cfc93d.tar.gz",
+    "url": "https://codeload.github.com/jpassing/elevate/tar.gz/d5cfc93d1ce06844a39d1a334a7a8081d26b6204",
+    "kind": "installer-source",
+    "sha256": "4fbbbb1cb9aa478a17896919b365beff61758f1d6601abc927dd886930375b17",
+    "bytes": 8132328
+  },
+  {
+    "name": "lzma-sdk",
+    "version": "19.00",
+    "file": "lzma1900.7z",
+    "url": "https://www.7-zip.org/a/lzma1900.7z",
+    "kind": "installer-source",
+    "sha256": "00f569e624b3d9ed89cf8d40136662c4c5207eaceb92a70b1044c77f84234bad",
+    "bytes": 1082692
+  }
+]

@@ -6,6 +6,7 @@ import type { DialogRequest } from '../shared/api.js';
 import { MaskEditor } from './MaskEditor.js';
 import { ProjectHistory } from './ProjectHistory.js';
 import { ImagePreview } from './ImagePreview.js';
+import { PreviewActions } from './PreviewActions.js';
 import { fittedViewport, zoomViewport } from './image-viewport.js';
 import type { Parameters, Recipe, SemanticModule } from '../core/domain.js';
 import type { Command, DesktopApi, ViewAsset, WorkspaceView } from '../shared/api.js';
@@ -13,8 +14,15 @@ import { createPreviewApi } from './preview-api.js';
 
 import { GenerationOptionsPanel } from './GenerationOptionsPanel.js';
 import { ModuleEditor } from './ModuleEditor.js';
+import { ChainReferenceImage } from './ChainReferenceImage.js';
+import { GenerationTaskThumbnail,GenerationTaskPreview,generationTaskLabels } from './GenerationTask.js';
+import { GenerationProgress } from './GenerationProgress.js';
+import { isActiveJob,resultTimeline } from './result-timeline.js';
 import { describeInputBlock } from './module-presentation.js';
 import { ModelSettingsPage,type SettingsPageHandle } from './ModelSettingsPage.js';
+import { ModuleSettingsPage } from './ModuleSettingsPage.js';
+import { PromptSettingsPage,type PromptSettingsPageHandle } from './PromptSettingsPage.js';
+import { defaultModuleSettings } from '../core/module-settings.js';
 import { referenceDropEffect } from './drag-input.js';
 import { visibleResult, usableThumbnail } from './asset-display.js';
 import { synchronizeInputPreview } from './input-preview.js';
@@ -22,37 +30,45 @@ import { resolveOutputGeometry,geometryLabel,parseRatio } from '../core/output-g
 import { contractFor,updateParameters } from '../core/generation-parameters.js';
 import { defaultInputStrategies } from '../core/compiler.js';
 import './editor.css';
+import './generation-feedback.css';
 
 declare global { interface Window { ediro?: DesktopApi } }
 const glyphs: Record<string, string> = { image_text: '▧', subject: '◈', composition: '▦', style: '◐', prompt: '≡', viewpoint: '◇' };
 const builtInModuleKinds = [
   {type:'image_text',title:'图文',description:'图片与文字 · 无预设语义',glyph:'▧'},
   {type:'prompt',title:'提示词',description:'文本生成要求',glyph:'≡'},
-  {type:'subject',title:'语义参考图',description:'主体 / 构图 / 风格',glyph:'◈'},
+  {type:'subject',title:'主体参考',description:'商品结构与身份',glyph:'◈'},
+  {type:'composition',title:'构图参考',description:'布局、位置与空间关系',glyph:'▦'},
+  {type:'style',title:'风格参考',description:'环境、道具、色调与光影',glyph:'◐'},
   {type:'viewpoint',title:'功能参考图',description:'视角工具与生成参考',glyph:'◇'},
 ];
 const statusLabels: Record<string,string> = { queued:'等待中', preparing:'准备中', running:'运行中', post_processing:'保存中', succeeded:'已完成', failed:'失败', cancelled:'已取消' };
 const api = window.ediro ?? (new URLSearchParams(location.search).get('preview') === '1' ? createPreviewApi() : undefined);
 
 
-function ModuleCard({ module: m, index, imageNames, assets, definition, definitions, onEdit, onCopy, onDelete, onImport, onMove, onDrop, onFiles, onAsset, onExpand, onReferenceType, onSelectAsset }: {
+function ModuleCard({ module: m, index, imageNames, assets, definition, onEdit, onCopy, onDelete, onImport, onMove, onDrop, onFiles, onAsset, onExpand, onSelectAsset, autoBusy, inferenceModels, inferenceModelId, onInferenceModel, onAutoPrompt, onReinfer }: {
   module: SemanticModule; index: number; imageNames: string[]; assets: ViewAsset[]; definition?: WorkspaceView['module_definitions'][number];
-  definitions: WorkspaceView['module_definitions'];
+  autoBusy: boolean; inferenceModels: WorkspaceView['models']; inferenceModelId?: string;
+  onInferenceModel: (id: string) => void; onAutoPrompt: (enabled: boolean) => void; onReinfer: () => void;
   onEdit: (patch: Partial<SemanticModule>) => void; onCopy: () => void; onDelete: () => void; onImport: () => void;
   onMove: (delta: number) => void; onDrop: (value: string) => void; onSelectAsset: (id: string) => void;
-  onFiles: (files: File[]) => void; onAsset: (id: string) => void; onExpand: (text: string) => void; onReferenceType: (type: string) => void;
+  onFiles: (files: File[]) => void; onAsset: (id: string) => void; onExpand: (text: string) => void;
 }) {
   const [text, setText] = useState(m.user_instruction);
   const [title, setTitle] = useState(m.title);
-  const focused = useRef(false);
-  useEffect(() => { if (!focused.current) { setText(m.user_instruction); setTitle(m.title); } }, [m.user_instruction,m.title]);
+  const textFocused = useRef(false), titleFocused = useRef(false);
+  useEffect(() => { if (!textFocused.current) setText(m.user_instruction); }, [m.user_instruction]);
+  useEffect(() => { if (!titleFocused.current) setTitle(m.title); }, [m.title]);
   const isPrompt = definition?.editor_kind === 'text';
   const neutral = m.reference_type === 'image_text';
-  const textLabel = isPrompt ? '生成要求' : neutral ? '文字说明' : '额外要求';
+  const semanticReference = m.reference_type === 'composition' || m.reference_type === 'style';
+  const descriptionOnly = semanticReference && m.reference_mode === 'text_only';
+  const description = descriptionOnly ? definition?.inference_task?.description : definition?.description;
+  const textLabel = isPrompt ? '生成要求' : descriptionOnly ? '描述与要求' : neutral ? '文字说明' : '额外要求';
   const functional = definition?.editor_kind === 'generated_reference';
   const acceptsImages = definition?.accepts_images;
   return <article className={`module-card type-${m.reference_type} ${m.enabled ? '' : 'disabled'}`} data-module-id={m.module_id}
-    onDoubleClick={event=>{if(!(event.target as HTMLElement).closest('button,input,textarea,select,.drag-handle'))onExpand(text);}}
+    onDoubleClick={event=>{if(!autoBusy&&!(event.target as HTMLElement).closest('button,input,textarea,select,.drag-handle'))onExpand(text);}}
     onDragOver={event => { event.stopPropagation(); const effect=referenceDropEffect(Array.from(event.dataTransfer.types),event.dataTransfer.effectAllowed,definition?.editor_kind==='image_collection'); event.dataTransfer.dropEffect=effect; if(effect==='none'){event.currentTarget.classList.remove('drop-target');return;} event.preventDefault(); event.currentTarget.classList.add('drop-target'); }}
     onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) { event.currentTarget.classList.remove('drop-target'); } }}
     onDrop={event => { event.preventDefault(); event.stopPropagation(); event.currentTarget.classList.remove('drop-target'); document.querySelectorAll('.module-card.is-dragging').forEach(el=>el.classList.remove('is-dragging')); document.querySelectorAll('.module-card.drop-target').forEach(el=>el.classList.remove('drop-target')); if(event.dataTransfer.files.length)onFiles(Array.from(event.dataTransfer.files));else if(event.dataTransfer.getData('application/ediro-asset'))onAsset(event.dataTransfer.getData('application/ediro-asset'));else onDrop(event.dataTransfer.getData('application/ediro-module')); }}>
@@ -63,27 +79,34 @@ function ModuleCard({ module: m, index, imageNames, assets, definition, definiti
       <span className="module-number">{String(index+1).padStart(2,'0')}</span>
       <span className="module-glyph">{glyphs[m.reference_type] ?? '◇'}</span>
       <input className="module-title" aria-label={`${m.title}模块名称`} value={title} maxLength={80}
-        onFocus={() => focused.current=true} onChange={e => {setTitle(e.target.value);if(e.target.value.trim())onEdit({title:e.target.value.trim()});}}
-        onBlur={() => { focused.current=false; if (title.trim() && title !== m.title) onEdit({title:title.trim()}); else if (!title.trim()) setTitle(m.title); }} />
+        onFocus={() => titleFocused.current=true} onChange={e => {setTitle(e.target.value);if(e.target.value.trim())onEdit({title:e.target.value.trim()});}}
+        onBlur={() => { titleFocused.current=false; if (title.trim() && title !== m.title) onEdit({title:title.trim()}); else if (!title.trim()) setTitle(m.title); }} />
       <button className={`toggle ${m.enabled?'on':''}`} aria-label={`${m.enabled?'停用':'启用'}${m.title}模块`} aria-pressed={m.enabled} title="启用或停用" onClick={() => onEdit({enabled:!m.enabled})} />
     </div>
-    {definition?.editor_kind === 'image_collection' && !neutral && <select className="reference-role" aria-label={`${m.title}参考类别`} value={m.reference_type} onChange={event=>onReferenceType(event.target.value)}>{definitions.filter(d=>d.editor_kind==='image_collection'&&d.type!=='image_text').map(d=><option value={d.type} key={d.type}>{d.title}参考</option>)}</select>}
-    {m.base_instruction && <div className="base-instruction" title={definition?.description??'按模块功能使用参考信息。'}><span>功能说明</span><p>{definition?.description??'按模块功能使用参考信息。'}</p></div>}
+    {semanticReference && <div className="reference-mode" role="group" aria-label={`${m.title}参考方式`}>
+      <button aria-pressed={!descriptionOnly} title="参考图与文字一起用于生图" onClick={()=>onEdit({reference_mode:'image_text'})}>图文</button>
+      <button aria-pressed={descriptionOnly} title="参考图仅供推理识别，生图只使用文字描述" onClick={()=>onEdit({reference_mode:'text_only'})}>仅描述</button>
+    </div>}
+    {m.reference_type==='prompt' && <div className="auto-prompt-controls">
+      <div className="auto-prompt-heading"><label><button className={`toggle ${m.auto_prompt?'on':''}`} role="switch" aria-label={`${m.title}自动提示词`} aria-checked={!!m.auto_prompt} onClick={()=>onAutoPrompt(!m.auto_prompt)}/>自动提示词</label>{m.auto_prompt&&<button className="text-button" disabled={autoBusy||!m.enabled} onClick={onReinfer}>重新推理</button>}</div>
+      {m.auto_prompt&&<label className="auto-prompt-model">推理模型<select aria-label="自动提示词推理模型" value={inferenceModelId??''} disabled={autoBusy} onChange={event=>onInferenceModel(event.target.value)}><option value="">选择推理模型</option>{inferenceModels.map(model=><option key={model.model_config_id} value={model.model_config_id}>{model.title}{model.executable?'':'（未就绪）'}</option>)}</select></label>}
+    </div>}
+    {m.base_instruction && <div className="base-instruction" title={description??'按模块功能使用参考信息。'}><span>功能说明</span><p>{description??'按模块功能使用参考信息。'}</p></div>}
     {acceptsImages && <div className="reference-images">
       {m.asset_ids.map((id, i) => {
         const asset = assets.find(a => a.asset_id === id);
         return <div className="reference-image" key={`${id}-${i}`}>
           <button className="thumb-button" title={asset?.source_status==='missing'?'源图缺失':asset?.source_status==='changed'?'源图已变化':asset?.name} onClick={() => onSelectAsset(id)}>{usableThumbnail(asset) ? <img src={asset!.preview_url} alt={asset!.name} /> : <span>图片缺失</span>}</button>
-          <span>{imageNames[i]??(m.enabled?String(i+1):'停用')}</span><button className="remove-reference" aria-label={`移除第${i+1}参考图`} onClick={() => onEdit({asset_ids:m.asset_ids.filter((_, j) => j !== i)})}>×</button>
+          <span>{descriptionOnly?'仅识别':imageNames[i]??(m.enabled?String(i+1):'停用')}</span><button className="remove-reference" aria-label={`移除第${i+1}参考图`} onClick={() => onEdit({asset_ids:m.asset_ids.filter((_, j) => j !== i)})}>×</button>
         </div>;
       })}
       <button className="add-image" title={functional?'打开功能参考工具':'拖入或选择多图片，保持插入顺序'} onClick={functional?()=>onExpand(text):onImport}><b>{functional?'◇':'＋'}</b><span>{functional?'视角工具':neutral?'图片':'参考图'}</span></button>
     </div>}
     <label className="field-label">{textLabel}</label>
-    <textarea aria-label={`${m.title}${textLabel}`} placeholder={isPrompt?'描述你想生成的电商视觉…':neutral?'填写文字说明或指令，不附加预设语义…':'补充你希望达到的效果…'} value={text} rows={isPrompt?5:3}
-      onFocus={() => focused.current=true} onChange={e => {setText(e.target.value);onEdit({user_instruction:e.target.value});}} maxLength={32000}
-      onBlur={() => { focused.current=false; if(text !== m.user_instruction) onEdit({user_instruction:text}); }} />
-    <div className="module-footer"><button className="expand-module" aria-label={`展开${m.title}编辑`} onClick={()=>onExpand(text)}>展开编辑 ↗</button><div>
+    <textarea aria-label={`${m.title}${textLabel}`} disabled={autoBusy} placeholder={isPrompt?'描述你想生成的电商视觉…':descriptionOnly?'可用自动提示词整合，或展开编辑提取描述…':neutral?'填写文字说明或指令，不附加预设语义…':'补充你希望达到的效果…'} value={text} rows={isPrompt?5:3}
+      onFocus={() => textFocused.current=true} onChange={e => {setText(e.target.value);onEdit({user_instruction:e.target.value});}} maxLength={32000}
+      onBlur={() => { textFocused.current=false; if(text !== m.user_instruction) onEdit({user_instruction:text}); }} />
+    <div className="module-footer"><button className="expand-module" disabled={autoBusy} aria-label={`展开${m.title}编辑`} onClick={()=>onExpand(text)}>展开编辑 ↗</button><div>
       <button aria-label={`${m.title}前移`} title="前移" onClick={() => onMove(-1)}>←</button>
       <button aria-label={`${m.title}后移`} title="后移" onClick={() => onMove(1)}>→</button>
       <button aria-label={`复制${m.title}模块`} title="复制 · 创建新 ID" onClick={onCopy}>⧉</button>
@@ -101,8 +124,15 @@ export function App() {
   const viewRef=useRef<WorkspaceView|null>(null);
   const [invalidCustomRatio,setInvalidCustomRatio]=useState(false);
   const settingsRef=useRef<SettingsPageHandle>(null);
+  const promptSettingsRef=useRef<PromptSettingsPageHandle>(null);
+  const [settingsPage,setSettingsPage]=useState<'models'|'modules'|'prompts'>('models');
   const [toast,setToast]=useState(''), [error,setError]=useState(''), [pending,setPending]=useState(0), [library,setLibrary]=useState(false);
-  const [selectedAsset,setSelectedAsset]=useState<string|null>(null), [viewport,setViewport]=useState(fittedViewport), [tab,setTab]=useState<'chain'|'history'>('chain');
+  const [selectedAsset,setSelectedAssetId]=useState<string|null>(null), [viewport,setViewport]=useState(fittedViewport), [tab,setTab]=useState<'chain'|'history'>('chain');
+  const [selectedTaskId,setSelectedTaskId]=useState<string|null>(null);
+  const [removingPreview,setRemovingPreview]=useState(false);
+  const removalInFlight=useRef(false);
+  const selectionRef=useRef<string|null>(null);selectionRef.current=selectedTaskId?`task:${selectedTaskId}`:selectedAsset?`asset:${selectedAsset}`:null;
+  const setSelectedAsset=(id:string|null)=>{setSelectedTaskId(null);setSelectedAssetId(id);};
   const zoom=viewport.zoom;
   const setZoom=(value:number)=>setViewport(previous=>zoomViewport(previous,value));
   useLayoutEffect(()=>setViewport(fittedViewport()),[selectedAsset,view?.project?.project_id]);
@@ -114,6 +144,15 @@ export function App() {
   const answerHost=(response:number)=>{const request=hostDialogs[0];if(!request)return;api?.respondDialog?.(request.id,response);setHostDialogs(items=>items.filter(item=>item.id!==request.id));};
   const [showRecents,setShowRecents]=useState(false);
   const [editor,setEditor]=useState<{id:string;text:string}|null>(null), [fileDrag,setFileDrag]=useState(false);
+  const [autoRunning,setAutoRunning]=useState<{requestId:string;projectId:string;moduleId:string}|null>(null);
+  const autoRequest=useRef<typeof autoRunning>(null), startingRun=useRef(false);
+  const [starting,setStarting]=useState(false);
+  const cancelAuto=()=>{
+    const request=autoRequest.current;autoRequest.current=null;setAutoRunning(null);
+    if(request)void api?.execute({type:'module:cancel-inference',request_id:request.requestId}).catch(()=>{});
+  };
+  useEffect(()=>{const request=autoRequest.current;if(request&&(request.projectId!==view?.project?.project_id||request.moduleId!==view?.auto_prompt?.module_id))cancelAuto();},[view?.project?.project_id,view?.auto_prompt?.module_id]);
+  useEffect(()=>()=>{const request=autoRequest.current;if(request)void api?.execute({type:'module:cancel-inference',request_id:request.requestId}).catch(()=>{});},[]);
 
 
   const chainRef=useRef<HTMLDivElement>(null);
@@ -177,8 +216,8 @@ export function App() {
     await queue.current;return dispatch({type:'project:save'});
   };
   const flushEditorsRef=useRef(flushEditors);flushEditorsRef.current=flushEditors;
-  useEffect(()=>api?.beforeClose?.(()=>flushEditorsRef.current()),[]);
-  useEffect(()=>{const save=(event:KeyboardEvent)=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();void flushEditorsRef.current();}};window.addEventListener('keydown',save);return()=>window.removeEventListener('keydown',save);},[]);
+  useEffect(()=>api?.beforeClose?.(async()=>{if(promptSettingsRef.current&&!await promptSettingsRef.current.beforeClose())return false;return flushEditorsRef.current();}),[]);
+  useEffect(()=>{const save=(event:KeyboardEvent)=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();if(promptSettingsRef.current)void promptSettingsRef.current.save();else void flushEditorsRef.current();}};window.addEventListener('keydown',save);return()=>window.removeEventListener('keydown',save);},[]);
   const selectResult=async(assetId:string)=>{
     const project=viewRef.current?.project;
     if(!project)return;
@@ -189,7 +228,20 @@ export function App() {
     setMaskFresh(false);setMaskTaskId(undefined);
     setMaskSource(null);
   };
+  const selectTask=async(taskId:string)=>{
+    if(!await flushEditors())return;
+    const project=viewRef.current?.project;if(!project)return;
+    if(!await dispatch({type:'job:restore-recipe',project_id:project.project_id,task_id:taskId})||viewRef.current?.project?.project_id!==project.project_id)return;
+    const job=viewRef.current.project.jobs.find(job=>job.task_id===taskId);
+    if(job?.status==='succeeded'&&job.output_asset_ids[0])setSelectedAsset(job.output_asset_ids[0]);
+    else setSelectedTaskId(taskId);
+    setEditor(null);setMaskFresh(false);setMaskTaskId(undefined);setMaskSource(null);
+  };
   const editModule=(id:string,patch:Partial<SemanticModule>)=>void updateRecipe(r=>({...r,modules:r.modules.map(m=>m.module_id===id?{...m,...patch}:m)}));
+  const toggleAutoPrompt=(id:string,enabled:boolean)=>{
+    cancelAuto();
+    void updateRecipe(r=>({...r,modules:r.modules.map(m=>m.reference_type==='prompt'&&(m.module_id===id||enabled)?{...m,auto_prompt:m.module_id===id&&enabled}:m)}));
+  };
   const moveModule=(id:string,delta:number)=>void updateRecipe(r=>{const i=r.modules.findIndex(m=>m.module_id===id),j=i+delta;if(i>=0&&j>=0&&j<r.modules.length){const [m]=r.modules.splice(i,1);r.modules.splice(j,0,m);}return r;});
   const dropModule=(value:string,target?:string)=>{
     document.querySelectorAll('.module-card.is-dragging').forEach(el=>el.classList.remove('is-dragging'));
@@ -206,14 +258,83 @@ export function App() {
   const moduleKinds=[...builtInModuleKinds,...(view?.module_definitions??[]).filter(d=>!['image_text','prompt','subject','composition','style','viewpoint'].includes(d.type)).map(d=>({type:d.type,title:d.title,description:d.description,glyph:'◇'}))];
   const model=view?.models.find(m=>m.model_config_id===recipe?.model_config_id&&m.enabled&&(!recipe?.model_preset_id||m.preset_id===recipe.model_preset_id));
   let geometryNote='';if(recipe&&model){try{geometryNote=geometryLabel(resolveOutputGeometry(recipe,assets,model));}catch{geometryNote='比例依据待检查';}}
-  const currentAsset=assets.find(a=>a.asset_id===(maskSource??selectedAsset));
+  const selectedTask=project?.jobs.find(job=>job.task_id===selectedTaskId);
+  const currentAsset=assets.find(a=>a.asset_id===(maskSource??(selectedTask?null:selectedAsset)));
+  const timeline=resultTimeline(project?.jobs??[],assets);
   const resultLabels=new Map(project?.jobs.flatMap(job=>job.output_asset_ids.map(id=>[id,job.mask_edit?`${job.model_snapshot.kind==='mock'?'模拟 · ':''}${job.mask_edit.variants.find(v=>v.asset_id===id)?.mode==='natural'?'自然融合':'局部修改'}`:job.model_snapshot.kind==='mock'?'模拟预览':'AI 生成'] as const))??[]);
   const editingModule=recipe?.modules.find(m=>m.module_id===editor?.id);
   const latestJob=project?.jobs.at(-1);
-  const activeCount=project?.jobs.filter(j=>['queued','preparing','running','post_processing'].includes(j.status)).length??0;
+  const progressJob=project?.jobs.find(job=>isActiveJob(job)&&job.status!=='queued')??project?.jobs.find(isActiveJob)??latestJob;
+  const activeCount=project?.jobs.filter(isActiveJob).length??0;
+  const removePreview=async()=>{
+    if(removalInFlight.current)return;
+    const state=viewRef.current,project=state?.project,key=selectionRef.current;
+    if(!state||!project||!key)return;
+    const before=resultTimeline(project.jobs,state.assets),index=before.findIndex(entry=>entry.key===key);
+    const selectedOutput=state.assets.find(asset=>`asset:${asset.asset_id}`===key&&asset.kind==='output'&&!asset.removed_result);
+    const entry=before[index]??(selectedOutput?{kind:'result' as const,key,asset:selectedOutput}:undefined);
+    if(!entry||entry.kind==='task'&&!['failed','cancelled'].includes(entry.job.status))return;
+    removalInFlight.current=true;setRemovingPreview(true);
+    try{
+      if(!await flushEditors()||viewRef.current?.project?.project_id!==project.project_id)return;
+      const command:Command=entry.kind==='task'?{type:'job:hide-result',project_id:project.project_id,task_id:entry.job.task_id}:{type:'result:trash',asset_id:entry.asset.asset_id};
+      const message=entry.kind==='task'?'已从结果列表移除任务，历史参数保留':state.project_format==='ediro'?'已从结果列表移除，历史引用保留':'结果图片及恢复记录已移至回收站';
+      if(!await dispatch(command,message))return;
+      const current=viewRef.current;
+      if(current?.project?.project_id!==project.project_id||selectionRef.current!==key)return;
+      const remaining=resultTimeline(current.project.jobs,current.assets),available=new Map(remaining.map(item=>[item.key,item]));
+      const neighbor=(index<0?undefined:[...before.slice(index+1),...before.slice(0,index).reverse()].map(item=>available.get(item.key)).find(Boolean))??remaining.at(-1);
+      setSelectedAsset(null);setViewport(fittedViewport());
+      if(neighbor?.kind==='result'){if(neighbor.job)await selectResult(neighbor.asset.asset_id);else setSelectedAsset(neighbor.asset.asset_id);}
+      else if(neighbor?.kind==='task')await selectTask(neighbor.job.task_id);
+      else setSelectedAsset(current.assets.find(asset=>asset.kind==='import'&&!asset.hidden_from_materials)?.asset_id??null);
+    }finally{removalInFlight.current=false;setRemovingPreview(false);}
+  };
+  const previewActions=selectedTask
+    ?(['failed','cancelled'].includes(selectedTask.status)&&!selectedTask.hidden_from_results?<PreviewActions onRemove={()=>void removePreview()} removeDisabled={removingPreview} removeLabel="从结果列表移除此任务"/>:undefined)
+    :currentAsset?<PreviewActions onRemove={currentAsset.kind==='output'&&!currentAsset.removed_result?()=>void removePreview():undefined} removeDisabled={removingPreview||activeCount>0} removeLabel={view?.project_format==='ediro'?'从结果列表移除此版本':'将此版本移到回收站'} onExport={()=>void dispatch({type:'asset:export',asset_id:currentAsset.asset_id},'图片已导出')} exportDisabled={removingPreview||currentAsset.source_status==='missing'||currentAsset.source_status==='changed'}/>:undefined;
+  const generationBusy=starting||!!autoRunning||activeCount>0;
+  useEffect(()=>{
+    const frame=requestAnimationFrame(()=>{const strip=resultRef.current;if(strip)strip.scrollTo({left:strip.scrollWidth,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});});
+    return()=>cancelAnimationFrame(frame);
+  },[project?.project_id,latestJob?.task_id]);
   const isDraft=view?.project_format==='draft';
   const saveLabel=view?.save_state==='error'?'保存失败':isDraft?'未创建项目':view?.save_state==='pending'?'等待自动保存…':view?.save_state==='saving'?'正在保存…':'已保存';
-  const run=()=>void dispatch({type:'job:start',allow_degradation:true});
+  const autoState=view?.auto_prompt;
+  const inferenceModels=view?.models.filter(m=>m.purpose==='understanding'&&m.enabled)??[];
+  const inferenceModel=inferenceModels.find(m=>m.model_config_id===view?.assignments?.understanding_default);
+  const needsPrompt=!!autoState?.needs_inference;
+  const run=async(forceModuleId?:string)=>{
+    if(startingRun.current||autoRequest.current||!api)return;
+    startingRun.current=true;setStarting(true);
+    try{
+      if(!await flushEditors())return;
+      const state=viewRef.current,project=state?.project,automatic=state?.auto_prompt;
+      if(!state||!project)return;
+      if(forceModuleId||automatic?.needs_inference){
+        if(!automatic||forceModuleId&&automatic.module_id!==forceModuleId)throw new Error('请先为此提示词模块开启自动提示词。');
+        const target=project.recipe.modules.find(m=>m.module_id===automatic.module_id)!;
+        const understanding=state.models.find(m=>m.model_config_id===state.assignments?.understanding_default&&m.purpose==='understanding'&&m.enabled);
+        if(!understanding?.executable)throw new Error('请在提示词模块选择已就绪的推理模型。');
+        const request={requestId:`infer_${crypto.randomUUID()}`,projectId:project.project_id,moduleId:target.module_id};
+        autoRequest.current=request;setAutoRunning(request);setError('');
+        startingRun.current=false;setStarting(false);
+        // Share the recipe-save queue so edits made during inference are
+        // built from its returned recipe, rather than overwriting the result.
+        const operation=queue.current.then(async()=>{
+          if(autoRequest.current!==request)return;
+          const response=await api.execute({type:'module:infer',request_id:request.requestId,project_id:request.projectId,module_id:request.moduleId,model_config_id:understanding.model_config_id,text:target.user_instruction,allow_text_only:false,automatic:true});
+          if(response.state&&viewRef.current?.project?.project_id===request.projectId)accept(response.state);
+          if(!response.ok)throw new Error(response.error??'提示词生成失败，原文已保留。');
+          if(autoRequest.current===request)setToast('提示词已填入，可修改后点击生成图片');
+        });
+        const settled=operation.catch(error=>{if(autoRequest.current===request)setError(error instanceof Error?error.message:'提示词生成失败，原文已保留。');}).finally(()=>{if(autoRequest.current===request){autoRequest.current=null;setAutoRunning(null);}});
+        queue.current=settled;
+        await settled;
+      }else await dispatch({type:'job:start',allow_degradation:true});
+    }catch(error){setError(error instanceof Error?error.message:'操作失败');}
+    finally{startingRun.current=false;setStarting(false);}
+  };
   const changeParameter=<K extends keyof Parameters>(key:K,value:Parameters[K])=>void updateRecipe(r=>({...r,core_parameters:model?updateParameters(r.core_parameters,{[key]:value},model):{...r.core_parameters,[key]:value}}));
   const strategyHelp=view?.adaptation?.kind==='separated_inputs'?'实际采用编号拍平：文字引用 image_N，对应图片发送顺序。':view?.adaptation?'实际采用图文顺序。':'选择图片与文字的组合方式，按模型能力检查兼容性。';
 
@@ -223,11 +344,11 @@ export function App() {
       <div className="top-actions" hidden={library}><button onClick={()=>setShowNew(true)} disabled={activeCount>0||!!maskSource}>＋ 新工作</button><button onClick={()=>setShowRecents(true)} disabled={activeCount>0||!!maskSource}>项目记录</button><button onClick={()=>void dispatch({type:'project:package'})} disabled={!project||activeCount>0||!!maskSource}>另存为…</button><button className="settings-button" onClick={()=>setLibrary(true)} disabled={!view||!!maskSource}>设置</button>{api?.updates&&<button onClick={()=>setShowUpdates(true)} disabled={!!maskSource} title="检查 GitHub 发布版本">{updateState?.status==='available'?'发现新版本':updateState?.status==='downloaded'?'重启升级':updateState?.status==='downloading'?`下载更新 ${updateState.percent??0}%`:'检查更新'}</button>}</div>
     </header>
     <UpdatePanel api={api?.updates} open={showUpdates} onClose={()=>setShowUpdates(false)} onState={setUpdateState}/>
-    {library&&view&&<ModelSettingsPage ref={settingsRef} initialModel={recipe?.model_config_id} view={view} onClose={()=>setLibrary(false)} onSave={command=>dispatch(command,'设置已保存')} onProbe={async command=>{if(!api)return {ok:false,error:'桌面桥接不可用。'};const response=await api.execute(command);if(response.state)accept(response.state);return response;}}/>}
+    {library&&view&&(settingsPage==='prompts'?<PromptSettingsPage ref={promptSettingsRef} customizations={view.prompt_customizations} config={view.prompt_config} onModels={()=>setSettingsPage('models')} onModules={()=>setSettingsPage('modules')} onClose={()=>setLibrary(false)} onExecute={async command=>{if(!api)return {ok:false,error:'桌面桥接不可用。'};const response=await api.execute(command);if(response.state)accept(response.state);return response;}}/>:settingsPage==='modules'?<ModuleSettingsPage settings={view.module_settings} models={view.reference_models} onModels={()=>setSettingsPage('models')} onPrompts={()=>setSettingsPage('prompts')} onClose={()=>setLibrary(false)} onSave={async command=>{if(command.type!=='reference-model:prepare')return dispatch(command,'设置已保存');if(!api)throw new Error('桌面桥接不可用。');const response=await api.execute(command);if(response.state)accept(response.state);if(!response.ok)throw new Error(response.error??'资源下载失败，请重试。');return true;}}/>:<ModelSettingsPage ref={settingsRef} initialModel={recipe?.model_config_id} view={view} onModules={()=>setSettingsPage('modules')} onPrompts={()=>setSettingsPage('prompts')} onClose={()=>setLibrary(false)} onSave={command=>dispatch(command,'设置已保存')} onProbe={async command=>{if(!api)return {ok:false,error:'桌面桥接不可用。'};const response=await api.execute(command);if(response.state)accept(response.state);return response;}}/>)}
     <div className="workbench" hidden={library}>
       <aside className="left-sidebar" inert={!!maskSource}><section className="sidebar-section"><div className="section-heading"><h2>工作素材</h2><span>{assets.filter(a=>a.kind==='import'&&!a.hidden_from_materials).length}</span></div><p className="subtle">{isDraft?'添加素材或开始生成时创建项目。':view?.project_format==='ediro'?'素材收入工程，移动原图不影响编辑。':'旧工程使用外部引用；另存为可收齐素材。'}</p>
       <button className="import-button" disabled={!project} onClick={()=>void dispatch({type:'assets:import'},'素材已添加')}>＋ 添加素材</button>
-      <div className="asset-grid">{assets.filter(a=>a.kind==='import'&&!a.hidden_from_materials).map(a=><div className="asset-entry" key={a.asset_id}><button className={`asset-tile ${selectedAsset===a.asset_id?'selected':''}`} draggable onDragStart={event=>{event.dataTransfer.setData('application/ediro-asset',a.asset_id);event.dataTransfer.effectAllowed='copy';}} onClick={()=>setSelectedAsset(a.asset_id)}>{usableThumbnail(a)?<img src={a.preview_url} alt={a.name} draggable={false}/>:<span className="missing-image-label">图片缺失</span>}<span title={a.location.type==='external'?a.location.path:a.name}>{a.name}</span><small>{a.source_status==='missing'?'源图缺失':a.source_status==='changed'?'源图已变化':a.location.type==='external'?'磁盘链接':'包内素材'} · {a.width} × {a.height}</small></button><button className="material-remove" aria-label={`移除素材 ${a.name}`} title="移除备选素材，不删除源文件、不影响模块引用" onClick={()=>void dispatch({type:'asset:hide',asset_id:a.asset_id},'已移除备选素材，模块引用和源文件不变')}>×</button>{a.source_status!=='available'&&a.location.type==='external'&&<button className="relink-button" onClick={()=>void dispatch({type:'asset:relink',asset_id:a.asset_id},'源图已重新定位')}>重新定位</button>}</div>)}</div>
+      <div className="asset-grid">{assets.filter(a=>a.kind==='import'&&!a.hidden_from_materials).map(a=><div className="asset-entry" key={a.asset_id}><button className={`asset-tile ${!selectedTaskId&&selectedAsset===a.asset_id?'selected':''}`} draggable onDragStart={event=>{event.dataTransfer.setData('application/ediro-asset',a.asset_id);event.dataTransfer.effectAllowed='copy';}} onClick={()=>setSelectedAsset(a.asset_id)}>{usableThumbnail(a)?<img src={a.preview_url} alt={a.name} draggable={false}/>:<span className="missing-image-label">图片缺失</span>}<span title={a.location.type==='external'?a.location.path:a.name}>{a.name}</span><small>{a.source_status==='missing'?'源图缺失':a.source_status==='changed'?'源图已变化':a.location.type==='external'?'磁盘链接':'包内素材'} · {a.width} × {a.height}</small></button><button className="material-remove" aria-label={`移除素材 ${a.name}`} title="移除备选素材，不删除源文件、不影响模块引用" onClick={()=>void dispatch({type:'asset:hide',asset_id:a.asset_id},'已移除备选素材，模块引用和源文件不变')}>×</button>{a.source_status!=='available'&&a.location.type==='external'&&<button className="relink-button" onClick={()=>void dispatch({type:'asset:relink',asset_id:a.asset_id},'源图已重新定位')}>重新定位</button>}</div>)}</div>
       {!assets.some(a=>a.kind==='import'&&!a.hidden_from_materials)&&<div className="small-empty">◇<span>添加商品图或视觉参考</span><small>PNG / JPEG / WebP</small></div>}
       </section><section className="sidebar-section module-library"><div className="section-heading"><h2>输入模块库</h2><span>{moduleKinds.length}</span></div><p className="subtle">图文自由输入 · 语义与功能按需组合。</p>
       {moduleKinds.map(d=><button className={`library-module type-${d.type}`} key={d.type} disabled={!project} draggable={!!project}
@@ -236,33 +357,37 @@ export function App() {
       <div className="future-module"><span>↗ 双击模块展开编辑</span><small>功能参考可生成视角图<br/>仍进入同一富媒体指令链</small></div></section>
       <div className="sidebar-footer"><span className="status-dot"/> {isDraft?'当前调整仅本次使用，开始工作后自动保存':'停止编辑约 2 秒后自动保存'}<br/><small>{isDraft?'模型沿用设置中的默认选择':view?.project_storage_version===1?'旧版工程 · 另存为可去除重复图片':'另存为独立工程 · 成品按需导出'}</small></div></aside>
 
-      <main className="main-workspace"><section className="canvas-section"><div className="canvas-toolbar"><div className="workspace-heading"><h1>{maskSource?'局部编辑':currentAsset?.kind==='output'?'结果预览':currentAsset?'素材预览':'从参考到成品'}</h1><span className="eyebrow">VISUAL WORKSPACE</span></div><div className="canvas-actions">{maskSource?<span>正在编辑当前底图</span>:<>
+      <main className="main-workspace"><section className="canvas-section"><div className="canvas-toolbar"><div className="workspace-heading"><h1>{maskSource?'局部编辑':selectedTask?'生成任务':currentAsset?.kind==='output'?'结果预览':currentAsset?'素材预览':'从参考到成品'}</h1><span className="eyebrow">VISUAL WORKSPACE</span></div><div className="canvas-actions">{maskSource?<span>正在编辑当前底图</span>:<>
           <button className="mask-edit-entry" disabled={!currentAsset||!!currentAsset.removed_result||currentAsset.source_status==='missing'||currentAsset.source_status==='changed'} onClick={()=>{if(currentAsset){setMaskFresh(false);setMaskTaskId(undefined);setMaskSource(currentAsset.asset_id);}}}>编辑选区</button><button onClick={()=>void dispatch({type:'output:folder'})}>{view?.project_format==='legacy'?'output 文件夹':'导出目录'}</button><button disabled={activeCount>0} onClick={()=>void dispatch({type:'output:open'},'已从产出恢复工作')}>恢复旧产出</button>
-          {currentAsset?.kind==='output'&&!currentAsset.removed_result&&<button onClick={()=>void dispatch({type:'result:trash',asset_id:currentAsset.asset_id},view?.project_format==='ediro'?'已从结果列表移除，历史引用保留':'结果图片及恢复记录已移至回收站')} disabled={activeCount>0}>{view?.project_format==='ediro'?'移除选中版本':'删除选中版本'}</button>}
         <button onClick={()=>setZoom(Math.max(25,zoom-25))} disabled={!currentAsset} aria-label="缩小">−</button><span>{Math.round(zoom)}%</span><button onClick={()=>setZoom(Math.min(300,zoom+25))} disabled={!currentAsset} aria-label="放大">＋</button><button onClick={()=>setViewport(fittedViewport())}>适应</button>
-        <button disabled={!currentAsset} onClick={()=>currentAsset&&void dispatch({type:'asset:export',asset_id:currentAsset.asset_id},'图片已导出')}>↗ 导出</button></>}</div></div>
+        </>}</div></div>
         <div className={`canvas-stage ${currentAsset?'has-image':''}`}>
-          {maskSource?<div className="mask-stage-host" ref={setMaskCanvas}/>:currentAsset?(currentAsset.source_status==='missing'||currentAsset.source_status==='changed'?<div className="image-scroll"><div className="small-empty"><span>{currentAsset.source_status==='missing'?'源图片已移动或删除':'源图片内容可能已变化'}</span><small>输入链与生成结果仍保留，可重新定位原图，或作为新素材导入。</small><button onClick={()=>void dispatch({type:'asset:relink',asset_id:currentAsset.asset_id},'源图已重新定位')}>重新定位原图</button></div></div>:<ImagePreview key={`${currentAsset.asset_id}:${currentAsset.original_url}`} asset={currentAsset} view={viewport} onChange={setViewport}/>):<div className="welcome-canvas"><div className="welcome-symbol">◈</div><span className="eyebrow">A CLEAR PATH TO CREATE</span><h2>把设计意图，排成一条链。</h2><p>从文件夹拖入商品图或视觉参考。<br/>不用建立项目，放进来就开始。</p><div className="welcome-actions"><button onClick={()=>void dispatch({type:'assets:import'},'素材已添加')}>添加素材</button><span>或直接拖入图片</span></div><div className="sample-recipe"><span>◈ 语义参考</span><i>→</i><span>◇ 功能参考</span><i>→</i><span>≡ 提示词</span></div></div>}
-          <div className="canvas-bottom-note"><span>{currentAsset?`${currentAsset.name} · ${currentAsset.width} × ${currentAsset.height}`:'单工作台 · 生成单元与参考模块独立'}</span><span>{currentAsset?.kind==='output'?resultLabels.get(currentAsset.asset_id)??'生成结果':'LOCAL FIRST'}</span></div>
+          {maskSource?<div className="mask-stage-host" ref={setMaskCanvas}/>:selectedTask?<GenerationTaskPreview job={selectedTask} assets={assets} actions={previewActions}/>:currentAsset?(currentAsset.source_status==='missing'||currentAsset.source_status==='changed'?<div className="image-scroll"><div className="preview-unavailable-actions">{previewActions}</div><div className="small-empty"><span>{currentAsset.source_status==='missing'?'源图片已移动或删除':'源图片内容可能已变化'}</span><small>输入链与生成结果仍保留，可重新定位原图，或作为新素材导入。</small><button onClick={()=>void dispatch({type:'asset:relink',asset_id:currentAsset.asset_id},'源图已重新定位')}>重新定位原图</button></div></div>:<ImagePreview key={`${currentAsset.asset_id}:${currentAsset.original_url}`} asset={currentAsset} view={viewport} onChange={setViewport} actions={previewActions}/>):<div className="welcome-canvas"><div className="welcome-symbol">◈</div><span className="eyebrow">A CLEAR PATH TO CREATE</span><h2>把设计意图，排成一条链。</h2><p>从文件夹拖入商品图或视觉参考。<br/>不用建立项目，放进来就开始。</p><div className="welcome-actions"><button onClick={()=>void dispatch({type:'assets:import'},'素材已添加')}>添加素材</button><span>或直接拖入图片</span></div><div className="sample-recipe"><span>◈ 语义参考</span><i>→</i><span>◇ 功能参考</span><i>→</i><span>≡ 提示词</span></div></div>}
+          <div className="canvas-bottom-note"><span>{selectedTask?`任务 ${selectedTask.task_id.slice(-6)} · 参数与模块可恢复`:currentAsset?`${currentAsset.name} · ${currentAsset.width} × ${currentAsset.height}`:'单工作台 · 生成单元与参考模块独立'}</span><span>{selectedTask?generationTaskLabels[selectedTask.status]:currentAsset?.kind==='output'?resultLabels.get(currentAsset.asset_id)??'生成结果':'LOCAL FIRST'}</span></div>
         </div>
-        <div className="result-strip" ref={resultRef} inert={!!maskSource}><span className="strip-label">结果版本</span>{assets.filter(visibleResult).map(a=><button className={`result-thumb ${selectedAsset===a.asset_id?'selected':''}`} key={a.asset_id} title={`${a.name} · 点击恢复此版本的参数和创作模块 · 可拖入语义参考模块`} draggable onDragStart={event=>{event.dataTransfer.setData('application/ediro-asset',a.asset_id);event.dataTransfer.effectAllowed='copy';}} onClick={()=>void selectResult(a.asset_id)}><img src={a.preview_url} alt={a.name} draggable={false}/><span>{resultLabels.get(a.asset_id)??'生成结果'}</span></button>)}{!assets.some(visibleResult)&&<span className="subtle">生成结果会保存在这里，原图不会覆盖。</span>}</div>
+        <div className="result-strip" ref={resultRef} inert={!!maskSource}><span className="strip-label">结果版本</span>{timeline.map(entry=>{
+          if(entry.kind==='task')return <GenerationTaskThumbnail key={entry.key} job={entry.job} assets={assets} selected={selectedTaskId===entry.job.task_id} onSelect={()=>void selectTask(entry.job.task_id)}/>;
+          const a=entry.asset;return <button className={`result-thumb ${!selectedTaskId&&selectedAsset===a.asset_id?'selected':''}`} key={entry.key} data-asset-id={a.asset_id} data-task-id={entry.job?.task_id} title={`${a.name} · 点击恢复此版本的参数和创作模块 · 可拖入语义参考模块`} draggable onDragStart={event=>{event.dataTransfer.setData('application/ediro-asset',a.asset_id);event.dataTransfer.effectAllowed='copy';}} onClick={()=>void selectResult(a.asset_id)}><img src={a.preview_url} alt={a.name} draggable={false}/><span>{resultLabels.get(a.asset_id)??'生成结果'}</span></button>;
+        })}{!timeline.length&&<span className="subtle">生成任务和结果会保存在这里，原图不会覆盖。</span>}</div>
       </section>
 
       <section className="recipe-section" inert={!!maskSource}><header className="recipe-header"><div className="workspace-heading"><h2>生成输入链 <span>{recipe?.modules.length??0} 个模块</span></h2><span className="eyebrow">GENERATION RECIPE</span></div><div className="recipe-summary"><small title="拖动改变阅读顺序 · 无数值权重">拖动改变阅读顺序 · 无数值权重</small><span>{view?.chain?.mode==='reference_generation'?'带参考生成':'文生图'}</span></div></header>
         <div className="module-chain" ref={chainRef} onDragOver={e=>e.preventDefault()} onDragEnd={()=>{document.querySelectorAll('.module-card.is-dragging').forEach(el=>el.classList.remove('is-dragging'));document.querySelectorAll('.module-card.drop-target').forEach(el=>el.classList.remove('drop-target'));}} onDrop={e=>{if(e.target===e.currentTarget){e.preventDefault();dropModule(e.dataTransfer.getData('application/ediro-module'));}}}>
-          {recipe?.modules.map((m,index)=><ModuleCard key={m.module_id} module={m} index={index} imageNames={view?.chain?.blocks.filter(b=>b.type==='image'&&b.source_module_id===m.module_id).map(b=>b.type==='image'?b.image_name??'':'')??[]} assets={assets} definitions={view?.module_definitions??[]} definition={view?.module_definitions.find(d=>d.type===m.reference_type)}
+          {recipe?.modules.map((m,index)=><ModuleCard key={m.module_id} module={m} index={index} imageNames={view?.chain?.blocks.filter(b=>b.type==='image'&&b.source_module_id===m.module_id).map(b=>b.type==='image'?b.image_name??'':'')??[]} assets={assets} definition={view?.module_definitions.find(d=>d.type===m.reference_type)}
+            autoBusy={autoRunning?.moduleId===m.module_id} inferenceModels={inferenceModels} inferenceModelId={view?.assignments?.understanding_default}
+            onInferenceModel={id=>void dispatch({type:'model:assign',purpose:'understanding',model_config_id:id})} onAutoPrompt={enabled=>toggleAutoPrompt(m.module_id,enabled)} onReinfer={()=>void run(m.module_id)}
             onEdit={patch=>editModule(m.module_id,patch)} onCopy={()=>void dispatch({type:'module:copy',module_id:m.module_id},'已复制 · 新参考 ID')}
             onDelete={()=>void updateRecipe(r=>({...r,modules:r.modules.filter(item=>item.module_id!==m.module_id)}))}
             onImport={()=>void dispatch({type:'assets:import',module_id:m.module_id},'参考图已添加')}
-            onMove={delta=>moveModule(m.module_id,delta)} onDrop={value=>dropModule(value,m.module_id)} onFiles={files=>{setFileDrag(false);importDrop(files,m.module_id);}} onAsset={id=>{if(view?.module_definitions.find(d=>d.type===m.reference_type)?.editor_kind!=='image_collection'){setError('请把素材拖到语义参考图模块。');return;}void updateRecipe(r=>({...r,modules:r.modules.map(module=>module.module_id===m.module_id?{...module,asset_ids:[...module.asset_ids,id]}:module)}));}} onExpand={text=>setEditor({id:m.module_id,text})} onReferenceType={type=>void dispatch({type:'module:reference-type',module_id:m.module_id,reference_type:type},'参考类别已切换 · 新参考 ID')} onSelectAsset={id=>setSelectedAsset(id)}/>)}
+            onMove={delta=>moveModule(m.module_id,delta)} onDrop={value=>dropModule(value,m.module_id)} onFiles={files=>{setFileDrag(false);importDrop(files,m.module_id);}} onAsset={id=>{if(view?.module_definitions.find(d=>d.type===m.reference_type)?.editor_kind!=='image_collection'){setError('请把素材拖到语义参考图模块。');return;}void updateRecipe(r=>({...r,modules:r.modules.map(module=>module.module_id===m.module_id?{...module,asset_ids:[...module.asset_ids,id]}:module)}));}} onExpand={text=>setEditor({id:m.module_id,text})} onSelectAsset={id=>setSelectedAsset(id)}/>)}
           {project&&<button className="chain-add" title="添加提示词模块" onClick={()=>void dispatch({type:'module:add',reference_type:'prompt'})}><span>＋</span><small>添加模块<br/>或从左侧拖入</small></button>}
           {!project&&<div className="recipe-empty">先创建或打开项目，即可编辑完整生成配方。</div>}
         </div>
       </section></main>
 
-      <aside className="right-sidebar">{maskSource&&currentAsset&&view&&api?<MaskEditor key={`${project?.project_id}:${maskSource}:${maskFresh}:${maskTaskId}`} fresh={maskFresh} resumeTaskId={maskTaskId} source={currentAsset} state={view} canvas={maskCanvas} dispatch={dispatch} onClose={()=>setMaskSource(null)} onContinue={id=>{setMaskFresh(true);setMaskTaskId(undefined);setSelectedAsset(id);setMaskSource(id);}} api={api}/>:<><section className="parameter-section"><div className="section-heading"><h2>生成单元</h2><button className="text-button" onClick={()=>setLibrary(true)} disabled={!view}>管理模型</button></div>
+      <aside className="right-sidebar">{maskSource&&currentAsset&&view&&api?<MaskEditor key={`${project?.project_id}:${maskSource}:${maskFresh}:${maskTaskId}`} fresh={maskFresh} resumeTaskId={maskTaskId} source={currentAsset} state={view} canvas={maskCanvas} dispatch={dispatch} onClose={()=>setMaskSource(null)} onContinue={id=>{setMaskFresh(true);setMaskTaskId(undefined);setSelectedAsset(id);setMaskSource(id);}} api={api}/>:<><section className="parameter-section"><div className="section-heading"><h2>生成单元</h2><button className="text-button" onClick={()=>{setSettingsPage('models');setLibrary(true);}} disabled={!view}>管理模型</button></div>
         <div className="parameter-label-row"><label className="field-label" htmlFor="generation-model">主生图模型</label>{model&&<button className="text-button" onClick={()=>void dispatch({type:'recipe:reset-parameters'},'已恢复当前模型的 Ediro 默认设置')}>恢复模型默认</button>}</div><select id="generation-model" aria-label="主生图模型" disabled={!project} value={recipe?.model_config_id??''} onChange={e=>void dispatch({type:'recipe:select-model',model_config_id:e.target.value},'已恢复此工作流程的模型设置')}>
-          {!project&&<option value="">新建项目后选择</option>}{recipe&&!model&&<option value={recipe.model_config_id}>待选择模型 · 历史参数已保留</option>}{view?.models.filter(m=>m.enabled&&m.purpose!=='understanding'&&m.kind!=='local').map(m=>{const platform=view.connections?.find(c=>c.connection_id===m.connection_id)?.title;return <option key={m.model_config_id} value={m.model_config_id}>{platform?`${platform}·${m.title}`:m.title}</option>;})}
+          {!project&&<option value="">新建项目后选择</option>}{recipe&&!model&&<option value={recipe.model_config_id}>{recipe.model_config_id==='model_unselected'?'请选择生图模型':'待选择模型 · 历史参数已保留'}</option>}{view?.models.filter(m=>m.enabled&&m.purpose!=='understanding'&&m.kind!=='local').map(m=>{const platform=view.connections?.find(c=>c.connection_id===m.connection_id)?.title;return <option key={m.model_config_id} value={m.model_config_id}>{platform?`${platform}·${m.title}`:m.title}</option>;})}
         </select>
         {model&&<div className={`execution-note ${model.kind==='mock'?'':'warning'}`}><div className="execution-note-line"><span>{model.kind==='mock'?'● 模拟执行 · 不计费':model.executable?'● 真实 API · 可能计费':'○ 连接或协议未就绪'}</span><small title={model.model}>{model.model}</small></div>{model.readiness_error&&<small className="execution-error">{model.readiness_error}</small>}</div>}
         {recipe&&model&&<div className="strategy-control"><div className="parameter-label-row"><label className="field-label" htmlFor="input-strategy">提示词组合方式</label><span className="parameter-help"><button type="button" aria-label="提示词组合方式说明" aria-describedby="input-strategy-help">ⓘ</button><span id="input-strategy-help" role="tooltip">{strategyHelp}</span></span></div><select id="input-strategy" aria-label="提示词组合方式" value={recipe.input_strategy??(model.capabilities.interleaving==='native'?'interleaved':model.capabilities.interleaving==='mediated'?'legacy':'numbered_flat')} onChange={e=>{const strategy=e.target.value;void updateRecipe(r=>({...r,input_strategy:strategy}));}}><option value="auto">按能力选择</option>{defaultInputStrategies.list().map(s=><option key={s.id} value={s.id}>{s.title}</option>)}{model.capabilities.interleaving==='mediated'&&!recipe.input_strategy&&<option value="legacy">旧中介流程（未接入）</option>}</select></div>}
@@ -271,23 +396,24 @@ export function App() {
           <label>输出格式<select aria-label="输出格式" disabled={!model} value={recipe?.core_parameters.output_format??'png'} onChange={e=>changeParameter('output_format',e.target.value as Parameters['output_format'])}>{model?.capabilities.formats.map(value=><option key={value} value={value} >{value.toUpperCase()}</option>)}</select></label>
           <label>输出数量<select aria-label="输出数量" disabled={!model} value={recipe?.core_parameters.count??1} onChange={e=>changeParameter('count',Number(e.target.value))}>{Array.from({length:model?.capabilities.max_count??1},(_,i)=><option key={i} value={i+1}>{i+1} </option>)}</select></label>
         {recipe&&recipe.core_parameters.aspect_ratio!=='auto'&&!model?.capabilities.aspect_ratios.includes(recipe.core_parameters.aspect_ratio)&&<label className="field-label">自定义宽:高<input aria-label="自定义宽高比" maxLength={13} onChange={e=>setInvalidCustomRatio(!parseRatio(e.target.value.trim().replace('：',':')))} key={`${recipe.recipe_id}:${recipe.core_parameters.aspect_ratio}`} defaultValue={recipe.core_parameters.aspect_ratio.replace(/^custom:/,'')} placeholder="例如 5:3" onBlur={e=>{const value=e.target.value.trim().replace('：',':');if(!parseRatio(value)){setError('请填写正数宽:高，例如 5:3。');return;}changeParameter('aspect_ratio',`custom:${value}`);}}/></label>}
-        {model&&recipe&&<GenerationOptionsPanel model={model} parameters={recipe.core_parameters} references={assets.filter(a=>recipe.modules.some(m=>m.enabled&&m.asset_ids.includes(a.asset_id)))} onChange={patch=>void updateRecipe(r=>({...r,core_parameters:updateParameters(r.core_parameters,typeof patch==='function'?patch(r.core_parameters):patch,model)}))}/>}
+        {model&&recipe&&<GenerationOptionsPanel model={model} parameters={recipe.core_parameters} references={assets.filter(a=>view?.chain?.blocks.some(b=>b.type==='image'&&b.asset_id===a.asset_id))} onChange={patch=>void updateRecipe(r=>({...r,core_parameters:updateParameters(r.core_parameters,typeof patch==='function'?patch(r.core_parameters):patch,model)}))}/>}
         </div>
         {geometryNote&&<p className="notice">{geometryNote}{recipe?.core_parameters.aspect_ratio.startsWith('custom:')?' · 表达期望，实际输出可能不同':''}</p>}
-        <button className="generate-button" onClick={run} disabled={!project||!model?.executable||!!view?.adaptation_error||invalidCustomRatio}><span>✦ {model?.kind==='mock'?'运行模拟生成':model?.executable?'生成图片':'生成（未就绪）'}</span><small>{activeCount?`${activeCount} 个任务执行／等待中`:'配方快照 → 任务 → 新版本'}</small></button>
-        {latestJob&&<div className="task-progress"><div><b>{statusLabels[latestJob.status]}</b><small>{latestJob.progress}%</small></div><progress max={100} value={latestJob.progress}/><p>{latestJob.stage}</p>{!['failed','succeeded','cancelled'].includes(latestJob.status)&&<button className="text-button" onClick={()=>void dispatch({type:'job:cancel',task_id:latestJob.task_id})}>取消任务</button>}</div>}
+        <button className={`generate-button ${generationBusy?'is-busy':''}`} aria-busy={generationBusy} onClick={()=>void run()} disabled={!project||starting||!!autoRunning||(needsPrompt?!inferenceModel?.executable:!model?.executable||!!view?.adaptation_error||invalidCustomRatio)}><span className="generation-button-label">{generationBusy?<i className="generation-spinner" aria-hidden="true"/>:<i aria-hidden="true">✦</i>}{' '}{autoRunning?'正在生成提示词…':starting?'正在准备…':needsPrompt?(recipe?.modules.find(m=>m.module_id===autoState?.module_id)?.auto_prompt_input_key?'更新提示词':'生成提示词'):activeCount?'生成中 · 再生成':autoState?'生成图片':model?.kind==='mock'?'运行模拟生成':model?.executable?'生成图片':'生成（未就绪）'}</span><small>{autoRunning?'完成后填入提示词，等待你点击生图':needsPrompt?'先整理各模块条件，再查看和修改':activeCount?`${activeCount} 个任务执行／等待中`:'配方快照 → 任务 → 新版本'}</small></button>
+        {autoRunning?<button className="auto-prompt-cancel text-button" onClick={cancelAuto}>取消推理</button>:needsPrompt&&!inferenceModel?.executable&&<p className="notice">请在提示词模块选择已就绪的推理模型。</p>}
+        {progressJob&&<GenerationProgress key={progressJob.task_id} job={progressJob} timing={view?.generation_timings?.[progressJob.task_id]} onCancel={()=>void dispatch({type:'job:cancel',task_id:progressJob.task_id})}/>}
       </section>
       <section className="input-inspector"><div className="inspector-tabs"><button className={tab==='chain'?'selected':''} onClick={()=>setTab('chain')}>富媒体链</button><button className={tab==='history'?'selected':''} onClick={()=>setTab('history')}>任务记录 <span>{project?.jobs.length??0}</span></button></div>
         {tab==='chain'?<><div className="inspector-intro"><span>当前配方的输入预览</span><small>{view?.chain?.blocks.length??0} 个内容块 · 可反查模块</small></div>
           {view?.adaptation_error&&<div className="notice warning">{view.adaptation_error}</div>}
           {view?.adaptation?.adjustments.map(a=><div className="notice warning" key={a}>{a}</div>)}
-          <div className="block-list">{view?.chain?.blocks.map((b,i)=><div className={`input-block ${b.type}`} key={`${b.source_module_id}-${i}`}><div><span>{String(i+1).padStart(2,'0')}</span><b>{b.type==='text'?'TextBlock':'ImageBlock'}</b><small>{b.type==='image'?b.image_name??b.reference_type:b.model_name??b.reference_type}</small></div>{b.type==='text'?<p>{describeInputBlock(b,recipe?.modules.find(m=>m.module_id===b.source_module_id),view?.module_definitions.find(d=>d.type===b.reference_type))}</p>:<div className="image-block-content">{usableThumbnail(assets.find(a=>a.asset_id===b.asset_id))?<img src={assets.find(a=>a.asset_id===b.asset_id)!.preview_url} alt="输入参考"/>:<span className="missing-image-label">图片缺失</span>}<span>{assets.find(a=>a.asset_id===b.asset_id)?.name??b.asset_id}</span></div>}<code>{b.reference_id}</code></div>)}
+          <div className="block-list">{view?.chain?.blocks.map((b,i)=><div className={`input-block ${b.type}`} key={`${b.source_module_id}-${i}`}><div><span>{String(i+1).padStart(2,'0')}</span><b>{b.type==='text'?'TextBlock':'ImageBlock'}</b><small>{b.type==='image'?b.image_name??b.reference_type:b.model_name??b.reference_type}</small></div>{b.type==='text'?<p>{describeInputBlock(b,recipe?.modules.find(m=>m.module_id===b.source_module_id),view?.module_definitions.find(d=>d.type===b.reference_type))}</p>:<ChainReferenceImage api={api} projectId={project?.project_id} module={recipe?.modules.find(m=>m.module_id===b.source_module_id)} asset={assets.find(a=>a.asset_id===b.asset_id)} assetId={b.asset_id} moduleId={b.source_module_id} referenceType={b.reference_type} defaults={view?.module_settings??defaultModuleSettings}/>}<code>{b.reference_id}</code></div>)}
           {!view?.chain?.blocks.length&&<div className="small-empty">≡<span>填写提示词或添加参考图</span><small>{isDraft?'首次加入素材或生成时创建项目':'停止编辑约 2 秒后自动保存'}</small></div>}</div></>:<div className="job-list">{[...(project?.jobs??[])].reverse().map(job=><article className="job-card" key={job.task_id}><div><span className={`job-status ${job.status}`}>{statusLabels[job.status]}</span><small>{new Date(job.created_at).toLocaleTimeString('zh-CN')}</small></div><b>{job.model_snapshot.title}</b><p>{job.stage}</p>{job.error&&<p className="error-text">{job.error}</p>}<code>{job.task_id.slice(-12)}</code><div className="job-actions">{job.status==='failed'&&job.recoverable_result&&<button onClick={()=>void dispatch({type:'job:recover-result',task_id:job.task_id},'已恢复本地结果，未调用 API')}>恢复本地结果</button>}<button onClick={async()=>{if(await dispatch({type:'job:restore',task_id:job.task_id},job.mask_edit?'已恢复局部编辑草稿':'已复用历史配方，功能指令采用当前定义')){if(job.mask_edit){setMaskFresh(false);setMaskTaskId(job.task_id);setMaskSource(job.mask_edit.draft.source_asset_id);}}}}>{job.mask_edit?'恢复局部编辑':'恢复配方'}</button>{job.output_asset_ids.some(id=>assets.some(a=>a.asset_id===id&&visibleResult(a)))?<button onClick={()=>void selectResult(job.output_asset_ids.find(id=>assets.some(a=>a.asset_id===id&&visibleResult(a)))!)}>查看结果</button>:job.output_asset_ids.length>0&&<span className="missing-image-label">结果已删除或缺失</span>}{!['succeeded','failed','cancelled'].includes(job.status)&&<button onClick={()=>void dispatch({type:'job:cancel',task_id:job.task_id})}>取消</button>}</div></article>)}{!project?.jobs.length&&<div className="small-empty">↺<span>尚无生成记录</span><small>每次执行保存独立快照</small></div>}</div>}
       </section></>}</aside>
     </div>
     <footer className="app-status"><span>● {saveLabel}<i> / </i>{isDraft?'临时调整不保存为启动预设':view?.project_format==='ediro'?'素材与结果保存在工程内':'旧目录工程 · 外部素材引用'}</span><span title={view?.project_location??''}>{view?.project_location??(isDraft?'加入素材或生成时保存到默认项目目录':'正在准备工作台')}</span></footer>
     {fileDrag&&<div className="file-drop-hint">放入图片添加素材 · 放入 .ediro 打开工程</div>}
-    {editingModule&&editor&&<ModuleEditor key={editor.id} module={editingModule} description={view?.module_definitions.find(d=>d.type===editingModule.reference_type)?.description} initialText={editor.text} inferenceTask={view?.module_definitions.find(d=>d.type===editingModule.reference_type)?.inference_task} inference={api&&project?{api,project_id:project.project_id,models:view?.models??[],default_model_id:view?.assignments?.understanding_default}:undefined} functional={view?.module_definitions.find(d=>d.type===editingModule.reference_type)?.editor_kind==='generated_reference'} onClose={()=>setEditor(null)} onSave={(text,tool)=>tool?dispatch({type:'module:tool',module_id:editingModule.module_id,png_base64:tool.png,state:tool.state,instruction:text},'功能参考已更新，工程自动保存'):updateRecipe(r=>({...r,modules:r.modules.map(m=>m.module_id===editingModule.module_id?{...m,user_instruction:text}:m)}))}/>}
+    {editingModule&&editor&&<ModuleEditor key={editor.id} module={editingModule} description={view?.module_definitions.find(d=>d.type===editingModule.reference_type)?.description} initialText={editor.text} inferenceTask={view?.module_definitions.find(d=>d.type===editingModule.reference_type)?.inference_task} inference={api&&project?{api,project_id:project.project_id,models:view?.models??[],connections:view?.connections??[],default_model_id:view?.assignments?.understanding_default}:undefined} referencePreview={api&&project?{api,project_id:project.project_id,settings:view?.module_settings??defaultModuleSettings}:undefined} functional={view?.module_definitions.find(d=>d.type===editingModule.reference_type)?.editor_kind==='generated_reference'} onClose={()=>setEditor(null)} onSave={(text,tool,referenceSettings,promptRole)=>tool?dispatch({type:'module:tool',module_id:editingModule.module_id,png_base64:tool.png,state:tool.state,instruction:text},'功能参考已更新，工程自动保存'):updateRecipe(r=>({...r,modules:r.modules.map(m=>m.module_id===editingModule.module_id?{...m,user_instruction:text,...(referenceSettings?{reference_settings:referenceSettings}:{}),...(m.reference_type==='prompt'&&promptRole?{prompt_role:promptRole}:{})}:m)}))}/>}
     {toast&&<div className="toast" role="status">✓ {toast}</div>}
     {(error||view?.save_error)&&<div className="error-banner" role="alert"><span>{error||view?.save_error}</span>{view?.save_error&&<button onClick={()=>void flushEditors()}>重试保存</button>}<button aria-label="关闭错误提示" onClick={()=>setError('')}>×</button></div>}
     {hostDialogs[0]?<AppDialog key={hostDialogs[0].id} title={hostDialogs[0].message} onDismiss={()=>answerHost(hostDialogs[0].cancelId)} actions={hostDialogs[0].buttons.map((label,index)=>({label,primary:index===hostDialogs[0].defaultId,run:()=>answerHost(index)}))}>{hostDialogs[0].detail}</AppDialog>:notices[0]?<AppDialog key={notices[0].id} title={notices[0].title} onDismiss={()=>setNotices(items=>items.slice(1))} actions={[

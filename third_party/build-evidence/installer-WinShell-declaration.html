@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html class="client-nojs" lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<title>WinShell plug-in - NSIS</title>
+<script>document.documentElement.className="client-js";RLCONF={"wgBreakFrames":false,"wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgRequestId":"atnYwTYwcFg5AKaiJmfeBgAAABI","wgCSPNonce":false,"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"WinShell_plug-in","wgTitle":"WinShell plug-in","wgCurRevisionId":25687,"wgRevisionId":25687,"wgArticleId":5133,"wgIsArticle":true,"wgIsRedirect":false,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["Plugins"],"wgPageContentLanguage":"en","wgPageContentModel":"wikitext","wgRelevantPageName":"WinShell_plug-in","wgRelevantArticleId":5133,"wgIsProbablyEditable":false,"wgRelevantPageIsProbablyEditable":false,"wgRestrictionEdit":[],"wgRestrictionMove":[]};RLSTATE={"site.styles":"ready","user.styles":"ready","user":"ready","user.options":"loading","mediawiki.action.styles":"ready","mediawiki.interface.helpers.styles":"ready","skins.monobook.styles":"ready"};
+RLPAGEMODULES=["site","mediawiki.page.ready","mediawiki.toc","skins.monobook.scripts"];</script>
+<script>(RLQ=window.RLQ||[]).push(function(){mw.loader.implement("user.options@12s5i",function($,jQuery,require,module){mw.user.tokens.set({"patrolToken":"+\\","watchToken":"+\\","csrfToken":"+\\"});});});</script>
+<link rel="stylesheet" href="/mediawiki/load.php?lang=en&amp;modules=mediawiki.action.styles%7Cmediawiki.interface.helpers.styles%7Cskins.monobook.styles&amp;only=styles&amp;skin=monobook"/>
+<script async="" src="/mediawiki/load.php?lang=en&amp;modules=startup&amp;only=scripts&amp;raw=1&amp;skin=monobook"></script>
+<meta name="generator" content="MediaWiki 1.39.17"/>
+<meta name="robots" content="noindex,nofollow"/>
+<meta name="format-detection" content="telephone=no"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=0.25, maximum-scale=5.0"/>
+<link rel="icon" href="/favicon.ico"/>
+<link rel="search" type="application/opensearchdescription+xml" href="/mediawiki/opensearch_desc.php" title="NSIS Wiki (en)"/>
+<link rel="EditURI" type="application/rsd+xml" href="https://nsis.sourceforge.io/mediawiki/api.php?action=rsd"/>
+<link rel="license" href="/License"/>
+<link rel="alternate" type="application/atom+xml" title="NSIS Wiki Atom feed" href="/mediawiki/index.php?title=Special:RecentChanges&amp;feed=atom"/>
+</head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-WinShell_plug-in rootpage-WinShell_plug-in skin-monobook action-view skin--responsive"><div id="globalWrapper">
+	<div id="column-content">
+		<div id="content" class="mw-body" role="main">
+			<a id="top"></a>
+			<div id="siteNotice"></div>
+			<div class="mw-indicators">
+			</div>
+			<h1 id="firstHeading" class="firstHeading mw-first-heading"><span class="mw-page-title-main">WinShell plug-in</span></h1>
+			<div id="bodyContent" class="monobook-body">
+				<div id="siteSub">From NSIS Wiki</div>
+				<div id="contentSub" ><div class="mw-message-box-warning mw-revision mw-message-box"><div id="mw-revision-info">Revision as of 22:01, 7 June 2021 by <a href="/User:Anders" class="mw-userlink" title="User:Anders"><bdi>Anders</bdi></a> <span class="mw-usertoollinks">(<a href="/User_talk:Anders" class="mw-usertoollinks-talk" title="User talk:Anders">talk</a> | <a href="/Special:Contributions/Anders" class="mw-usertoollinks-contribs" title="Special:Contributions/Anders">contribs</a>)</span> <span class="comment">(System plug-in alternative)</span></div><div id="mw-revision-nav">(<a href="/mediawiki/index.php?title=WinShell_plug-in&amp;diff=prev&amp;oldid=25687" title="WinShell plug-in">diff</a>) <a href="/mediawiki/index.php?title=WinShell_plug-in&amp;direction=prev&amp;oldid=25687" title="WinShell plug-in">â† Older revision</a> | Latest revision (diff) | Newer revision â†’ (diff)</div></div></div>
+				
+				<div id="jump-to-nav"></div><a href="#column-one" class="mw-jump-link">Jump to navigation</a><a href="#searchInput" class="mw-jump-link">Jump to search</a>
+				<!-- start content -->
+				<div id="mw-content-text" class="mw-body-content mw-content-ltr" lang="en" dir="ltr"><div class="mw-parser-output"><table align="right">
+<tbody><tr>
+<td><small>Author: <a href="/User:Anders" title="User:Anders">Anders</a> (<a href="/User_talk:Anders" title="User talk:Anders">talk</a>, <a href="/Special:Contributions/Anders" title="Special:Contributions/Anders">contrib</a>)</small>
+</td></tr></tbody></table>
+<p><br style="clear:both;" />
+</p>
+<div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading"><input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none" /><div class="toctitle" lang="en" dir="ltr"><h2 id="mw-toc-heading">Contents</h2><span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Plugin_Info"><span class="tocnumber">1</span> <span class="toctext">Plugin Info</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Information"><span class="tocnumber">2</span> <span class="toctext">Information</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Usage_Example"><span class="tocnumber">3</span> <span class="toctext">Usage Example</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#System_plug-in_alternative"><span class="tocnumber">4</span> <span class="toctext">System plug-in alternative</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Credits"><span class="tocnumber">5</span> <span class="toctext">Credits</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="Plugin_Info">Plugin Info</span></h2>
+<ul><li><b>Version:</b> 20121005</li>
+<li><b>Type:</b> Runtime plugin</li>
+<li><b>Character encoding:</b> Ansi &amp; Unicode</li>
+<li><b>Minimum OS:</b> Win95/NT4</li>
+<li><b>Minimum NSIS Version:</b> 2.0</li>
+<li><b>License:</b> Freeware</li>
+<li><b>Download:</b> <a href="/mediawiki/images/5/54/WinShell.zip" style="text-decoration: none"><img src="/mediawiki/images/a/a0/Zip.gif" width="16" height="16" border="0" alt="" /> WinShell.zip</a> (2 KB)</li></ul>
+<p><br />
+</p>
+<h2><span class="mw-headline" id="Information">Information</span></h2>
+<p>SetLnkAUMI sets the PKEY_AppUserModel_ID property on a shortcut.
+</p><p>UninstAppUserModelId calls IApplicationDestinations::RemoveAllDestinations and ICustomDestinationList::DeleteList.
+</p><p>UninstShortcut calls IStartMenuPinnedList::RemoveFromList.
+</p><p><br />
+</p>
+<h2><span class="mw-headline" id="Usage_Example">Usage Example</span></h2>
+<pre class="nsis" style="font-family:monospace;"><span style="color: #000066; font-weight:bold;">!define</span> MyApp_AppUserModelId <span style="color: #660066;">&quot;MyCompany.MyApp.xyz&quot;</span>
+&#160;
+<span style="color: #000066;">Section</span> Install
+<span style="color: #000099;">CreateShortcut</span> <span style="color: #660066;">&quot;$SMPrograms\MyApp.lnk&quot;</span> <span style="color: #660066;">&quot;$Instdir\MyApp.exe&quot;</span>
+<span style="color: #000099;">WinShell</span>::SetLnkAUMI <span style="color: #660066;">&quot;$SMPrograms\MyApp.lnk&quot;</span> <span style="color: #660066;">&quot;${MyApp_AppUserModelId}&quot;</span>
+<span style="color: #000066;">SectionEnd</span>
+&#160;
+&#160;
+<span style="color: #000066;">Section</span> Uninstall
+<span style="color: #000099;">WinShell</span>::UninstAppUserModelId <span style="color: #660066;">&quot;${MyApp_AppUserModelId}&quot;</span>
+&#160;
+<span style="color: #000099;">WinShell</span>::<span style="color: #003399;">UninstShortcut </span><span style="color: #660066;">&quot;$SMPrograms\MyApp.lnk&quot;</span>
+<span style="color: #000099;">Delete</span> <span style="color: #660066;">&quot;$SMPrograms\MyApp.lnk&quot;</span>
+<span style="color: #000066;">SectionEnd</span></pre>
+<p><br />
+</p>
+<h2><span class="mw-headline" id="System_plug-in_alternative">System plug-in alternative</span></h2>
+<pre class="nsis" style="font-family:monospace;"><span style="color: #000066; font-weight:bold;">!include</span> <span style="color: #660066;">&quot;Win\COM.nsh&quot;</span>
+<span style="color: #000066; font-weight:bold;">!include</span> <span style="color: #006600;">LogicLib.nsh</span>
+&#160;
+<span style="color: #000066;">Section</span> Uninstall
+<span style="color: #000066; font-weight:bold;">!insertmacro</span> ComHlpr_CreateInProcInstance <span style="color: #660000;">$<span style="">&#123;</span>CLSID_DestinationList<span style="">&#125;</span> $<span style="">&#123;</span>IID_ICustomDestinationList<span style="">&#125;</span></span> r1 <span style="color: #660066;">&quot;&quot;</span>
+<span style="color: #660000;">$<span style="">&#123;</span>If<span style="">&#125;</span></span> <span style="color: #660000;">$1</span> P&lt;&gt; <span style="">0</span>
+	<span style="color: #660000;">$<span style="">&#123;</span>I<span style="color: #000099;">CustomDestinationList</span>::DeleteList<span style="">&#125;</span></span> <span style="color: #660000;">$1</span> <span style="color: #660066;">'(&quot;${MyApp_AppUserModelId}&quot;)'</span>
+	<span style="color: #660000;">$<span style="">&#123;</span>I<span style="color: #000099;">Unknown</span>::Release<span style="">&#125;</span></span> <span style="color: #660000;">$1</span> <span style="color: #660066;">&quot;&quot;</span>
+<span style="color: #660000;">$<span style="">&#123;</span>EndIf<span style="">&#125;</span></span>
+&#160;
+<span style="color: #000066; font-weight:bold;">!insertmacro</span> ComHlpr_CreateInProcInstance <span style="color: #660000;">$<span style="">&#123;</span>CLSID_ApplicationDestinations<span style="">&#125;</span> $<span style="">&#123;</span>IID_IApplicationDestinations<span style="">&#125;</span></span> r1 <span style="color: #660066;">&quot;&quot;</span>
+<span style="color: #660000;">$<span style="">&#123;</span>If<span style="">&#125;</span></span> <span style="color: #660000;">$1</span> P&lt;&gt; <span style="">0</span>
+	<span style="color: #660000;">$<span style="">&#123;</span>I<span style="color: #000099;">ApplicationDestinations</span>::SetAppID<span style="">&#125;</span></span> <span style="color: #660000;">$1</span> <span style="color: #660066;">'(&quot;${MyApp_AppUserModelId}&quot;)i.r0'</span>
+	<span style="color: #660000;">$<span style="">&#123;</span>If<span style="">&#125;</span></span> <span style="color: #660000;">$0</span> &gt;= <span style="">0</span>
+		<span style="color: #660000;">$<span style="">&#123;</span>I<span style="color: #000099;">ApplicationDestinations</span>::RemoveAllDestinations<span style="">&#125;</span></span> <span style="color: #660000;">$1</span> <span style="color: #660066;">''</span>
+	<span style="color: #660000;">$<span style="">&#123;</span>EndIf<span style="">&#125;</span></span>
+	<span style="color: #660000;">$<span style="">&#123;</span>I<span style="color: #000099;">Unknown</span>::Release<span style="">&#125;</span></span> <span style="color: #660000;">$1</span> <span style="color: #660066;">&quot;&quot;</span>
+<span style="color: #660000;">$<span style="">&#123;</span>EndIf<span style="">&#125;</span></span>
+&#160;
+<span style="color: #000066; font-weight:bold;">!include</span> Integration.nsh
+<span style="color: #660000;">$<span style="">&#123;</span>UnpinShortcut<span style="">&#125;</span></span> <span style="color: #660066;">&quot;$SMPrograms\MyApp.lnk&quot;</span>
+<span style="color: #000099;">Delete</span> <span style="color: #660066;">&quot;$SMPrograms\MyApp.lnk&quot;</span>
+<span style="color: #000066;">SectionEnd</span></pre>
+<p><br />
+</p>
+<h2><span class="mw-headline" id="Credits">Credits</span></h2>
+<p>Written by Anders (For fun and profit?)
+</p>
+<!-- 
+NewPP limit report
+Cached time: 20261022055847
+Cache expiry: 86400
+Reduced expiry: false
+Complications: [show‐toc]
+CPU time usage: 0.045 seconds
+Real time usage: 0.060 seconds
+Preprocessor visited node count: 42/1000000
+Post‐expand include size: 179/2097152 bytes
+Template argument size: 24/2097152 bytes
+Highest expansion depth: 3/100
+Expensive parser function count: 0/100
+Unstrip recursion depth: 0/20
+Unstrip post‐expand size: 5067/5000000 bytes
+-->
+<!--
+Transclusion expansion time report (%,ms,calls,template)
+100.00%   10.583      1 Template:PageAuthor
+100.00%   10.583      1 -total
+-->
+
+<!-- Saved in parser cache with key n22049_wiki-wiki_:pcache:idhash:5133-0!canonical and timestamp 20261022055847 and revision id 25687.
+ -->
+</div>
+<div class="printfooter" data-nosnippet="">Retrieved from "<a dir="ltr" href="https://nsis.sourceforge.io/mediawiki/index.php?title=WinShell_plug-in&amp;oldid=25687">https://nsis.sourceforge.io/mediawiki/index.php?title=WinShell_plug-in&amp;oldid=25687</a>"</div></div>
+				<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="/Special:Categories" title="Special:Categories">Category</a>: <ul><li><a href="/Category:Plugins" title="Category:Plugins">Plugins</a></li></ul></div></div>
+				<!-- end content -->
+				<div class="visualClear"></div>
+			</div>
+		</div>
+		<div class="visualClear"></div>
+	</div>
+	<div id="column-one" >
+		<h2>Navigation menu</h2>
+		<div role="navigation" class="portlet" id="p-cactions" aria-labelledby="p-cactions-label">
+			<h3 id="p-cactions-label" >Page actions</h3>
+			<div class="pBody">
+				<ul >
+				<li id="ca-nstab-main" class="selected mw-list-item"><a href="/WinShell_plug-in" title="View the content page [c]" accesskey="c">Page</a></li><li id="ca-talk" class="new mw-list-item"><a href="/mediawiki/index.php?title=Talk:WinShell_plug-in&amp;action=edit&amp;redlink=1" rel="discussion" title="Discussion about the content page (page does not exist) [t]" accesskey="t">Comment</a></li><li id="ca-view" class="selected mw-list-item"><a href="/WinShell_plug-in">Read</a></li><li id="ca-viewsource" class="mw-list-item"><a href="/mediawiki/index.php?title=WinShell_plug-in&amp;action=edit" title="This page is protected.&#10;You can view its source [e]" accesskey="e">View source</a></li><li id="ca-history" class="mw-list-item"><a href="/mediawiki/index.php?title=WinShell_plug-in&amp;action=history" title="Past revisions of this page [h]" accesskey="h">History</a></li>
+				
+				</ul>
+			</div>
+		</div>
+		
+<div role="navigation" class="portlet mw-portlet mw-portlet-cactions-mobile"
+	id="p-cactions-mobile" aria-labelledby="p-cactions-mobile-label">
+	<h3 id="p-cactions-mobile-label" >Page actions</h3>
+	<div class="pBody">
+		<ul ><li id="main-mobile" class="selected mw-list-item"><a href="/WinShell_plug-in" title="Page">Page</a></li><li id="talk-mobile" class="new mw-list-item"><a href="/mediawiki/index.php?title=Talk:WinShell_plug-in&amp;action=edit&amp;redlink=1" title=" (page does not exist)">Comment</a></li><li id="ca-more" class="mw-list-item"><a href="#p-cactions">More</a></li><li id="ca-tools" class="mw-list-item"><a href="#p-tb" title="Tools">Tools</a></li></ul>
+		
+	</div>
+</div>
+
+		<div role="navigation" class="portlet" id="p-personal" aria-labelledby="p-personal-label">
+			<h3 id="p-personal-label" >Personal tools</h3>
+			<div class="pBody">
+				<ul >
+				<li id="pt-createaccount" class="mw-list-item"><a href="/mediawiki/index.php?title=Special:CreateAccount&amp;returnto=WinShell+plug-in&amp;returntoquery=oldid%3D25687" title="You are encouraged to create an account and log in; however, it is not mandatory">Create account</a></li><li id="pt-login" class="mw-list-item"><a href="/mediawiki/index.php?title=Special:UserLogin&amp;returnto=WinShell+plug-in&amp;returntoquery=oldid%3D25687" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in</a></li>
+				</ul>
+			</div>
+		</div>
+		<div class="portlet" id="p-logo" role="banner">
+			<a href="/Main_Page" class="mw-wiki-logo"></a>
+		</div>
+		<div id="sidebar">
+		
+<div role="navigation" class="portlet mw-portlet mw-portlet-WebsiteNavigation"
+	id="p-WebsiteNavigation" aria-labelledby="p-WebsiteNavigation-label">
+	<h3 id="p-WebsiteNavigation-label" >Website navigation</h3>
+	<div class="pBody">
+		<ul ><li id="n-mainpage" class="mw-list-item"><a href="/Main_Page" title="Visit the main page [z]" accesskey="z">Main Page</a></li><li id="n-news" class="mw-list-item"><a href="/News">News</a></li><li id="n-features" class="mw-list-item"><a href="/Features">Features</a></li><li id="n-screenshots" class="mw-list-item"><a href="/Screenshots">Screenshots</a></li><li id="n-NSIS2" class="mw-list-item"><a href="/NSIS_2">NSIS 2</a></li><li id="n-license" class="mw-list-item"><a href="/License">License</a></li><li id="n-documentation" class="mw-list-item"><a href="https://nsis.sourceforge.io/Docs">Documentation</a></li><li id="n-support" class="mw-list-item"><a href="/Support">Support</a></li><li id="n-community" class="mw-list-item"><a href="/Community">Community</a></li><li id="n-FAQ" class="mw-list-item"><a href="/FAQ">FAQ</a></li><li id="n-bugreports" class="mw-list-item"><a href="/Bug_Reports">Bug Reports</a></li><li id="n-requests" class="mw-list-item"><a href="/Requests">Requests</a></li><li id="n-developercenter" class="mw-list-item"><a href="/Developer_Center">Developer Center</a></li><li id="n-plugins" class="mw-list-item"><a href="/Category:Plugins">Plug-ins</a></li><li id="n-tutorials" class="mw-list-item"><a href="/Category:Tutorials">Tutorials</a></li><li id="n-examples" class="mw-list-item"><a href="/Category:Code_Examples">Examples</a></li><li id="n-download" class="mw-list-item"><a href="/Download">Download</a></li><li id="n-specialbuilds" class="mw-list-item"><a href="/Special_Builds">Special Builds</a></li><li id="n-developmentfiles" class="mw-list-item"><a href="/Development_Files">Development Files</a></li><li id="n-users" class="mw-list-item"><a href="/Users">Users</a></li><li id="n-contact" class="mw-list-item"><a href="/Contact">Contact</a></li><li id="n-Wiki-Information" class="mw-list-item"><a href="/Wiki_Information">Wiki Information</a></li></ul>
+		
+	</div>
+</div>
+
+		<div role="search" class="portlet" id="p-search">
+			<h3 id="p-search-label" ><label for="searchInput">Search</label></h3>
+			<div class="pBody" id="searchBody">
+				<form action="/mediawiki/index.php" id="searchform"><input type="hidden" value="Special:Search" name="title"><input type="search" name="search" placeholder="Search NSIS Wiki" aria-label="Search NSIS Wiki" autocapitalize="sentences" title="Search NSIS Wiki [f]" accesskey="f" id="searchInput"/><input type="submit" name="go" value="Go" title="Go to a page with this exact name if it exists" class="searchButton" id="searchButton"/> <input type="submit" name="fulltext" value="Search" title="Search the pages for this text" class="searchButton mw-fallbackSearchButton" id="mw-searchButton"/></form>
+			</div>
+		</div>
+		
+<div role="navigation" class="portlet mw-portlet mw-portlet-tb"
+	id="p-tb" aria-labelledby="p-tb-label">
+	<h3 id="p-tb-label" >Tools</h3>
+	<div class="pBody">
+		<ul ><li id="t-whatlinkshere" class="mw-list-item"><a href="/Special:WhatLinksHere/WinShell_plug-in" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li><li id="t-recentchangeslinked" class="mw-list-item"><a href="/Special:RecentChangesLinked/WinShell_plug-in" rel="nofollow" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li><li id="t-specialpages" class="mw-list-item"><a href="/Special:SpecialPages" title="A list of all special pages [q]" accesskey="q">Special pages</a></li><li id="t-print" class="mw-list-item"><a href="javascript:print();" rel="alternate" title="Printable version of this page [p]" accesskey="p">Printable version</a></li><li id="t-permalink" class="mw-list-item"><a href="/mediawiki/index.php?title=WinShell_plug-in&amp;oldid=25687" title="Permanent link to this revision of this page">Permanent link</a></li><li id="t-info" class="mw-list-item"><a href="/mediawiki/index.php?title=WinShell_plug-in&amp;action=info" title="More information about this page">Page information</a></li></ul>
+		
+	</div>
+</div>
+
+		
+		</div>
+		<a href="#sidebar" title="Jump to navigation"
+			class="menu-toggle" id="sidebar-toggle"></a>
+		<a href="#p-personal" title="user tools"
+			class="menu-toggle" id="p-personal-toggle"></a>
+		<a href="#globalWrapper" title="back to top"
+			class="menu-toggle" id="globalWrapper-toggle"></a>
+	</div>
+	<!-- end of the left (by default at least) column -->
+	<div class="visualClear"></div>
+	<div id="footer" class="mw-footer" role="contentinfo"
+		>
+		<div id="f-copyrightico" class="footer-icons">
+			<img src="" alt="zlib/libpng license" width="88" height="31" loading="lazy"/>
+		</div>
+		<div id="f-poweredbyico" class="footer-icons">
+			<a href="https://www.mediawiki.org/"><img src="/mediawiki/resources/assets/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" srcset="/mediawiki/resources/assets/poweredby_mediawiki_132x47.png 1.5x, /mediawiki/resources/assets/poweredby_mediawiki_176x62.png 2x" width="88" height="31" loading="lazy"/></a>
+		</div>
+		<ul id="f-list">
+			<li id="lastmod"> This page was last edited on 7 June 2021, at 22:01.</li><li id="copyright">Content is available under <a href="/License" title="License">zlib/libpng license</a> unless otherwise noted.</li>
+			<li id="privacy"><a href="/NSIS_Wiki:Privacy_policy">Privacy policy</a></li><li id="about"><a href="/NSIS_Wiki:About">About NSIS Wiki</a></li><li id="disclaimer"><a href="/NSIS_Wiki:General_disclaimer">Disclaimers</a></li>
+		</ul>
+	</div>
+</div>
+<script>(RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgPageParseReport":{"limitreport":{"cputime":"0.045","walltime":"0.060","ppvisitednodes":{"value":42,"limit":1000000},"postexpandincludesize":{"value":179,"limit":2097152},"templateargumentsize":{"value":24,"limit":2097152},"expansiondepth":{"value":3,"limit":100},"expensivefunctioncount":{"value":0,"limit":100},"unstrip-depth":{"value":0,"limit":20},"unstrip-size":{"value":5067,"limit":5000000},"timingprofile":["100.00%   10.583      1 Template:PageAuthor","100.00%   10.583      1 -total"]},"cachereport":{"timestamp":"20261022055847","ttl":86400,"transientcontent":false}}});mw.config.set({"wgBackendResponseTime":359});});</script>
+</body>
+</html>

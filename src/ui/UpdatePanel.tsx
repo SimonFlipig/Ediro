@@ -24,7 +24,7 @@ export function UpdatePanel({api, open, onClose, onState}: {api?: UpdateApi; ope
   if (state && !['disabled','checking','downloading','downloaded','installing'].includes(state.status)) actions.push({label: state.status === 'error' ? '重新检查' : '检查更新', run: () => run('check')});
   if (state?.status === 'available') actions.push({label: state.mode === 'portable' ? '下载新版 ZIP' : '下载更新', primary: true, run: () => run(state.mode === 'portable' ? 'release' : 'download')});
   if (state?.status === 'downloaded') actions.push({label: '保存并重启升级', primary: true, run: () => run('install')});
-  if (state?.status === 'error') actions.push({label: '打开发布页', run: () => run('release')});
+  if (state && state.mode !== 'development') actions.push({label: '版本说明与源码', run: () => run('release')});
   return <AppDialog title="软件更新" onDismiss={onClose} actions={actions}>
     <p>当前版本 {state?.currentVersion ?? '—'}{state?.mode === 'portable' ? ' · 便携版' : ''}</p>
     {state?.version && <p>新版本 {state.version}</p>}

@@ -9,11 +9,11 @@ import { GeminiGenerator } from '../src/adapters/gemini-generator.js';
 import { openModelLibrary } from '../src/adapters/model-library-repository.js';
 
 function fixture(){const values=new Map<string,string>();const library=new ModelLibrary(migrateModels(seedModels()),async()=>{}, {has:async ref=>values.has(ref),set:async(ref,key)=>{values.set(ref,key);},resolve:async ref=>values.get(ref)!},[mockDescription,new GeminiGenerator().description]);return {values,library};}
-test('默认编辑模型独立保存，必须具备编辑能力，删除前须先更换默认项',async()=>{
+test('默认编辑模型独立保存，必须具备编辑能力，内置模拟引擎保留',async()=>{
   const {library}=fixture();await library.assign('editing','model_mock_native');
   const snapshot=library.snapshot();assert.equal(snapshot.assignments.editing_default,'model_mock_native');assert.equal(snapshot.assignments.generation_default,'model_mock_native');
   await library.assign('generation','model_mock_separated');assert.equal(library.snapshot().assignments.editing_default,'model_mock_native');
-  await assert.rejects(()=>library.deleteModel('model_mock_native'),/默认/);
+  await assert.rejects(()=>library.deleteModel('model_mock_native'),/内置模拟引擎/);
   const bad=snapshot.models.find(m=>m.model_config_id==='model_mock_separated')!;
   await library.saveModel({...bad,capabilities:{...bad.capabilities,operations:['generate']}});
   await assert.rejects(()=>library.assign('editing',bad.model_config_id),/用途/);

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp,readFile,writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { modelCatalog,modelFromPreset,identifyPreset,modelIdentity } from '../src/protocols/model-catalog.js';
+import { modelCatalog,modelFromPreset,identifyPreset,modelIdentity,findPreset } from '../src/protocols/model-catalog.js';
 import { ModelLibrary,seedModels } from '../src/core/models.js';
 import { mockDescription,migrateModels } from '../src/core/model-library.js';
 import { GeminiGenerator } from '../src/adapters/gemini-generator.js';
@@ -21,7 +21,7 @@ import type {MaskDraft} from '../src/core/mask.js';
 function fixture(){const library=new ModelLibrary(seedModels().slice(0,2),async()=>{}, {has:async()=>true,set:async()=>{}},[mockDescription,new GeminiGenerator().description,new ImagesGenerator().description]);return library;}
 async function enroll(library:ModelLibrary,preset:string,id:string,connection:string,remote?:string){
   if(!library.snapshot().connections.some(c=>c.connection_id===connection))await library.saveConnection({connection_id:connection,title:connection,endpoint:'https://example.com',enabled:true},'test-only');
-  const m=modelFromPreset(preset,id,connection,remote??modelCatalog.find(p=>p.id===preset)!.aliases[0]);
+  const m=modelFromPreset(preset,id,connection,remote??findPreset(preset)!.aliases[0]);
   const {endpoint,executable,revision,...entry}=m;await library.saveModel({...entry,purpose:m.purpose!,capability_source:'documented'});return library.resolve(id);
 }
 test('catalog presets enroll with complete options and validated defaults; ambiguous aliases require a choice',async()=>{
@@ -34,7 +34,7 @@ test('catalog presets enroll with complete options and validated defaults; ambig
   assert.equal(identifyPreset('models/gemini-3-pro-image')?.id,'nano-banana-pro');
   assert.equal(identifyPreset('gpt-image-2.5-sunburst-c'),undefined);
   assert.equal(identifyPreset('gpt-image-2.5'),undefined);
-  assert.equal(library.resolve('model_catalog_4').generation_contract?.fields.some(f=>f.key==='thinking_level'),true);
+  assert.equal(library.resolve(`model_catalog_${modelCatalog.findIndex(p=>p.purpose==='understanding')}`).generation_contract?.fields.some(f=>f.key==='thinking_level'),true);
 });
 test('a new channel reuses shared defaults, aliases keep their exact IDs, same binding cannot be duplicated',async()=>{
   const library=fixture();await enroll(library,'nano-banana-pro','model_a','channel_a');
