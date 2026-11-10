@@ -5,18 +5,28 @@ import { maskDraftSchema,maskModeSchema,maskStrokesSchema } from '../core/mask.j
 import { moduleSettingsSchema, referenceSettingsSchema } from '../core/module-settings.js';
 import { promptRoleSchema } from '../core/prompt-roles.js';
 import { promptCustomizationsSchema } from '../core/prompt-customization.js';
+import { promptSettingsSchema, promptPresetLibrarySchema } from '../core/prompt-settings.js';
+import { MAX_MODULE_IMAGE_REFERENCES, MAX_STORED_IMAGE_BYTES } from '../core/image-limits.js';
+
+const pastedImagesSchema = z.array(z.object({
+  name: z.string().min(1).max(200),
+  bytes: z.instanceof(Uint8Array).refine(bytes => bytes.byteLength > 0, '剪贴板图片为空。'),
+})).min(1).max(MAX_MODULE_IMAGE_REFERENCES).refine(
+  images => images.reduce((size, image) => size + image.bytes.byteLength, 0) <= MAX_STORED_IMAGE_BYTES,
+  '一次粘贴的图片合计不能超过 192 MB。',
+);
 
 export const commandSchema = z.discriminatedUnion('type', [
+  z.object({type:z.literal('prompt-settings:save'),settings:promptSettingsSchema}),
+  z.object({type:z.literal('prompt-presets:save'),presets:promptPresetLibrarySchema}),
   z.object({type:z.literal('prompt-customizations:save'),customizations:promptCustomizationsSchema}),
   z.object({type:z.literal('prompt-customizations:import')}),
-  z.object({type:z.literal('prompt-customizations:export'),customizations:promptCustomizationsSchema}),
+  z.object({type:z.literal('prompt-customizations:export'),customizations:promptCustomizationsSchema,settings:promptSettingsSchema.optional()}),
   z.object({type:z.literal('reference:preview'),request_id:idSchema,project_id:idSchema,asset_id:idSchema,reference_type:z.enum(['composition','style']),module_id:idSchema.optional(),settings:referenceSettingsSchema.optional()}),
   z.object({type:z.literal('reference:cancel-preview'),request_id:idSchema}),
   z.object({type:z.literal('reference-model:prepare'),kind:z.enum(['depth','segment'])}),
   z.object({type:z.literal('module-settings:save'),settings:moduleSettingsSchema}),
-  z.object({type:z.literal('mask:save-composite'),project_id:idSchema,task_id:idSchema,strokes:maskStrokesSchema}),
   z.object({type:z.literal('mask:preview'),project_id:idSchema,task_id:idSchema,mode:maskModeSchema,feather:z.number().int().min(0).max(64),composite_strokes:maskStrokesSchema.optional()}),
-  z.object({type:z.literal('mask:save-draft'),project_id:idSchema,draft:maskDraftSchema}),
   z.object({type:z.literal('mask:start'),project_id:idSchema,draft:maskDraftSchema}),
   z.object({type:z.literal('mask:reprocess'),project_id:idSchema,task_id:idSchema,mode:maskModeSchema,feather:z.number().int().min(0).max(64),composite_strokes:maskStrokesSchema.optional()}),
   z.object({type:z.literal('recipe:select-model'),model_config_id:idSchema}),
@@ -53,6 +63,7 @@ export const commandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('module:tool'), module_id: idSchema, png_base64: z.string().max(3_000_000), state: z.record(z.string().max(80),z.union([z.string().max(1000),z.number(),z.boolean()])).refine(s=>Object.keys(s).length<=64,'工具状态过大。'), instruction: z.string().max(32000) }),
   z.object({ type: z.literal('assets:import'), module_id: idSchema.optional() }),
   z.object({ type: z.literal('assets:drop'), paths: z.array(z.string().min(1).max(32768)).min(1).max(64), module_id: idSchema.optional() }),
+  z.object({ type: z.literal('assets:paste'), project_id: idSchema, module_id: idSchema, images: pastedImagesSchema }),
   z.object({ type: z.literal('asset:relink'), asset_id: idSchema }),
   z.object({ type: z.literal('project:package') }),
   z.object({ type: z.literal('workspace:resume'), id: z.string().regex(/^(work-[a-zA-Z0-9]{6}|file-[a-f0-9]{12})$/) }),

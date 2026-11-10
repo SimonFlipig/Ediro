@@ -129,8 +129,6 @@ const server=http.createServer(async(request,response)=>{
           }
           case 'prompt-customizations:import':case 'prompt-customizations:export':throw new Error('请在桌面版中导入或导出指令文件。');
           case 'module-settings:save':workspace.moduleSettings=await saveModuleSettings(moduleSettingsDirectory,command.settings);break;
-          case 'mask:save-composite':await workspace.saveCompositeMask(command.project_id,command.task_id,command.strokes);break;
-          case 'mask:save-draft':await workspace.saveMaskDraft(command.project_id,command.draft);break;
           case 'mask:preview':return {ok:true,mask_preview:await workspace.previewMask(command.project_id,command.task_id,command.mode,command.feather,command.composite_strokes)};
           case 'mask:start':if(modelLibrary.resolve(command.draft.model_config_id).kind!=='mock')throw new Error('验证模式只允许模拟编辑。');await workspace.enqueueMask(command.project_id,command.draft);break;
           case 'mask:reprocess':{const selected_asset_id=await workspace.reprocessMask(command.project_id,command.task_id,command.mode,command.feather,command.composite_strokes);return {ok:true,state:await view(),selected_asset_id};}

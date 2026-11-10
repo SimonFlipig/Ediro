@@ -16,7 +16,7 @@ function fixture(): { registry: ModuleRegistry; recipe: Recipe } {
   const prompt=registry.create('prompt');prompt.user_instruction='生成暖色电商主视觉';
   return { registry, recipe: {recipe_id:newId('recipe'),schema_version:1,modules:[subject,style,prompt],model_config_id:'model_mock_native',core_parameters:{...defaultParameters}} };
 }
-test('基础图文模块不注入预设语义，原生保留图文，降级仅关联实际图片序号',()=>{
+test('基础图文模块不注入预设语义，图文标题与 XML 图片引用均按实际顺序生成',()=>{
   const {registry,recipe}=fixture();
   const neutral=registry.create('image_text');neutral.title='用户自定义名字';neutral.asset_ids=['asset_a','asset_a'];neutral.user_instruction='这里是我自己的说明';
   recipe.modules=[recipe.modules[1],neutral,recipe.modules[2]];
@@ -24,13 +24,23 @@ test('基础图文模块不注入预设语义，原生保留图文，降级仅�
   assert.equal(neutral.base_instruction,'');assert.equal(neutral.numbered_instruction,undefined);
   assert.deepEqual(own.map(b=>b.type),['text','image','text','image','text']);
   assert.deepEqual(own.filter(b=>b.type==='text').map(b=>b.text),['image_2','image_3','这里是我自己的说明']);
-  assert.deepEqual(adaptChain(chain,seedModels()[0]).blocks,chain.blocks);
+  assert.equal(chain.format_version,4);
+  const native=adaptChain(chain,seedModels()[0]);
+  assert.deepEqual(native.blocks!.filter(b=>b.type==='image'),chain.blocks.filter(b=>b.type==='image'));
+  const nativeText=native.blocks!.filter(b=>b.type==='text').map(b=>b.text).join('');
+  assert.deepEqual([...nativeText.matchAll(/^## (\d+)\. (.+)$/gm)].map(match=>[match[1],match[2]]),[['1','style'],['2','image_text'],['3','prompt']]);
+  assert.ok(nativeText.includes(neutral.user_instruction));
+  assert.doesNotMatch(nativeText,/<module|<image_ref|<requirements>/);
+  for(const block of native.blocks!.filter(b=>b.type==='image'&&b.source_module_id===neutral.module_id)){
+    const preceding=native.blocks![native.blocks!.indexOf(block)-1];
+    assert.equal(preceding.type,'text');assert.ok(preceding.type==='text'&&preceding.text.endsWith(`${block.image_name}:\n`));
+  }
   const flat=adaptChain(chain,seedModels()[1]);
   assert.deepEqual(flat.image_asset_ids,['asset_style','asset_a','asset_a']);
-  assert.match(flat.prompt!,/image_2\nimage_3\n这里是我自己的说明/);
+  assert.match(flat.prompt!,/<module type="image_text" name="image_text">\n<image_ref id="image_2"\/>\n<image_ref id="image_3"\/>\n<requirements>这里是我自己的说明<\/requirements>/);
   assert.ok(!flat.prompt!.includes(neutral.title));assert.ok(!flat.prompt!.includes(neutral.reference_id));
   recipe.modules=[neutral,recipe.modules[0],recipe.modules[2]];
-  assert.match(adaptChain(compileRecipe(recipe),seedModels()[1]).prompt!,/^image_1\nimage_2\n这里是我自己的说明/);
+  assert.match(adaptChain(compileRecipe(recipe),seedModels()[1]).prompt!,/^<generation_request>\n<image_mapping>[^<]+<\/image_mapping>\n<module type="image_text" name="image_text">\n<image_ref id="image_1"\/>\n<image_ref id="image_2"\/>\n<requirements>这里是我自己的说明<\/requirements>/);
 });
 
 test('基础图文模块支持仅图片、仅文字，空白及停用模块不加入输入',()=>{
@@ -39,9 +49,12 @@ test('基础图文模块支持仅图片、仅文字，空白及停用模块不�
   assert.deepEqual(compileRecipe(recipe).blocks,[]);
   neutral.asset_ids=['asset_a','asset_b'];
   assert.deepEqual(compileRecipe(recipe).blocks.map(b=>b.type),['text','image','text','image']);
-  assert.equal(adaptChain(compileRecipe(recipe),seedModels()[1]).prompt,'image_1\nimage_2');
+  assert.equal(adaptChain(compileRecipe(recipe),seedModels()[1]).prompt,'<generation_request>\n<image_mapping>image_N refers to the Nth attached image (1-based), in attachment order. Image numbers are independent of module numbers.</image_mapping>\n<module type="image_text" name="image_text">\n<image_ref id="image_1"/>\n<image_ref id="image_2"/>\n</module>\n</generation_request>');
+  const native=adaptChain(compileRecipe(recipe),seedModels()[0]);
+  assert.equal(native.blocks![0].type==='text'&&native.blocks![0].text,'## 1. image_text\n\nimage_1:\n');
+  assert.deepEqual(native.blocks!.filter(block=>block.type==='image').map(block=>block.asset_id),['asset_a','asset_b']);
   neutral.asset_ids=[];neutral.user_instruction='自由输入文字';
-  assert.equal(adaptChain(compileRecipe(recipe),seedModels()[1]).prompt,'自由输入文字');
+  assert.equal(adaptChain(compileRecipe(recipe),seedModels()[1]).prompt,'<generation_request>\n<module type="image_text" name="image_text">\n<requirements>自由输入文字</requirements>\n</module>\n</generation_request>');
   neutral.enabled=false;assert.deepEqual(compileRecipe(recipe).blocks,[]);
 });
 
@@ -55,7 +68,8 @@ test('富媒体链按模块顺序和模块内图片插入顺序展开',()=>{
   assert.deepEqual(chain.blocks.map(b=>b.type),['text','text','image','text','image','text','text','text','image','text']);
   assert.deepEqual(chain.blocks.filter(b=>b.type==='image').map(b=>b.asset_id),['asset_front','asset_side','asset_style']);
   assert.equal(chain.mode,'reference_generation');
-  assert.equal((chain.blocks[0] as {text:string}).text,`subject:\n${recipe.modules[0].base_instruction}`);
+  assert.equal(chain.format_version,4);
+  assert.equal((chain.blocks[0] as {text:string}).text,recipe.modules[0].base_instruction);
   for(const module of recipe.modules){assert.ok(!chain.blocks.some(b=>b.type==='text'&&(b.text.includes(module.reference_id)||b.text.includes(module.module_id))));}
   assert.equal(chain.blocks[0].reference_id,recipe.modules[0].reference_id);
 });
@@ -81,17 +95,25 @@ test('相同图片引用不自动去重',()=>{
   const {recipe}=fixture();recipe.modules[0].asset_ids=['asset_front','asset_front'];
   assert.deepEqual(compileRecipe(recipe).blocks.filter(b=>b.type==='image').map(b=>b.asset_id),['asset_front','asset_front','asset_style']);
 });
-test('原生接口保留块链；降级接口保留图片对应、顺序及可见记录',()=>{
+test('原生接口发送编号 Markdown 与图片块；拍平接口保留 XML 图片对应和顺序',()=>{
   const {recipe}=fixture(),chain=compileRecipe(recipe),models=seedModels();
-  assert.deepEqual(adaptChain(chain,models[0]).blocks,chain.blocks);
+  const native=adaptChain(chain,models[0]);
+  assert.notDeepEqual(native.blocks,chain.blocks);
+  assert.deepEqual(native.blocks!.filter(b=>b.type==='image'),chain.blocks.filter(b=>b.type==='image'));
+  const nativeText=native.blocks!.filter(b=>b.type==='text').map(b=>b.text).join('');
+  assert.match(nativeText,/^## 1\. subject\n\n/);
+  assert.ok(nativeText.includes(recipe.modules[0].base_instruction));
+  assert.match(nativeText,/\n\n## 2\. style\n\n/);
+  assert.match(nativeText,/\n\n## 3\. prompt\n\n生成暖色电商主视觉$/);
+  assert.doesNotMatch(nativeText,/<generation_request>|<reference_rules>/);
   const adapted=adaptChain(chain,models[1]);assert.equal(adapted.kind,'separated_inputs');assert.equal(adapted.adjustments.length,1);
   assert.deepEqual(adapted.image_asset_ids,['asset_front','asset_side','asset_style']);
   assert.match(adapted.prompt!,/保持image_1, image_2中主体的结构、颜色和比例。/);
-  assert.match(adapted.prompt!,/image_2\n保留 Logo/);
+  assert.match(adapted.prompt!,/<image_ref id="image_2"\/>\n<requirements>保留 Logo<\/requirements>/);
   assert.match(adapted.prompt!,/参考image_3的视觉风格、色调与光影表现。/);
   assert.ok(adapted.prompt!.indexOf('image_1')<adapted.prompt!.indexOf('image_3'));
   assert.ok(!/补充要求|用于|对应说明/.test(adapted.prompt!));
-  assert.ok(adapted.prompt!.endsWith('生成暖色电商主视觉'));
+  assert.ok(adapted.prompt!.endsWith('<generation_prompt>生成暖色电商主视觉\n</generation_prompt>\n</generation_request>'));
   for(const module of recipe.modules)assert.ok(!adapted.prompt!.includes(module.reference_id));
 });
 
@@ -100,18 +122,19 @@ test('降级图片编号随模块重排和停用重新生成，重复图片按�
   recipe.modules=[recipe.modules[1],recipe.modules[0],recipe.modules[2]];
   const model=seedModels()[1],chain=compileRecipe(recipe),snapshot=structuredClone(chain),adapted=adaptChain(chain,model);
   assert.deepEqual(adapted.image_asset_ids,['asset_style','asset_front','asset_front']);
-  assert.match(adapted.prompt!,/^style:\n参考image_1的视觉风格、色调与光影表现。/);
-  assert.match(adapted.prompt!,/image_3\n保留 Logo/);
+  assert.match(adapted.prompt!,/^<generation_request>\n<image_mapping>[^<]+<\/image_mapping>\n<module type="style" name="style">\n<reference_rules>参考image_1的视觉风格、色调与光影表现。<\/reference_rules>/);
+  assert.match(adapted.prompt!,/<image_ref id="image_3"\/>\n<requirements>保留 Logo<\/requirements>/);
   assert.deepEqual(chain,snapshot);
   recipe.modules[0].enabled=false;
   const next=adaptChain(compileRecipe(recipe),model);assert.deepEqual(next.image_asset_ids,['asset_front','asset_front']);
-  assert.match(next.prompt!,/^subject:\n保持image_1, image_2中主体的结构、颜色和比例。/);assert.ok(!next.prompt!.includes('image_3'));
+  assert.match(next.prompt!,/^<generation_request>\n<image_mapping>[^<]+<\/image_mapping>\n<module type="subject" name="subject">\n<reference_rules>保持image_1, image_2中主体的结构、颜色和比例。<\/reference_rules>/);assert.ok(!next.prompt!.includes('image_3'));
 });
 
 test('无图模块和独立提示词降级时保持原文，不冒用相邻图片的补充要求',()=>{
   const {recipe}=fixture();recipe.modules[0].asset_ids=[];
   const chain=compileRecipe(recipe),adapted=adaptChain(chain,seedModels()[1]);
-  assert.ok(adapted.prompt!.startsWith(`subject:\n${recipe.modules[0].base_instruction}\n保留 Logo`));
+  assert.ok(adapted.prompt!.startsWith('<generation_request>\n<image_mapping>'));
+  assert.ok(adapted.prompt!.includes(`</image_mapping>\n<module type="subject" name="subject">\n<reference_rules>${recipe.modules[0].base_instruction}</reference_rules>\n<requirements>保留 Logo</requirements>\n</module>`));
   assert.match(adapted.prompt!,/参考image_1的视觉风格、色调与光影表现。/);
   assert.deepEqual(adapted.image_asset_ids,['asset_style']);
 });
@@ -122,12 +145,12 @@ test('图片语义模板校验拒绝未知、缺失及重复占位符；旧配�
   for(const template of ['保持主体。','保持{image}。','保持{images}{images}。','保持{images}和{other}。','保持{images}和{'])assert.throws(()=>validateNumberedTemplate(template),/占位符/);
   assert.equal(validateNumberedTemplate('Match {images}. Target viewpoint: {viewpoint}.'),'Match {images}. Target viewpoint: {viewpoint}.');
   const {recipe}=fixture();delete recipe.modules[0].numbered_instruction;
-  assert.match(adaptChain(compileRecipe(recipe),seedModels()[1]).prompt!,/^subject:\n保持image_1, image_2中主体/);
+  assert.match(adaptChain(compileRecipe(recipe),seedModels()[1]).prompt!,/<reference_rules>保持image_1, image_2中主体/);
   recipe.modules[0].base_instruction='旧版本语义。';
   recipe.modules[0].numbered_instruction='旧版本{images}。';
   const before=structuredClone(recipe);
   const updated=adaptChain(compileRecipe(recipe),seedModels()[1]);
-  assert.match(updated.prompt!,/^subject:\n保持image_1, image_2中主体/);
+  assert.match(updated.prompt!,/<reference_rules>保持image_1, image_2中主体/);
   assert.ok(!updated.prompt!.includes('旧版本'));
   assert.deepEqual(recipe,before);
 });

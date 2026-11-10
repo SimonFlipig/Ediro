@@ -1,0 +1,131 @@
+// Hidden Electron regression/performance check. Uses deterministic local images
+// and a mock executor only; no installed profile, user document or cloud model.
+const {app,BrowserWindow,ipcMain,protocol,net,dialog,shell}=require('electron');
+const {mkdir,mkdtemp,readFile,writeFile}=require('node:fs/promises');
+const path=require('node:path');
+const {pathToFileURL}=require('node:url');
+const {performance,monitorEventLoopDelay}=require('node:perf_hooks');
+const assert=require('node:assert/strict');
+const sharp=require('sharp');
+const root=path.resolve(__dirname,'..'),artifacts=path.join(root,'.local');
+const label=process.env.EDIRO_MASK_PERF_LABEL||'current';
+const reportFile=path.join(artifacts,`mask-composite-${label}-report.json`);
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const percentile=(values,p)=>{const sorted=values.slice().sort((a,b)=>a-b);return sorted.length?sorted[Math.min(sorted.length-1,Math.floor(sorted.length*p))]:0;};
+const summarize=values=>({count:values.length,p50_ms:percentile(values,.5),p95_ms:percentile(values,.95),max_ms:values.length?Math.max(...values):0,over50:values.filter(x=>x>50).length,over100:values.filter(x=>x>100).length});
+shell.showItemInFolder=()=>{};
+dialog.showMessageBox=async(_window,options)=>({response:options.cancelId??0});
+protocol.registerSchemesAsPrivileged([{scheme:'ediro-asset',privileges:{standard:true,secure:true,supportFetchAPI:true}}]);
+app.on('window-all-closed',()=>{});
+global.fetch=async()=>{throw Error('This local smoke test forbids network requests.');};
+let testRoot,win,controller,drawMetrics;
+const checks=[],previews=[];
+let phase='setup',previewInFlight=0,documentWrites=0,mockCalls=0,pointerDown=false;
+app.whenReady().then(async()=>{
+  await mkdir(artifacts,{recursive:true});
+  testRoot=await mkdtemp(path.join(artifacts,`mask-composite-${label}-`));
+  app.setPath('userData',path.join(testRoot,'electron'));
+  const {DesktopController}=await import('../dist-host/desktop/controller.js');
+  win=new BrowserWindow({width:1540,height:1040,show:false,webPreferences:{preload:path.join(root,'dist-host/desktop/preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false,offscreen:true}});
+  controller=await DesktopController.create(path.join(testRoot,'runtime'),()=>win);
+  const execute=controller.execute.bind(controller);
+  ipcMain.handle('ediro:command',async(_event,command)=>{
+    if(command.type!=='mask:preview')return execute(command);
+    const started=performance.now(),requestPhase=phase,duringDrag=pointerDown;
+    previewInFlight++;
+    try{
+      const result=await execute(command),elapsed_ms=performance.now()-started;
+      const image=result.mask_preview;
+      const bytes=image?Buffer.from(image.slice(image.indexOf(',')+1),'base64'):undefined;
+      const meta=bytes?await sharp(bytes).metadata():{};
+      previews.push({phase:requestPhase,duringDrag,elapsed_ms,ok:result.ok,error:result.error,bytes:bytes?.length??0,url_length:image?.length??0,width:meta.width,height:meta.height,feather:command.feather,strokes:structuredClone(command.composite_strokes??[])});
+      return result;
+    }finally{previewInFlight--;}
+  });
+  protocol.handle('ediro-asset',async request=>{try{return net.fetch(pathToFileURL(await controller.assetPath(request.url)).href);}catch{return new Response('missing',{status:404});}});
+  // A detailed deterministic texture gives PNG transport/decode realistic work.
+  const width=3072,height=3072,channels=3,sourcePixels=Buffer.alloc(width*height*channels);
+  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+    const i=(y*width+x)*channels,grain=((x*73856093)^(y*19349663))&15;
+    sourcePixels[i]=35+Math.floor(x/width*120)+grain;
+    sourcePixels[i+1]=65+Math.floor(y/height*110)+grain;
+    sourcePixels[i+2]=90+Math.floor((Math.sin(x/80)+Math.cos(y/70))*25)+grain;
+  }
+  const sourceFile=path.join(testRoot,'detail-source.png');
+  await writeFile(sourceFile,await sharp(sourcePixels,{raw:{width,height,channels}}).png().toBuffer());
+  const imported=await execute({type:'assets:drop',paths:[sourceFile],module_id:controller.workspace.project.recipe.modules[0].module_id});assert.ok(imported.ok,imported.error);
+  controller.executors.execute=async context=>{
+    assert.equal(context.model.kind,'mock');mockCalls++;
+    const input=await context.readImage(context.job.mask_edit.request_source_id??context.job.mask_edit.source_snapshot_id);
+    const bytes=await sharp(input).modulate({brightness:1.2,saturation:.6}).tint('#d79064').png().toBuffer();
+    const meta=await sharp(bytes).metadata();
+    return {images:[{bytes,format:'png',width:meta.width,height:meta.height}]};
+  };
+  const project=controller.workspace.project,source=project.assets[0];
+  const initialStrokes=Array.from({length:16},(_,j)=>({tool:'paint',size:44,points:Array.from({length:40},(_,i)=>[.22+i/39*.55,.24+j*.033+Math.sin(i/5+j)*.012])}));
+  const draft={source_asset_id:source.asset_id,width,height,strokes:initialStrokes,instruction:'Local mock composite fixture',model_config_id:'model_mock_native',quality:'standard',mode:'strict',feather:12,crop:{x:256,y:256,width:2560,height:2560}};
+  const started=await execute({type:'mask:start',project_id:project.project_id,draft});assert.ok(started.ok,started.error);
+  for(let i=0;i<600&&project.jobs.some(j=>!['succeeded','failed','cancelled'].includes(j.status));i++)await wait(50);
+  const job=project.jobs.at(-1);assert.equal(job.status,'succeeded',job.error);
+  const saved=await execute({type:'mask:reprocess',project_id:project.project_id,task_id:job.task_id,mode:'strict',feather:12,composite_strokes:initialStrokes});assert.ok(saved.ok,saved.error);
+  assert.equal(mockCalls,1);
+  const repo=controller.workspace.repository,save=repo.save.bind(repo);
+  repo.save=async(...args)=>{documentWrites++;return save(...args);};
+  const before=await readFile(repo.filename);
+  await win.loadFile(path.join(root,'dist/index.html'));await wait(450);
+  const js=script=>win.webContents.executeJavaScript(script);
+  const until=async(predicate,description,timeout=60000)=>{const begin=performance.now();while(performance.now()-begin<timeout){if(await predicate())return;await wait(40);}throw Error(`Timed out: ${description}`);};
+  const clickText=async(selector,text)=>{assert.ok(await js(`(()=>{const button=[...document.querySelectorAll(${JSON.stringify(selector)})].find(x=>x.textContent.trim()===${JSON.stringify(text)});if(!button)return false;button.click();return true;})()`),`Missing ${text}`);await wait(80);};
+  const previewReady=async()=>{await until(async()=>previewInFlight===0&&await js(`!!document.querySelector('.mask-generate')&&!document.querySelector('.mask-generate').disabled`),'latest composite preview');await wait(100);};
+  await js(`document.querySelector('.result-thumb').click()`);await wait(120);
+  await js(`document.querySelector('.mask-edit-entry').click()`);await wait(200);
+  assert.ok(await js(`document.querySelector('.mask-view-tabs .selected').textContent.includes('修改结果')`));
+  assert.ok(await js(`document.querySelector('.mask-mode-options .selected').textContent.includes('蒙版合成')`));
+  checks.push('real-renderer-result-composite-entry');
+  const surface=await js(`(()=>{const b=document.querySelector('.mask-surface').getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height};})()`);
+  const point=(x,y)=>({x:Math.round(surface.x+surface.width*x),y:Math.round(surface.y+surface.height*y)});
+  const drag=async(points,stepMs=8)=>{
+    win.webContents.sendInputEvent({type:'mouseMove',...point(...points[0])});
+    pointerDown=true;win.webContents.sendInputEvent({type:'mouseDown',...point(...points[0]),button:'left',clickCount:1});
+    for(const p of points.slice(1)){win.webContents.sendInputEvent({type:'mouseMove',...point(...p),modifiers:['leftButtonDown']});await wait(stepMs);}
+    win.webContents.sendInputEvent({type:'mouseUp',...point(...points.at(-1)),button:'left',clickCount:1});pointerDown=false;await wait(70);
+  };
+  await js(`window.__maskFrames=[];window.__maskLongTasks=[];window.__maskSampling=true;window.__maskLastFrame=undefined;function maskFrame(t){if(!window.__maskSampling)return;if(window.__maskLastFrame!==undefined)window.__maskFrames.push(t-window.__maskLastFrame);window.__maskLastFrame=t;requestAnimationFrame(maskFrame)}requestAnimationFrame(maskFrame);window.__maskObserver=new PerformanceObserver(list=>window.__maskLongTasks.push(...list.getEntries().map(x=>x.duration)));window.__maskObserver.observe({type:'longtask',buffered:false});`);
+  const eventLoop=monitorEventLoopDelay({resolution:10});eventLoop.enable();
+  phase='continuous-draw';
+  const drawStart=performance.now();
+  const trajectories=Array.from({length:5},(_,j)=>Array.from({length:100},(_,i)=>[.19+i/99*.63,.3+j*.09+Math.sin(i/8)*.025]));
+  for(const trajectory of trajectories)await drag(trajectory);
+  const inputWall_ms=performance.now()-drawStart;
+  await previewReady();
+  await js(`window.__maskSampling=false;window.__maskObserver.disconnect()`);
+  eventLoop.disable();
+  const renderer=await js(`({frames:window.__maskFrames,longTasks:window.__maskLongTasks})`);
+  drawMetrics={inputWall_ms,raf:summarize(renderer.frames),longTasks:summarize(renderer.longTasks),main_event_loop:{p95_ms:eventLoop.percentile(95)/1e6,max_ms:eventLoop.max/1e6,mean_ms:eventLoop.mean/1e6}};
+  const lastDraw=previews.at(-1);assert.ok(lastDraw?.ok,lastDraw?.error);
+  assert.equal(lastDraw.strokes.length,initialStrokes.length+5);
+  const lastPoint=lastDraw.strokes.at(-1).points.at(-1),expectedPoint=trajectories.at(-1).at(-1);
+  assert.ok(Math.hypot(lastPoint[0]-expectedPoint[0],lastPoint[1]-expectedPoint[1])<.012,`last mouse position reaches final preview: ${JSON.stringify({lastPoint,expectedPoint})}`);
+  assert.ok(previews.some(p=>p.phase==='continuous-draw'&&p.duringDrag),'Composite previews update while the pointer is still down.');
+  checks.push('sustained-native-pointer-drag','preview-updates-during-drag','latest-stroke-and-endpoint-in-preview');
+  phase='undo';await clickText('.mask-tool-row button','撤销');await previewReady();assert.equal(previews.at(-1).strokes.length,initialStrokes.length+4);
+  phase='redo';await clickText('.mask-tool-row button','重做');await previewReady();assert.equal(previews.at(-1).strokes.length,initialStrokes.length+5);checks.push('undo-redo-preview');
+  phase='erase';await clickText('.mask-tool-row button','减选');await drag(Array.from({length:50},(_,i)=>[.4+i/49*.15,.48]),10);await previewReady();assert.equal(previews.at(-1).strokes.at(-1).tool,'erase');checks.push('erase-stroke-preview');
+  phase='feather';await js(`(()=>{const input=document.querySelector('[aria-label="向内羽化"]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'24');input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));})()`);await wait(120);await previewReady();assert.equal(previews.at(-1).feather,24);checks.push('feather-preview');
+  const strokesBeforeOutside=structuredClone(previews.at(-1).strokes),previewCountBeforeOutside=previews.length;
+  phase='outside-crop';await clickText('.mask-tool-row button','画笔');await drag([[.03,.03],[.04,.04],[.05,.05]],20);await wait(300);
+  assert.equal(previews.length,previewCountBeforeOutside,'Drawing outside the model crop must not change the composite.');checks.push('crop-restricts-edit-region');
+  assert.equal(documentWrites,0);assert.deepEqual(await readFile(repo.filename),before);assert.equal(project.mask_drafts,undefined);assert.equal(mockCalls,1);checks.push('trial-strokes-zero-document-writes','no-model-call-during-composite');
+  const screenshot=path.join(testRoot,'composite-preview.png');await writeFile(screenshot,(await win.webContents.capturePage()).toPNG());
+  phase='confirm';const variantsBefore=job.mask_edit.variants.length;
+  await js(`document.querySelector('.mask-generate').click()`);
+  await until(async()=>job.mask_edit.variants.length===variantsBefore+1,'confirmed original-size version');await controller.workspace.serial(async()=>{});await wait(200);
+  const variant=job.mask_edit.variants.at(-1),output=project.assets.find(a=>a.asset_id===variant.asset_id);
+  assert.equal(output.width,width);assert.equal(output.height,height);assert.equal(variant.feather,24);assert.deepEqual(variant.composite_strokes,strokesBeforeOutside);
+  const outputBytes=await repo.readAsset(output),outputMeta=await sharp(outputBytes).metadata();assert.equal(outputMeta.width,width);assert.equal(outputMeta.height,height);
+  const topLeft=await sharp(outputBytes).extract({left:0,top:0,width:1,height:1}).removeAlpha().raw().toBuffer();assert.deepEqual(topLeft,sourcePixels.subarray(0,3),'Outside crop pixels remain unchanged.');
+  assert.ok(documentWrites>0);assert.deepEqual((await repo.load()).jobs.at(-1).mask_edit.variants.at(-1).composite_strokes,strokesBeforeOutside);checks.push('confirm-saves-original-resolution','confirmed-mask-roundtrip','outside-crop-pixels-preserved');
+  const compactPreviews=previews.map(({strokes,...rest})=>({...rest,stroke_count:strokes.length,point_count:strokes.reduce((sum,s)=>sum+s.points.length,0)}));
+  const report={passed:true,label,testRoot,screenshot,node:process.versions.node,electron:process.versions.electron,fixture:{width,height,crop:draft.crop,initial_strokes:initialStrokes.length,continuous_strokes:trajectories.length,points_per_drag:100,step_ms:8,window:{width:1540,height:1040,hidden:true,offscreen:true}},checks,drawMetrics,preview_summary:summarize(previews.filter(p=>p.phase==='continuous-draw').map(p=>p.elapsed_ms)),previews:compactPreviews,documentWrites,mockCalls};
+  await controller.shutdown();win.destroy();await writeFile(reportFile,JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.exit(0);
+}).catch(async error=>{const report={passed:false,label,testRoot,error:error.stack,checks,drawMetrics,previews:previews.map(({strokes,...rest})=>({...rest,stroke_count:strokes.length,last_point:strokes.at(-1)?.points.at(-1)}))};await writeFile(reportFile,JSON.stringify(report,null,2)).catch(()=>{});console.error(error);app.exit(1);});

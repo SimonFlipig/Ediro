@@ -1,12 +1,12 @@
 import {MAX_STORED_IMAGE_BYTES,MAX_MODEL_INPUT_BYTES} from '../core/image-limits.js';
 import { createHash } from 'node:crypto';
 import {constants} from 'node:fs';
-import { readFile, writeFile, mkdir, stat, copyFile, realpath, readdir, cp } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, stat, copyFile, realpath, readdir, cp, rm } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 import { z } from 'zod';
-import { idSchema, recipeSchema, modelConfigSchema, newId, type Asset, type Project, type Job } from '../core/domain.js';
-import type { ExecutionResult } from '../core/ports.js';
+import { idSchema, recipeSchema, modelConfigSchema, systemInstructionSchema, newId, type Asset, type Project, type Job } from '../core/domain.js';
+import type { ExecutionResult, PendingExecutionResult, PastedImage } from '../core/ports.js';
 import { planSummarySchema } from '../core/generation-contract.js';
 import { outputGeometrySchema } from '../core/output-geometry.js';
 import { modelInputSchema,type ModelInput } from '../core/model-input.js';
@@ -29,10 +29,14 @@ const assetSchema = z.object({
   created_at: z.string(), kind: z.enum(['import', 'output', 'generated']),
   hidden_from_materials: z.boolean().optional(), removed_result: z.boolean().optional(), hidden_from_results: z.boolean().optional(),
 });
-const blockSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('text'), text: z.string().max(64000), numbered_text:z.string().max(64000).optional(),text_role:z.enum(['instruction','header','user','image_label']).optional(),model_name:z.string().optional(), source_module_id: idSchema, reference_type: z.string(), reference_id: idSchema }),
+const blockSchemaFor = (maxTextChars:number) => z.discriminatedUnion('type', [
+  z.object({ type: z.literal('text'), text: z.string().max(maxTextChars), numbered_text:z.string().max(64000).optional(),text_role:z.enum(['instruction','header','user','image_label']).optional(),model_name:z.string().optional(), source_module_id: idSchema, reference_type: z.string(), reference_id: idSchema }),
   z.object({ type: z.literal('image'), asset_id: idSchema,image_name:z.string().optional(),model_name:z.string().optional(), source_module_id: idSchema, reference_type: z.string(), reference_id: idSchema }),
 ]);
+const blockSchema=blockSchemaFor(64000);
+// XML entity escaping can expand one semantic character to six request characters.
+// Only the adapted request gets this allowance; original module snapshots stay bounded.
+const adaptedBlockSchema=blockSchemaFor(64000*6+256);
 const projectSchema = z.object({
   storage_version:z.literal(1).optional(),
   mask_drafts:z.array(maskDraftSchema).max(20).optional(),
@@ -45,11 +49,11 @@ const projectSchema = z.object({
     task_id: idSchema, status: z.enum(['queued','preparing','running','post_processing','succeeded','failed','cancelled']),
     stage: z.string(), progress: z.number().min(0).max(100), created_at: z.string(), finished_at: z.string().optional(), error: z.string().optional(),
     recipe_snapshot: recipeSchema,
-    chain_snapshot: z.object({format_version:z.literal(2).optional(),prompt_config:promptConfigSchema.optional(), blocks: z.array(blockSchema), mode: z.enum(['text_to_image','reference_generation']) }),
+    chain_snapshot: z.object({format_version:z.union([z.literal(2),z.literal(3),z.literal(4)]).optional(),prompt_config:promptConfigSchema.optional(),system_instruction:systemInstructionSchema.optional(), blocks: z.array(blockSchema), mode: z.enum(['text_to_image','reference_generation']) }),
     execution_plan:planSummarySchema.optional(),
     output_geometry:outputGeometrySchema.optional(),
-    model_snapshot: z.object({ model_config_id: idSchema, preset_id: z.string().optional(), title: z.string(), provider: z.string(), model: z.string(), adapter_id: z.string(), revision: z.number(), kind: z.enum(['mock','local','cloud']),images_compatibility:modelConfigSchema.shape.images_compatibility,gemini_compatibility:modelConfigSchema.shape.gemini_compatibility }),
-    adapted_input: z.object({ kind: z.enum(['native_blocks','separated_inputs']), blocks: z.array(blockSchema).optional(), prompt: z.string().optional(), image_asset_ids: z.array(idSchema).optional(), adjustments: z.array(z.string()) }),
+    model_snapshot: z.object({ model_config_id: idSchema, preset_id: z.string().optional(), title: z.string(), provider: z.string(), model: z.string(), adapter_id: z.string(), revision: z.number(), kind: z.enum(['mock','local','cloud']),images_compatibility:modelConfigSchema.shape.images_compatibility,gemini_compatibility:modelConfigSchema.shape.gemini_compatibility,nano_model_override:modelConfigSchema.shape.nano_model_override,model_variant_override:modelConfigSchema.shape.model_variant_override }),
+    adapted_input: z.object({ kind: z.enum(['native_blocks','separated_inputs']),system_instruction:systemInstructionSchema.optional(), blocks: z.array(adaptedBlockSchema).optional(), prompt: z.string().optional(), image_asset_ids: z.array(idSchema).optional(), adjustments: z.array(z.string()) }),
     output_asset_ids: z.array(idSchema),
     recoverable_result:z.boolean().optional(),
     execution_summary:z.object({adapter_version:z.number(),capabilities:modelConfigSchema.shape.capabilities,text:z.string().max(64000).optional(),request_id:z.string().max(200).optional(),usage:z.record(z.string(),z.number()).optional(),fee:z.literal('unknown'),actual_formats:z.array(z.enum(['png','jpeg','webp']))}).optional(),
@@ -67,16 +71,40 @@ export class ProjectRepository {
     if(!/^(assets|input|internal)\/[a-zA-Z0-9_-]+\.(png|jpeg|jpg|webp)$/.test(relative))throw new Error('项目素材路径非法。');
     return relative.startsWith('input/')&&this.storage?path.join(this.storage.inputDirectory,path.basename(relative)):path.join(this.directory,relative);
   }
-  async saveInternalImage(bytes:Buffer,name:string,role:'input'|'internal'='input'):Promise<Asset>{
+  saveInternalImage(bytes:Buffer,name:string,role:'input'|'internal'='input'):Promise<Asset>{
+    return this.saveManagedImage(bytes, name, role, 'generated');
+  }
+  importPastedImage(image: PastedImage): Promise<Asset> {
+    return this.saveManagedImage(image.bytes, image.name, 'input', 'import');
+  }
+  private async saveManagedImage(bytes:Uint8Array,name:string,role:'input'|'internal',kind:'generated'|'import'):Promise<Asset>{
     if(bytes.length>MAX_STORED_IMAGE_BYTES)throw new Error('编辑素材超过 192 MB 存储限制。');
     const meta=await sharp(bytes,{limitInputPixels:40_000_000}).metadata();
     if(!['png','jpeg','webp'].includes(meta.format??'')||!meta.width||!meta.height)throw new Error('编辑素材格式无效。');
-    await sharp(bytes,{limitInputPixels:40_000_000}).stats();
+    if (kind === 'generated') await sharp(bytes,{limitInputPixels:40_000_000}).stats();
     const asset_id=newId('asset'),relative_path=`${this.storage?role:'assets'}/${asset_id}.${meta.format}`,thumbnail_path=this.thumbnail(asset_id);
     await mkdir(path.dirname(this.ownedPath(relative_path)),{recursive:true});await mkdir(path.dirname(this.ownedPath(thumbnail_path)),{recursive:true});
+    const thumbnail = sharp(bytes, {limitInputPixels:40_000_000});
+    if (kind === 'import') {
+      const file = path.win32.parse(name.trim());
+      const ext = meta.format === 'jpeg' && file.ext.toLowerCase() === '.jpg' ? 'jpg' : meta.format!;
+      name = (file.name || '剪贴板图片').slice(0, 199 - ext.length) + '.' + ext;
+      thumbnail.rotate();
+    }
+    const preview = await thumbnail.resize(420,420,{fit:'inside',withoutEnlargement:kind==='import'}).webp({quality:82}).toBuffer();
     await writeFile(this.ownedPath(relative_path),bytes,{flag:'wx'});
-    await sharp(bytes).resize(420,420,{fit:'inside'}).webp({quality:82}).toFile(this.ownedPath(thumbnail_path));
-    return {asset_id,name,location:{type:'managed',relative_path},thumbnail_path,width:meta.width,height:meta.height,mime_type:`image/${meta.format}`,created_at:new Date().toISOString(),kind:'generated',hidden_from_results:true,hidden_from_materials:true};
+    try {
+      await writeFile(this.ownedPath(thumbnail_path),preview,{flag:'wx'});
+    } catch (error) {
+      await rm(this.ownedPath(relative_path), {force:true});
+      throw error;
+    }
+    return {asset_id,name,location:{type:'managed',relative_path},thumbnail_path,width:meta.width,height:meta.height,mime_type:`image/${meta.format}`,created_at:new Date().toISOString(),kind,
+      ...(kind === 'generated' ? {hidden_from_results:true,hidden_from_materials:true} : {})};
+  }
+  async discardPastedImage(asset: Asset) {
+    if (asset.kind !== 'import' || asset.location.type !== 'managed') throw new Error('只能清理本次暂存的粘贴图片。');
+    await Promise.all([asset.location.relative_path, asset.thumbnail_path].map(file => rm(this.ownedPath(file), {force:true})));
   }
   private modelInputPath(taskId:string){return path.join(this.directory,'model-inputs',`${idSchema.parse(taskId)}.json`);}
   async saveModelInput(taskId:string,input:ModelInput){const parsed=modelInputSchema.parse(input);if(Buffer.byteLength(JSON.stringify(parsed))>MAX_MODEL_INPUT_BYTES)throw new Error('模型输入记录超过 144 MB 限制，未发送请求。');await atomicJson(this.modelInputPath(taskId),parsed);}
@@ -249,10 +277,10 @@ export class ProjectRepository {
     const directory=this.pendingDirectory(job.task_id);await mkdir(directory,{recursive:true});
     const images=[];
     for(let i=0;i<result.images.length;i++){const image=result.images[i],file=`${i}.${image.format}`;await writeFile(path.join(directory,file),image.bytes);images.push({file,format:image.format,width:image.width,height:image.height});}
-    await atomicJson(path.join(directory,'result.json'),{images,text:result.text,request_id:result.request_id,usage:result.usage});
+    await atomicJson(path.join(directory,'result.json'),{images,text:result.text,request_id:result.request_id,usage:result.usage,execution_summary:job.execution_summary});
   }
-  async pendingResult(id:string):Promise<ExecutionResult>{
-    const directory=this.pendingDirectory(id),data=z.object({images:z.array(z.object({file:z.string().regex(/^\d+\.(png|jpeg|webp)$/),format:z.enum(['png','jpeg','webp']),width:z.number().int().positive(),height:z.number().int().positive()})).min(1).max(10),text:z.string().max(64000).optional(),request_id:z.string().max(200).optional(),usage:z.record(z.string(),z.number()).optional()}).parse(JSON.parse(await readFile(path.join(directory,'result.json'),'utf8')));
+  async pendingResult(id:string):Promise<PendingExecutionResult>{
+    const directory=this.pendingDirectory(id),data=z.object({images:z.array(z.object({file:z.string().regex(/^\d+\.(png|jpeg|webp)$/),format:z.enum(['png','jpeg','webp']),width:z.number().int().positive(),height:z.number().int().positive()})).min(1).max(10),text:z.string().max(64000).optional(),request_id:z.string().max(200).optional(),usage:z.record(z.string(),z.number()).optional(),execution_summary:projectSchema.shape.jobs.element.shape.execution_summary}).parse(JSON.parse(await readFile(path.join(directory,'result.json'),'utf8')));
     const images=[];for(const image of data.images){const bytes=await readFile(path.join(directory,image.file)),meta=await sharp(bytes,{limitInputPixels:40_000_000}).metadata();if(meta.format!==image.format||meta.width!==image.width||meta.height!==image.height)throw new Error('待恢复产物校验失败。');images.push({...image,bytes});}return {...data,images};
   }
   async clearPendingResult(id:string){

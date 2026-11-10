@@ -4,9 +4,11 @@ import { normalizePromptConfig, type CurrentPromptConfig } from '../core/prompt-
 import { releasePromptConfig } from '../core/release-prompt-config.js';
 import { ModuleRegistry } from '../core/modules.js';
 import { applyPromptCustomizations, emptyPromptCustomizations, promptCustomizationsSchema, type PromptCustomizations } from '../core/prompt-customization.js';
+import { createPromptSettings, mergeImportedPromptSettings, presetTarget, promptSettingsSchema, promptSettingsImportSchema, promptPresetLibrarySchema, type PromptSettingsDocument, type PromptSettingsImport, type InstructionPreset } from '../core/prompt-settings.js';
 import { atomicJson } from './atomic-json.js';
 
 export const promptCustomizationsFilename='prompt-customizations.v1.json';
+export const promptSettingsFilename='prompt-settings.v2.json';
 const editableModules=['subject','composition','style','viewpoint'] as const;
 const instructionFields=['native_instruction','numbered_instruction'] as const;
 
@@ -45,28 +47,65 @@ function legacyCustomizations(config:CurrentPromptConfig):PromptCustomizations{
   return promptCustomizationsSchema.parse(customizations);
 }
 
+async function readSavedPromptSettings(runtimeDirectory:string):Promise<PromptSettingsDocument|undefined>{
+  try{return promptSettingsSchema.parse(JSON.parse(await readFile(path.join(runtimeDirectory,promptSettingsFilename),'utf8')));}
+  catch(error){
+    if((error as NodeJS.ErrnoException).code==='ENOENT')return undefined;
+    throw new Error('自定义指令配置无效，请检查 prompt-settings.v2.json；原文件未修改。');
+  }
+}
+
+function resolvePromptSettings(legacy:CurrentPromptConfig,settings:PromptSettingsDocument){
+  const customizations=settings.customizations;
+  const config=applyPromptCustomizations(customizationBase(legacy),customizations);
+  new ModuleRegistry(undefined,config,customizations.roles,settings.inference_instructions);
+  return {config,customizations,settings};
+}
+
 export async function loadPromptSettings(runtimeDirectory:string){
+  const settings=await readSavedPromptSettings(runtimeDirectory);
   const legacy=await loadLegacyPromptConfig(runtimeDirectory);
+  if(settings)return resolvePromptSettings(legacy,settings);
   let customizations:PromptCustomizations;
   try{customizations=promptCustomizationsSchema.parse(JSON.parse(await readFile(path.join(runtimeDirectory,promptCustomizationsFilename),'utf8')));}
   catch(error){
     if((error as NodeJS.ErrnoException).code==='ENOENT'){
       const customizations=legacyCustomizations(legacy);
-      return {config:applyPromptCustomizations(customizationBase(legacy),customizations),customizations};
+      return resolvePromptSettings(legacy,createPromptSettings(customizations));
     }
     throw new Error('自定义指令配置无效，请检查 prompt-customizations.v1.json；原文件未修改。');
   }
-  return {config:applyPromptCustomizations(customizationBase(legacy),customizations),customizations};
+  return resolvePromptSettings(legacy,createPromptSettings(customizations));
 }
 
 export async function loadPromptConfig(runtimeDirectory:string){return (await loadPromptSettings(runtimeDirectory)).config;}
 
 export async function savePromptCustomizations(runtimeDirectory:string,input:PromptCustomizations){
   const customizations=promptCustomizationsSchema.parse(input);
+  const existing=await readSavedPromptSettings(runtimeDirectory);
+  if(existing)return savePromptSettings(runtimeDirectory,mergeImportedPromptSettings(existing,customizations));
   const config=applyPromptCustomizations(customizationBase(await loadLegacyPromptConfig(runtimeDirectory)),customizations);
   new ModuleRegistry(undefined,config,customizations.roles);
   await atomicJson(path.join(runtimeDirectory,promptCustomizationsFilename),customizations);
-  return {config,customizations};
+  return {config,customizations,settings:createPromptSettings(customizations)};
+}
+
+export async function savePromptSettings(runtimeDirectory:string,input:PromptSettingsDocument){
+  const settings=promptSettingsSchema.parse(input);
+  const result=resolvePromptSettings(await loadLegacyPromptConfig(runtimeDirectory),settings);
+  await atomicJson(path.join(runtimeDirectory,promptSettingsFilename),settings);
+  return result;
+}
+
+export async function savePromptPresetLibrary(runtimeDirectory:string,input:InstructionPreset[]){
+  const presets=promptPresetLibrarySchema.parse(input);
+  const {settings}=await loadPromptSettings(runtimeDirectory);
+  const selected_presets={...settings.selected_presets};
+  for(const target of Object.keys(selected_presets) as Array<keyof typeof selected_presets>){
+    const id=selected_presets[target];
+    if(id!==undefined&&!presets.some(preset=>preset.id===id&&presetTarget(preset)===target))delete selected_presets[target];
+  }
+  return savePromptSettings(runtimeDirectory,{...settings,presets,selected_presets});
 }
 
 export async function importPromptCustomizations(filename:string):Promise<PromptCustomizations>{
@@ -77,4 +116,15 @@ export async function importPromptCustomizations(filename:string):Promise<Prompt
 
 export async function exportPromptCustomizations(filename:string,input:PromptCustomizations){
   await atomicJson(filename,promptCustomizationsSchema.parse(input));
+}
+
+export async function importPromptSettings(filename:string):Promise<PromptSettingsImport>{
+  // Accommodate a full valid library even when JSON escapes every character.
+  if((await stat(filename)).size>80*1024*1024)throw new Error('指令配置文件不能超过 80 MB。');
+  try{return promptSettingsImportSchema.parse(JSON.parse((await readFile(filename,'utf8')).replace(/^\uFEFF/,'')));}
+  catch{throw new Error('指令配置格式无效，请选择 Ediro 导出的指令配置 JSON；当前设置未改变。');}
+}
+
+export async function exportPromptSettings(filename:string,input:PromptSettingsDocument){
+  await atomicJson(filename,promptSettingsSchema.parse(input));
 }

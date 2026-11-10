@@ -6,6 +6,8 @@ import { defaultPromptConfig,promptConfigSchema,normalizePromptConfig,type Promp
 import {defaultModuleSettings,resolveReferenceSettings,type ModuleSettings} from './module-settings.js';
 import { roleInstructionsSchema, type RoleInstructions } from './prompt-customization.js';
 import { promptRoles, type PromptRole } from './prompt-roles.js';
+import { referencePrecisionDefault } from './reference-precision.js';
+import { moduleInferenceInstructionsSchema,moduleInferenceInstruction,type ModuleInferenceInstructions } from './module-inference-instructions.js';
 
 export const defaultDefinitions: ModuleDefinition[] = [
   { type: 'image_text', title: '图文', description: '图片与文字，无预设语义', base_instruction: '', editor_kind: 'image_collection', accepts_images: true, inference_task: promptOptimizationTask },
@@ -19,9 +21,11 @@ export const defaultDefinitions: ModuleDefinition[] = [
 export class ModuleRegistry {
   readonly promptConfig:CurrentPromptConfig;
   readonly roleInstructions:RoleInstructions;
+  private readonly inferenceInstructions:ModuleInferenceInstructions;
   private definitions = new Map<string, ModuleDefinition>();
-  constructor(definitions = defaultDefinitions.map(d=>semanticPrompts[d.type]?{...d,description:semanticPrompts[d.type].description,base_instruction:semanticPrompts[d.type].native,numbered_instruction:semanticPrompts[d.type].numbered}:d),config:PromptConfig=defaultPromptConfig,roleInstructions:RoleInstructions={}) { this.promptConfig=normalizePromptConfig(config);this.roleInstructions=roleInstructionsSchema.parse(roleInstructions);definitions.forEach(d => this.register(d)); }
+  constructor(definitions = defaultDefinitions.map(d=>semanticPrompts[d.type]?{...d,description:semanticPrompts[d.type].description,base_instruction:semanticPrompts[d.type].native,numbered_instruction:semanticPrompts[d.type].numbered}:d),config:PromptConfig=defaultPromptConfig,roleInstructions:RoleInstructions={},instructions:ModuleInferenceInstructions={}) { this.promptConfig=normalizePromptConfig(config);this.roleInstructions=roleInstructionsSchema.parse(roleInstructions);this.inferenceInstructions=moduleInferenceInstructionsSchema.parse(instructions);definitions.forEach(d => this.register(d)); }
   roleInstruction(role:PromptRole){return this.roleInstructions[role]??promptRoles.find(item=>item.id===role)!.instruction;}
+  inferenceInstruction(type:string){return moduleInferenceInstruction(type,this.inferenceInstructions);}
   register(definition: ModuleDefinition) {
     if (!/^[a-z][a-z0-9_]{0,39}$/.test(definition.type) || this.definitions.has(definition.type)) throw new Error('模块类型非法或已注册。');
     if(definition.numbered_instruction!==undefined)promptConfigSchema.parse({...defaultPromptConfig,modules:{[definition.type]:{numbered_instruction:definition.numbered_instruction}}});
@@ -58,9 +62,10 @@ export class ModuleRegistry {
     return { module_id: newId('mod'), reference_type: d.type, reference_id: newId(d.type), title: d.title,
       model_name:this.promptConfig.modules[type]?.model_name??d.model_name??d.type,
       enabled: true, base_instruction: d.base_instruction, user_instruction: '', asset_ids: [],
+      ...(d.accepts_images?{reference_precision:referencePrecisionDefault({reference_type:type},defaults)}:{}),
       ...(type==='prompt'?{prompt_role:defaults.prompt.role}:{}),
       ...(referenceSettings?{reference_settings:referenceSettings}:{}),
-      ...(d.numbered_instruction?{numbered_instruction:d.numbered_instruction}:{}),
+      ...(d.numbered_instruction!==undefined?{numbered_instruction:d.numbered_instruction}:{}),
       ...(d.default_tool_state ? { tool_state: structuredClone(d.default_tool_state) } : {}) };
   }
   validateToolState(type:string,state:Record<string,unknown>){
@@ -74,6 +79,8 @@ export class ModuleRegistry {
     const copied={ ...structuredClone(module), module_id: newId('mod'), reference_id: newId(module.reference_type) };
     const referenceSettings=resolveReferenceSettings(module,defaults);
     if(referenceSettings)copied.reference_settings=referenceSettings;else delete copied.reference_settings;
+    if(this.get(module.reference_type).accepts_images)copied.reference_precision=referencePrecisionDefault(module,defaults);
+    else delete copied.reference_precision;
     if(copied.reference_type==='prompt'){
       if(copied.auto_prompt)copied.auto_prompt=false;
       delete copied.auto_prompt_input_key;

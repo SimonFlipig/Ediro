@@ -56,28 +56,31 @@ async function fixture(executor?:CloudExecutionPort){
 }
 async function settle(workspace:Workspace){for(let i=0;i<300;i++){if(await workspace.serial(async()=>workspace.project!.jobs.every(j=>['succeeded','failed','cancelled'].includes(j.status))))return;await new Promise(r=>setTimeout(r,10));}throw new Error('timeout');}
 
-test('局部编辑重试使用原蒙版与输入快照，不覆盖后来修改的草稿',async()=>{
+test('局部编辑重试使用原蒙版与输入快照，未提交的后续编辑不进入工程',async()=>{
   let attempts=0;const engine=new MockGenerator(1);
-  const {workspace:w,d}=await fixture({execute:async(...args)=>{if(++attempts===1)throw new Error('模拟请求失败');return engine.execute(...args);}});
+  const {workspace:w,repo,d}=await fixture({execute:async(...args)=>{if(++attempts===1)throw new Error('模拟请求失败');return engine.execute(...args);}});
   await w.serial(()=>w.enqueueMask(w.project!.project_id,d));await settle(w);
   const old=structuredClone(w.project!.jobs[0]);assert.equal(old.status,'failed');
-  const changed={...d,instruction:'后来修改的局部指令',strokes:[]};await w.saveMaskDraft(w.project!.project_id,changed);
+  assert.deepEqual((await repo.load()).jobs[0].mask_edit!.draft,d);
+  d.instruction='后来修改的局部指令';d.strokes=[];
   const assetCount=w.project!.assets.length;
   await w.serial(()=>w.retry(w.project!.project_id,old.task_id));await settle(w);
   assert.equal(attempts,2);assert.equal(w.project!.jobs[1].status,'succeeded');
-  assert.deepEqual(w.project!.jobs[0],old);assert.deepEqual(w.project!.mask_drafts![0],changed);
+  assert.deepEqual(w.project!.jobs[0],old);assert.equal(w.project!.mask_drafts,undefined);
   assert.deepEqual(w.project!.jobs[1].mask_edit!.draft,old.mask_edit!.draft);
   assert.equal(w.project!.jobs[1].mask_edit!.mask_asset_id,old.mask_edit!.mask_asset_id);
-  assert.equal(w.project!.assets.length,assetCount+1);await w.shutdown();
+  assert.equal(w.project!.assets.length,assetCount+1);
+  const saved=await repo.load();assert.deepEqual(saved.jobs[1].mask_edit!.draft,old.mask_edit!.draft);assert.equal(saved.mask_drafts,undefined);await w.shutdown();
 });
 
 test('失败局部编辑的任务缩略图恢复主配方，不改写蒙版草稿或调用模型',async()=>{
-  const {workspace:w,d,calls}=await fixture({execute:async()=>{throw new Error('受控局部编辑失败');}});
+  const {workspace:w,repo,d,calls}=await fixture({execute:async()=>{throw new Error('受控局部编辑失败');}});
   const projectId=w.project!.project_id;
   await w.serial(()=>w.enqueueMask(projectId,d));await settle(w);
   const job=structuredClone(w.project!.jobs[0]);assert.equal(job.status,'failed');assert.deepEqual(job.output_asset_ids,[]);
   const current=structuredClone(w.project!.recipe);current.modules.reverse();current.modules[0].user_instruction='后续主配方内容';
-  await w.saveRecipe(current);await w.saveMaskDraft(projectId,{...d,instruction:'后续蒙版草稿'});
+  w.project!.mask_drafts=[{...d,instruction:'旧工程保留的蒙版草稿'}];await repo.save(w.project!); // Legacy file fixture.
+  await w.saveRecipe(current);
   const history=structuredClone(w.project!.jobs),drafts=structuredClone(w.project!.mask_drafts);
   await w.restoreTaskRecipe(projectId,job.task_id);
   assert.deepEqual(w.project!.recipe,w.registry.resolveRecipe(job.mask_edit!.main_recipe_snapshot));
@@ -95,15 +98,36 @@ test('局部编辑优先可用 Nano，未配置或停用时回退，恢复草稿
   assert.equal(defaultMaskModel([{...banana,executable:false},image,...mocks])?.model_config_id,image.model_config_id);
 });
 
+test('原底图重开采用最后提交的蒙版，旧草稿仅在没有任务时恢复，明确新编辑不绑定旧任务',async()=>{
+  let attempts=0;const engine=new MockGenerator(1);
+  const {workspace:w,repo,d}=await fixture({execute:async(...args)=>{if(++attempts===2)throw new Error('第二次请求失败');return engine.execute(...args);}});
+  const legacy={...d,instruction:'旧版本未生成的草稿',strokes:[]};
+  w.project!.mask_drafts=[legacy];await repo.save(w.project!);await w.open(repo);
+  assert.deepEqual(maskEditorEntry(w.project!,d.source_asset_id).draft,legacy);
+
+  await w.serial(()=>w.enqueueMask(w.project!.project_id,d));await settle(w);await w.open(repo);
+  const first=w.project!.jobs[0],entry=maskEditorEntry(w.project!,d.source_asset_id);
+  assert.equal(first.status,'succeeded');assert.equal(entry.taskId,first.task_id);assert.equal(entry.snapshotId,first.mask_edit!.source_snapshot_id);
+  assert.deepEqual(entry.draft,d);assert.deepEqual(entry.strokes,d.strokes);assert.equal(entry.display,'result');
+  assert.deepEqual(w.project!.mask_drafts,[legacy]); // Compatibility data is retained without masking newer inputs.
+
+  const next={...d,instruction:'最新提交的修改',strokes:[{tool:'paint' as const,size:8,points:[[.2,.3] as [number,number]]}]};
+  await w.serial(()=>w.enqueueMask(w.project!.project_id,next));await settle(w);await w.open(repo);
+  const latest=w.project!.jobs[1],reopened=maskEditorEntry(w.project!,d.source_asset_id);
+  assert.equal(latest.status,'failed');assert.equal(reopened.taskId,latest.task_id);assert.deepEqual(reopened.draft,next);assert.equal(reopened.display,'mask');
+  assert.equal(maskEditorEntry(w.project!,d.source_asset_id,{taskId:first.task_id}).taskId,first.task_id);
+  const fresh=maskEditorEntry(w.project!,d.source_asset_id,{fresh:true});assert.equal(fresh.taskId,undefined);assert.deepEqual(fresh.draft,legacy);
+  await w.shutdown();
+});
+
 test('合成版本重开恢复原任务的绘制和补画蒙版；旧版本、新一轮编辑与新任务分开',async()=>{
   const {workspace:w,repo,d,calls}=await fixture();
   await w.serial(()=>w.enqueueMask(w.project!.project_id,d));await settle(w);
   const job=w.project!.jobs[0],p=w.project!;
   const old=await w.reprocessMask(p.project_id,job.task_id,'strict',0);
   const strokes=[...d.strokes,{tool:'erase' as const,size:7,points:[[.5,.5] as [number,number]]}];
-  await w.saveCompositeMask(p.project_id,job.task_id,strokes);
   const edited=await w.reprocessMask(p.project_id,job.task_id,'strict',3,strokes);
-  await w.saveMaskDraft(p.project_id,{...d,source_asset_id:edited,strokes:[]}); // old UI treated output as a new source
+  p.mask_drafts=[{...d,source_asset_id:edited,strokes:[]}];await repo.save(p); // Old UI treated output as a new source.
   await w.open(repo);
   const entry=maskEditorEntry(w.project!,edited);
   assert.equal(entry.taskId,job.task_id);assert.equal(entry.sourceId,d.source_asset_id);assert.equal(entry.snapshotId,job.mask_edit!.source_snapshot_id);
@@ -114,7 +138,7 @@ test('合成版本重开恢复原任务的绘制和补画蒙版；旧版本、�
   const beforeCalls=calls();
   assert.equal(await w.reprocessMask(p.project_id,entry.taskId!,entry.draft!.mode,entry.draft!.feather,entry.strokes),edited);assert.equal(calls(),beforeCalls);
   const unfinished=[...strokes,{tool:'paint' as const,size:5,points:[[.6,.5] as [number,number]]}];
-  await w.saveCompositeMask(p.project_id,job.task_id,unfinished);await w.open(repo);
+  w.project!.jobs[0].mask_edit!.composite_strokes=unfinished;await repo.save(w.project!);await w.open(repo); // Legacy autosaved composition fixture.
   assert.deepEqual(maskEditorEntry(w.project!,edited).strokes,unfinished);
   // Explicit version selection resumes exactly the saved variant, even if the
   // latest result has an unfinished composition draft.
@@ -131,7 +155,7 @@ test('合成版本重开恢复原任务的绘制和补画蒙版；旧版本、�
   assert.equal(maskEditorEntry(w.project!,d.source_asset_id,{taskId:job.task_id}).taskId,job.task_id);
 });
 
-test('编辑快照、草稿重开、主配方隔离、双模式本地处理与父版本关系',async()=>{
+test('编辑快照重开、主配方隔离、双模式本地处理与父版本关系',async()=>{
   const {workspace:w,repo,d,calls}=await fixture(),recipe=structuredClone(w.project!.recipe);
   await w.serial(()=>w.enqueueMask(w.project!.project_id,d));await settle(w);
   const p=w.project!,job=p.jobs[0];assert.equal(job.status,'succeeded',job.error);assert.deepEqual(p.recipe,recipe);assert.equal(calls(),1);
@@ -145,14 +169,14 @@ test('编辑快照、草稿重开、主配方隔离、双模式本地处理与�
   assert.deepEqual(Buffer.from(preview.split(',')[1],'base64'),await repo.readAsset(p.assets.find(a=>a.asset_id===strict)!));
   const natural=await w.serial(()=>w.reprocessMask(p.project_id,job.task_id,'natural',12));assert.notEqual(strict,natural);assert.equal(calls(),1);
   assert.equal(await w.serial(()=>w.reprocessMask(p.project_id,job.task_id,'strict',0)),strict);assert.equal(job.output_asset_ids.length,2);
-  await w.open(repo);assert.deepEqual(w.project!.mask_drafts![0],d);assert.deepEqual(w.project!.recipe,recipe);
+  await w.open(repo);assert.equal(w.project!.mask_drafts,undefined);assert.deepEqual(w.project!.jobs[0].mask_edit!.draft,d);assert.deepEqual(w.project!.recipe,recipe);
   const second={...draft(strict),strokes:[{tool:'paint' as const,size:10,points:[[.5,.5] as [number,number]]}]};
   await w.serial(()=>w.enqueueMask(w.project!.project_id,second));await settle(w);
   const child=w.project!.jobs[1];assert.equal(child.status,'succeeded',child.error);
   await w.serial(()=>w.reprocessMask(w.project!.project_id,child.task_id,'strict',0));
   const rev=w.project!.revisions.find(r=>r.asset_id===child.output_asset_ids[0])!;
   assert.equal(rev.parent_revision_id,w.project!.revisions.find(r=>r.asset_id===strict)!.revision_id);
-  await w.restore(job.task_id);assert.deepEqual(w.project!.recipe,recipe);
+  await w.restore(job.task_id);assert.deepEqual(w.project!.recipe,recipe);assert.deepEqual(w.project!.mask_drafts![0],d);
 });
 
 test('旧羽化版本保留原文件，重开后预览与确认使用新算法，仍复用同一次模型返回',async()=>{
@@ -174,14 +198,15 @@ test('旧羽化版本保留原文件，重开后预览与确认使用新算法�
   assert.equal(currentMaskFeather({mode:'strict',feather:0}),true);assert.equal(currentMaskFeather({mode:'natural',feather:0}),true);
 });
 
-test('空选区与错误模型在发送前拒绝，失败后草稿保留',async()=>{
+test('空选区与错误模型在发送前拒绝，失败后保留实际生成蒙版快照',async()=>{
   const {workspace:w,d,calls}=await fixture();
   await assert.rejects(()=>w.serial(()=>w.enqueueMask(w.project!.project_id,{...d,strokes:[]})),/涂出/);
   assert.equal(w.project!.jobs.length,0);assert.equal(calls(),0);
   await assert.rejects(()=>w.serial(()=>w.enqueueMask(w.project!.project_id,{...d,model_config_id:'model_nano_pro'})),/就绪/);assert.equal(calls(),0);
+  assert.equal(w.project!.mask_drafts,undefined);
   const bad=await fixture({execute:async()=>{throw new Error('模拟网络失败');}});
   await bad.workspace.serial(()=>bad.workspace.enqueueMask(bad.workspace.project!.project_id,bad.d));await settle(bad.workspace);
-  assert.equal(bad.workspace.project!.jobs[0].status,'failed');assert.deepEqual((await bad.repo.load()).mask_drafts![0],bad.d);assert.equal(bad.calls(),1);
+  assert.equal(bad.workspace.project!.jobs[0].status,'failed');const failed=await bad.repo.load();assert.deepEqual(failed.jobs[0].mask_edit!.draft,bad.d);assert.equal(failed.mask_drafts,undefined);assert.equal(bad.calls(),1);
 });
 
 test('补画合成蒙版只采用返回像素；减选、清空、版本隔离与重开恢复不修改生成请求',async()=>{
@@ -193,9 +218,9 @@ test('补画合成蒙版只采用返回像素；减选、清空、版本隔离�
   const raw=await rgba(await repo.readAsset(p.assets.find(a=>a.asset_id===edit.raw_asset_ids[0])!));
   const oldId=await w.reprocessMask(p.project_id,job.task_id,'strict',0),oldBytes=await repo.readAsset(p.assets.find(a=>a.asset_id===oldId)!);
   const added=[...d.strokes,{tool:'paint' as const,size:10,points:[[.5,.08] as [number,number]]}];
-  await w.saveCompositeMask(p.project_id,job.task_id,added);
-  const beforePreview=JSON.stringify(p),preview=await w.previewMask(p.project_id,job.task_id,'strict',0,added);
+  const beforePreview=JSON.stringify(p),beforeFile=await repo.load(),preview=await w.previewMask(p.project_id,job.task_id,'strict',0,added);
   assert.equal(JSON.stringify(p),beforePreview);
+  await w.flush();assert.deepEqual(await repo.load(),beforeFile);
   const bytes=Buffer.from(preview.split(',')[1],'base64'),data=await rgba(bytes),addedIndex=(5*64+32)*4;
   assert.deepEqual(data.subarray(addedIndex,addedIndex+4),raw.subarray(addedIndex,addedIndex+4));
   assert.deepEqual((await rgba(oldBytes)).subarray(addedIndex,addedIndex+4),base.subarray(addedIndex,addedIndex+4));
@@ -209,8 +234,9 @@ test('补画合成蒙版只采用返回像素；减选、清空、版本隔离�
   assert.equal(await w.reprocessMask(p.project_id,job.task_id,'strict',0,frozen.strokes),oldId);
   assert.deepEqual(edit.draft,frozen);assert.deepEqual(await repo.loadModelInput(job.task_id),request);
   assert.deepEqual(await repo.readAsset(p.assets.find(a=>a.asset_id===edit.mask_asset_id)!),originalMask);assert.equal(calls(),1);
-  await w.saveCompositeMask(p.project_id,job.task_id,erased);await w.open(repo);
-  assert.deepEqual(w.project!.jobs[0].mask_edit!.composite_strokes,erased);
+  await w.previewMask(p.project_id,job.task_id,'strict',0,erased);await w.open(repo);
+  assert.deepEqual(w.project!.jobs[0].mask_edit!.composite_strokes,frozen.strokes);
+  assert.equal(w.project!.mask_drafts,undefined);
   assert.deepEqual(w.project!.jobs[0].mask_edit!.variants.find(v=>v.asset_id===newId)!.composite_strokes,added);
   const output=p.assets.find(a=>a.asset_id===newId)!;if(output.location.type!=='external')throw new Error('expected external');
   const recovered=await new ProjectRepository(path.join(repo.directory,'recovered-composite')).recoverOutput(output.location.path);

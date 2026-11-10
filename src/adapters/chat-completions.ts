@@ -2,10 +2,12 @@ import sharp from 'sharp';
 import { z } from 'zod';
 import type { AdapterDescription } from '../core/model-library.js';
 import type { CloudExecutionContext, CloudExecutionPort, ExecutionResult } from '../core/ports.js';
-import { extensionOptions, normalizeParameters, validateGenerationParameters } from '../core/generation-parameters.js';
+import { MAX_SYSTEM_INSTRUCTION_CHARS,systemInstructionSchema } from '../core/domain.js';
+import { extensionOptions, fieldError, normalizeParameters, parameterFields, validateGenerationParameters } from '../core/generation-parameters.js';
 import { chatProfile } from '../protocols/chat-profile.js';
 import { captureModelInput } from './capture-model-input.js';
 import { readReferenceImage } from './reference-image.js';
+import { readServerSentEvents } from './server-sent-events.js';
 
 const MB=1024*1024;
 const MAX_IMAGE_BYTES=20*MB,MAX_REQUEST_BYTES=50*MB,MAX_RESPONSE_BYTES=2*MB,MAX_TEXT_CHARS=32000;
@@ -14,6 +16,7 @@ const optionsSchema=z.object({
   reasoning_effort:z.enum(['low','medium','high']).optional(),
   max_output_tokens:z.number().int().min(1).max(32768).default(16384),
   token_limit_field:z.enum(['max_completion_tokens','max_tokens']).default('max_completion_tokens'),
+  instruction_role:z.enum(['system','developer']).default('system'),
   image_detail:z.enum(['auto','low','high']).optional(),
 }).strict();
 const responseSchema=z.object({
@@ -25,6 +28,15 @@ const responseSchema=z.object({
       tool_calls:z.array(z.unknown()).nullish(),function_call:z.unknown().optional(),audio:z.unknown().optional(),
     }),
   })).min(1).max(10),
+  usage:z.record(z.string(),z.unknown()).nullish(),
+});
+const chunkSchema=z.object({
+  id:z.string().nullish(),
+  error:z.unknown().optional(),
+  choices:z.array(z.object({
+    index:z.literal(0),finish_reason:z.string().nullish(),
+    delta:z.object({content:z.string().nullish(),refusal:z.string().nullish(),tool_calls:z.array(z.unknown()).nullish(),function_call:z.unknown().optional(),audio:z.unknown().optional()}),
+  })).max(1),
   usage:z.record(z.string(),z.unknown()).nullish(),
 });
 type ContentPart={type:'text';text:string}|{type:'image_url';image_url:{url:string;detail?:'auto'|'low'|'high'}};
@@ -68,13 +80,13 @@ async function boundedJson(response:Response,signal:AbortSignal){
 
 export class ChatCompletionsAdapter implements CloudExecutionPort {
   readonly description:AdapterDescription={
-    adapter_id:'openai-chat-completions',version:1,title:'OpenAI 兼容 Chat Completions',kind:'cloud',installed:true,
-    purposes:['understanding'],requires_credential:true,supports_probe:true,interleaving:['native','separated'],
+    adapter_id:'openai-chat-completions',version:2,title:'OpenAI 兼容 Chat Completions',kind:'cloud',installed:true,
+    purposes:['understanding'],requires_credential:true,supports_probe:true,supports_system_instruction:true,interleaving:['native','separated'],
     operations:['understand'],parameters:[],generation_contract:chatProfile,
   };
   constructor(private request:typeof fetch=fetch){}
 
-  private async call(url:string,key:string,body:string|undefined,signal:AbortSignal){
+  private async response(url:string,key:string,body:string|undefined,signal:AbortSignal){
     cancelled(signal);
     let response:Response;
     try{
@@ -88,9 +100,47 @@ export class ChatCompletionsAdapter implements CloudExecutionPort {
       cancelled(signal,true);
       throw new Error(response.status===401||response.status===403?'推理模型鉴权失败或权限不足；未自动重试。':response.status===429?'推理模型额度不足或请求受限；未自动重试。':response.status===413?'当前渠道拒绝了请求大小（HTTP 413），请缩小送入范围；未自动重试。':response.status===400?'推理模型拒绝请求参数，请核对模型 ID、图片能力与参数配置；未自动重试。':`推理服务返回 HTTP ${response.status}；未自动重试。`);
     }
+    return response;
+  }
+  private async call(url:string,key:string,body:string|undefined,signal:AbortSignal){
+    const response=await this.response(url,key,body,signal);
     try{return await boundedJson(response,signal);}catch{
       cancelled(signal,true);
       throw new Error('推理响应读取或解析失败，或超过 2 MB 读取限制；上游计费状态未知，未自动重试。');
+    }
+  }
+
+  private async stream(url:string,key:string,body:string,signal:AbortSignal,onTextDelta:(delta:string)=>void):Promise<ExecutionResult>{
+    const response=await this.response(url,key,body,signal);
+    let text='',requestId:string|undefined,finished=false,done=false;
+    let usage:Record<string,number>={};
+    try{
+      for await(const event of readServerSentEvents(response,signal,MAX_RESPONSE_BYTES)){
+        cancelled(signal,true);
+        if(event==='[DONE]'){done=true;break;}
+        const parsed=chunkSchema.safeParse(JSON.parse(event));
+        if(!parsed.success)throw new Error('invalid chunk');
+        const chunk=parsed.data;
+        if(chunk.error!=null)throw new Error('upstream error');
+        if(chunk.id){if(requestId&&requestId!==chunk.id)throw new Error('changed request');requestId=chunk.id;}
+        if(chunk.usage)usage={...usage,...Object.fromEntries(Object.entries(chunk.usage).filter((entry):entry is [string,number]=>typeof entry[1]==='number'&&Number.isFinite(entry[1])&&entry[1]>=0))};
+        const candidate=chunk.choices[0];
+        if(!candidate)continue;
+        const delta=candidate.delta;
+        if(finished||delta.refusal||delta.tool_calls?.length||delta.function_call!=null||delta.audio!=null)throw new Error('invalid text result');
+        if(candidate.finish_reason!=null&&candidate.finish_reason!=='stop')throw new Error('incomplete result');
+        if(delta.content){
+          if(text.length+delta.content.length>MAX_TEXT_CHARS)throw new Error('text limit');
+          text+=delta.content;onTextDelta(delta.content);cancelled(signal,true);
+        }
+        if(candidate.finish_reason==='stop')finished=true;
+      }
+      cancelled(signal,true);
+      if(!done||!finished||!text.trim())throw new Error('incomplete stream');
+      return {images:[],text:text.trim(),request_id:requestId?.slice(0,200),usage};
+    }catch{
+      cancelled(signal,true);
+      throw new Error('推理流式响应未正常完成、包含非文字结果或超过读取限制，未采用不完整结果；上游计费状态未知，未自动重试。');
     }
   }
 
@@ -116,12 +166,18 @@ export class ChatCompletionsAdapter implements CloudExecutionPort {
     if(context.text_output_limit!==undefined&&(!Number.isInteger(context.text_output_limit)||context.text_output_limit<1))throw new Error('推理输出上限无效。');
     const tokenLimit=Math.min(options.max_output_tokens,context.text_output_limit??options.max_output_tokens);
     const input=job.adapted_input;
+    const systemInstruction=input.system_instruction;
+    if(systemInstruction!==undefined&&!systemInstructionSchema.safeParse(systemInstruction).success)throw new Error(`系统指令须为不超过 ${MAX_SYSTEM_INSTRUCTION_CHARS} 字符的纯文字；未发送请求。`);
+    if(systemInstruction?.trim()){
+      const field=parameterFields(model).find(field=>field.key==='instruction_role');
+      if(!field||fieldError(field,options.instruction_role,parameters.output_format))throw new Error('当前模型能力未允许本次系统指令角色。请在模型默认设置中显式选择渠道支持的系统指令兼容方式，并核对能力限制；未发送请求。');
+    }
     if(input.kind!=='native_blocks'&&input.kind!=='separated_inputs')throw new Error('推理输入结构不受支持。');
     const blocks=input.kind==='native_blocks'?input.blocks??[]:[{type:'text' as const,text:input.prompt??''},...(input.image_asset_ids??[]).map(asset_id=>({type:'image' as const,asset_id}))];
     const imageCount=blocks.filter(block=>block.type==='image').length;
     if(imageCount>model.capabilities.max_images)throw new Error(`本次输入有 ${imageCount} 张图片，超过推理模型的 ${model.capabilities.max_images} 张上限；没有丢弃图片，未发送请求。`);
     if(!blocks.some(block=>block.type==='image'||block.text.trim()))throw new Error('推理输入不能为空。');
-    const content:ContentPart[]=[];let estimatedBytes=0,imageIndex=0;
+    const content:ContentPart[]=[];let estimatedBytes=Buffer.byteLength(systemInstruction??''),imageIndex=0;
     for(const block of blocks){
       cancelled(timed);
       if(block.type==='text'){
@@ -145,7 +201,7 @@ export class ChatCompletionsAdapter implements CloudExecutionPort {
     }
     // A string also works with text-only compatibility endpoints; image tasks retain every block.
     const userContent=imageCount?content:content.map(part=>part.type==='text'?part.text:'').join('\n');
-    const body=JSON.stringify({model:model.model,messages:[{role:'user',content:userContent}],stream:false,
+    const body=JSON.stringify({model:model.model,messages:[...(systemInstruction?.trim()?[{role:options.instruction_role,content:systemInstruction}]:[]),{role:'user',content:userContent}],stream:!!context.onTextDelta,
       [options.token_limit_field]:tokenLimit,
       ...(options.temperature!==undefined?{temperature:options.temperature}:{}),
       ...(options.reasoning_effort?{reasoning_effort:options.reasoning_effort}:{}),
@@ -154,6 +210,7 @@ export class ChatCompletionsAdapter implements CloudExecutionPort {
     await progress('等待模型返回理解结果（无上游百分比）',30);cancelled(timed);
     await captureModelInput(context,new URL(requestUrl).pathname,body);cancelled(timed);
     const key=await context.resolveCredential();cancelled(timed);
+    if(context.onTextDelta)return this.stream(requestUrl,key,body,timed,context.onTextDelta);
     const parsed=responseSchema.safeParse(await this.call(requestUrl,key,body,timed));
     cancelled(timed,true);
     if(!parsed.success)throw new Error('推理响应不符合 Chat Completions 文字结果结构；未自动重试。');

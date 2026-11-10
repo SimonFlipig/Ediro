@@ -11,6 +11,8 @@ import { prepareModuleInference } from '../src/core/module-inference.js';
 import { seedModels } from '../src/core/models.js';
 import { getAutoPromptState } from '../src/core/auto-prompt.js';
 import { defaultModuleSettings } from '../src/core/module-settings.js';
+import { buildPromptSystemInstruction } from '../src/core/module-inference-tasks.js';
+import { buildModuleInferenceReferenceRules } from '../src/core/module-inference-instructions.js';
 
 function fixture(registry=new ModuleRegistry(undefined,releasePromptConfig)){
   const subject=registry.create('subject'),prompt=registry.create('prompt');
@@ -86,17 +88,53 @@ test('空白和未覆盖的预览独立为空，视角占位符使用同一实�
   assert.throws(()=>previewModuleInstructions('viewpoint',{native_instruction:'{viewpoint}'},{toolState:{yaw:300}}));
 });
 
-test('角色覆盖用于真实推理编译，保持输出约束，不混入生图；恢复采用出厂角色',()=>{
-  const f=fixture(new ModuleRegistry(undefined,releasePromptConfig,{general:'我的自定义角色要求。'}));
+test('角色覆盖原文与公共规则进入 system，user 仅本次条件；空覆盖只关闭角色，恢复采用出厂角色',()=>{
+  const custom='  我的自定义角色要求。\n';
+  const f=fixture(new ModuleRegistry(undefined,releasePromptConfig,{general:custom}));
   const model={...seedModels()[2],purpose:'understanding' as const,enabled:true,executable:true,capabilities:{...seedModels()[2].capabilities,operations:['understand']}};
   const prepared=prepareModuleInference(f.recipe,f.prompt.module_id,'优化这段描述',model,f.registry);
   const actual=textOf(prepared.job.chain_snapshot.blocks);
-  assert.match(actual,/我的自定义角色要求/);assert.match(actual,/只返回可直接填回当前模块编辑框/);
+  const referenceRules=buildModuleInferenceReferenceRules([f.subject],type=>f.registry.inferenceInstruction(type));
+  const expected=buildPromptSystemInstruction(custom,referenceRules);
+  assert.equal(prepared.job.chain_snapshot.system_instruction,expected);assert.equal(prepared.job.adapted_input.system_instruction,expected);
+  assert.ok(expected.includes(custom),'custom role retains its original whitespace and text');
+  assert.match(expected,/# 参考用途/);assert.ok(expected.includes(f.registry.inferenceInstruction('subject')!));
+  assert.ok(!expected.includes(f.subject.module_id));
+  assert.doesNotMatch(actual,/我的自定义角色要求|只返回|Return only|Write the final/);
+  assert.ok(!actual.includes(f.registry.inferenceInstruction('subject')!),'module understanding rules belong to system, not user conditions');
+  const conditions=JSON.parse(prepared.job.chain_snapshot.blocks[0].type==='text'?prepared.job.chain_snapshot.blocks[0].text:'');
+  assert.equal(conditions.draft,'优化这段描述');
+  const subjectCondition=conditions.references.find((reference:{use:string})=>reference.use==='主体参考');
+  assert.ok(subjectCondition);assert.equal(Object.hasOwn(subjectCondition,'base_instruction'),false);assert.equal(Object.hasOwn(subjectCondition,'numbered_instruction'),false);
   assert.ok(!actual.includes(promptRoles[0].instruction));
   assert.doesNotMatch(textOf(compileRecipe(f.recipe,f.registry).blocks),/我的自定义角色要求/);
-  const original=textOf(prepareModuleInference(f.recipe,f.prompt.module_id,'优化这段描述',model,new ModuleRegistry(undefined,releasePromptConfig)).job.chain_snapshot.blocks);
-  assert.ok(original.includes(promptRoles[0].instruction));
+  const original=prepareModuleInference(f.recipe,f.prompt.module_id,'优化这段描述',model,new ModuleRegistry(undefined,releasePromptConfig));
+  assert.equal(original.job.chain_snapshot.system_instruction,buildPromptSystemInstruction(promptRoles[0].instruction,referenceRules));
+  assert.equal(original.job.adapted_input.system_instruction,original.job.chain_snapshot.system_instruction);
   assert.equal(new ModuleRegistry(undefined,releasePromptConfig,{general:''}).roleInstruction('general'),'');
+  for(const empty of ['', ' \n\t ']){
+    const blank=prepareModuleInference(f.recipe,f.prompt.module_id,'优化这段描述',model,new ModuleRegistry(undefined,releasePromptConfig,{general:empty}));
+    assert.equal(blank.job.chain_snapshot.system_instruction,buildPromptSystemInstruction('',referenceRules));
+    assert.equal(blank.job.adapted_input.system_instruction,blank.job.chain_snapshot.system_instruction);
+    assert.ok(blank.job.chain_snapshot.system_instruction!.length>0);
+    assert.ok(!blank.job.chain_snapshot.system_instruction!.includes(promptRoles[0].instruction));
+    assert.deepEqual(blank.job.chain_snapshot.blocks,prepared.job.chain_snapshot.blocks);
+  }
+  assert.equal(prepared.job.chain_snapshot.system_instruction,expected);
+});
+
+test('原有 32000 字符自定义角色完整保留，追加公共规则不会使合法配置无法准备',()=>{
+  const role='R'.repeat(32000),custom=promptCustomizationsSchema.parse({version:1,modules:{},roles:{general:role}});
+  const registry=new ModuleRegistry(undefined,releasePromptConfig,custom.roles),f=fixture(registry);
+  const model={...seedModels()[2],purpose:'understanding' as const,enabled:true,executable:true,capabilities:{...seedModels()[2].capabilities,operations:['understand']}};
+  for(const automatic of [false,true]){
+    const prepared=prepareModuleInference(f.recipe,f.prompt.module_id,'保留正文',model,registry,false,undefined,{automatic});
+    const system=prepared.job.adapted_input.system_instruction!;
+    assert.ok(system.length>32000);assert.ok(system.includes(role));
+    assert.equal(system.split(role).length,2,'role is included exactly once and never truncated');
+    assert.equal(prepared.job.chain_snapshot.system_instruction,system);
+  }
+  assert.equal(registry.roleInstructions.general,role);assert.equal(custom.roles.general,role);
 });
 
 test('角色文字变更或清空会使自动提示词过期，仅其它角色变更或无效差异不改变复用',()=>{

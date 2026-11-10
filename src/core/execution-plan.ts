@@ -1,9 +1,10 @@
-import type { Asset,CompiledChain,ModelConfig,Recipe } from './domain.js';
+import { MAX_SYSTEM_INSTRUCTION_CHARS,systemInstructionSchema,type Asset,type CompiledChain,type ModelConfig,type Recipe } from './domain.js';
 import { compileRecipe,adaptChain,validateParameters,defaultInputStrategies } from './compiler.js';
 import { contractFor,normalizeParameters,parameterFields } from './generation-parameters.js';
 import type { PlanSummary } from './generation-contract.js';
 import { resolveOutputGeometry } from './output-geometry.js';
 import { ModuleRegistry } from './modules.js';
+import { appendGenerationXmlRequirement } from './generation-prompt-xml.js';
 
 // One pure planning entry for preview, queueing and understanding tasks.
 export function planExecution(input:Recipe,assets:Pick<Asset,'asset_id'|'width'|'height'>[],model:ModelConfig,registry=new ModuleRegistry(),preparedChain?:CompiledChain,strategies=defaultInputStrategies){
@@ -15,8 +16,14 @@ export function planExecution(input:Recipe,assets:Pick<Asset,'asset_id'|'width'|
   if(model.purpose!=='understanding'&&recipe.core_parameters.resolution?.mode==='default'&&contract.tiers.length){
     recipe.core_parameters.resolution={mode:'tier',value:contract.tiers[0]};
   }
-  const chain=preparedChain?structuredClone(preparedChain):compileRecipe(recipe,registry);
   const understanding=model.purpose==='understanding';
+  const chain=preparedChain?structuredClone(preparedChain):compileRecipe(recipe,registry,{purpose:understanding?'understanding':'generation'});
+  if(chain.system_instruction!==undefined){
+    const parsed=systemInstructionSchema.safeParse(chain.system_instruction);
+    if(!parsed.success)throw new Error(`系统指令须为不超过 ${MAX_SYSTEM_INSTRUCTION_CHARS} 字符的文字。`);
+    if(!parsed.data.trim())delete chain.system_instruction;
+    else if(!understanding)throw new Error('系统角色指令仅用于理解／推理任务，不能用于生图。');
+  }
   const operation=understanding?'understand':chain.mode==='reference_generation'?'referenceEdit':'generate';
   if(model.kind==='cloud'&&!model.capabilities.operations.includes(operation))throw new Error('所选模型未声明本次操作能力。');
   validateParameters(recipe,model);
@@ -40,10 +47,11 @@ export function planExecution(input:Recipe,assets:Pick<Asset,'asset_id'|'width'|
   for(const message of geometry?.adjustments??[])diagnostics.push({code:'output.ratio_unexpressible',severity:'warning',message});
   if(geometry?.target==='auto'&&geometry.ratio){
     const hint=`期望输出画面的宽高比为 ${geometry.ratio}。请尽量保持该比例。`;
-    if(adapted.kind==='separated_inputs')adapted.prompt=`${adapted.prompt??''}\n\n${hint}`;
-    else {
+    const structured=(chain.format_version===3||(chain.format_version===4&&adapted.kind==='separated_inputs'))&&appendGenerationXmlRequirement(adapted,hint);
+    if(!structured&&adapted.kind==='separated_inputs')adapted.prompt=`${adapted.prompt??''}\n\n${hint}`;
+    else if(!structured) {
       const source=chain.blocks[0];
-      if(source)adapted.blocks!.push({type:'text',text:hint,source_module_id:source.source_module_id,reference_id:source.reference_id,reference_type:source.reference_type});
+      if(source)adapted.blocks!.push({type:'text',text:chain.format_version===4?`\n\n${hint}`:hint,source_module_id:source.source_module_id,reference_id:source.reference_id,reference_type:source.reference_type});
     }
   }
   adapted.adjustments=diagnostics.filter(d=>d.severity==='warning').map(d=>d.message);

@@ -11,8 +11,10 @@ import { ProjectRepository, atomicJson, projectFilename } from '../adapters/proj
 import { MockGenerator } from '../adapters/mock-generator.js';
 import { openModelLibrary,modelLibraryFilename } from '../adapters/model-library-repository.js';
 import { ExecutionRegistry } from '../adapters/execution-registry.js';
-import { loadPromptSettings,savePromptCustomizations,importPromptCustomizations,exportPromptCustomizations } from '../adapters/prompt-config-repository.js';
+import { GenerationFailureLog } from '../adapters/generation-failure-log.js';
+import { loadPromptSettings,savePromptCustomizations,savePromptSettings,savePromptPresetLibrary,importPromptSettings,exportPromptSettings } from '../adapters/prompt-config-repository.js';
 import { emptyPromptCustomizations, type PromptCustomizations } from '../core/prompt-customization.js';
+import { createPromptSettings, type PromptSettingsDocument } from '../core/prompt-settings.js';
 import { loadModuleSettings,saveModuleSettings } from '../adapters/module-settings-repository.js';
 import { loadGenerationTimings } from '../adapters/generation-timing-repository.js';
 import { ReferencePreprocessor } from '../adapters/reference-preprocessor.js';
@@ -26,7 +28,7 @@ import { ImagesGenerator } from '../adapters/images-generator.js';
 import { ChatCompletionsAdapter } from '../adapters/chat-completions.js';
 import { MaskPixels } from '../adapters/mask-pixels.js';
 import { commandSchema } from '../shared/commands.js';
-import type { ApiResponse, WorkspaceView } from '../shared/api.js';
+import type { ApiResponse, WorkspaceView, ModuleInferenceProgress } from '../shared/api.js';
 import { EncryptedSecretStore } from './secret-store.js';
 import { ModelTests,modelTestSchema,type ModelTestRecord } from '../core/model-tests.js';
 import {ProjectLibrary} from '../adapters/project-library.js';
@@ -38,6 +40,7 @@ import {inspectDocumentTarget,sameDocumentFile} from '../adapters/document-save-
 
 export class DesktopController {
   private promptCustomizations:PromptCustomizations=structuredClone(emptyPromptCustomizations);
+  private promptSettings:PromptSettingsDocument=createPromptSettings();
   private showMessage:(options:import('electron').MessageBoxOptions)=>Promise<{response:number}>;
   private inferences=new Map<string,AbortController>();
   private referenceDownloads=new Map<LocalImageModelKind,AbortController>();
@@ -91,7 +94,9 @@ export class DesktopController {
     const file = path.join(runtimeDirectory, modelLibraryFilename);
     const configs = await openModelLibrary(runtimeDirectory);
     const preprocessing=new ReferencePreprocessor(runtimeDirectory);
-    const executors=new ExecutionRegistry((bytes,settings,signal)=>preprocessing.process(bytes,settings,signal)).register(new MockGenerator()).register(new GeminiGenerator()).register(new ImagesGenerator()).register(new ChatCompletionsAdapter());
+    const failureLog=new GenerationFailureLog(runtimeDirectory);
+    await failureLog.initialize().catch(()=>{console.warn('本地生成失败日志暂时无法清理。');});
+    const executors=new ExecutionRegistry((bytes,settings,signal)=>preprocessing.process(bytes,settings,signal),record=>failureLog.append(record)).register(new MockGenerator()).register(new GeminiGenerator()).register(new ImagesGenerator()).register(new ChatCompletionsAdapter());
     const descriptions=executors.descriptions();
     descriptions.push({adapter_id:'local-pending',version:1,title:'本地引擎 · 待选型',kind:'local',installed:false,purposes:['generation'],requires_credential:false,supports_probe:false,interleaving:['native'],operations:[],parameters:[]});
     const library = new ModelLibrary(configs, data => atomicJson(file, data), new EncryptedSecretStore(path.join(runtimeDirectory, 'credentials')),descriptions);
@@ -99,8 +104,9 @@ export class DesktopController {
     try{testRecords=z.array(modelTestSchema).max(200).parse(JSON.parse(await readFile(testFile,'utf8')));}catch(e){if((e as NodeJS.ErrnoException).code!=='ENOENT')throw new Error('模型测试记录无效，不会静默清除。');testRecords=[];}
     const modelTests=new ModelTests(testRecords,records=>atomicJson(testFile,records),executors,model=>library.credential(model));await modelTests.recover();
     const prompts=await loadPromptSettings(runtimeDirectory);
-    const controller = new DesktopController(new Workspace(library, executors,new ModuleRegistry(undefined,prompts.config,prompts.customizations.roles),new MaskPixels(),2000), window, runtimeDirectory,executors,modelTests,options?.showMessage,options?.projectRoot,preprocessing);
+    const controller = new DesktopController(new Workspace(library, executors,new ModuleRegistry(undefined,prompts.config,prompts.customizations.roles,prompts.settings.inference_instructions),new MaskPixels()), window, runtimeDirectory,executors,modelTests,options?.showMessage,options?.projectRoot,preprocessing);
     controller.promptCustomizations=prompts.customizations;
+    controller.promptSettings=prompts.settings;
     controller.workspace.moduleSettings=await loadModuleSettings(runtimeDirectory);
     controller.workspace.generationTimings=await loadGenerationTimings(runtimeDirectory);
     await controller.documents.initialize();
@@ -143,7 +149,7 @@ export class DesktopController {
     let auto_prompt:WorkspaceView['auto_prompt'];
     if(project)try{auto_prompt=getAutoPromptState(project.recipe,workspace.registry,workspace.moduleSettings,project.assets);}
     catch(error){adaptation_error??=error instanceof Error?error.message:'自动提示词条件无法读取。';}
-    return { project,prompt_customizations:structuredClone(this.promptCustomizations),generation_timings:structuredClone(Object.fromEntries(workspace.generationTimingByTask)),reference_models,module_settings:structuredClone(workspace.moduleSettings),auto_prompt,prompt_config:structuredClone(workspace.registry.promptConfig), models: await workspace.models.list(),model_tests:this.modelTests.list(),connections:await workspace.models.connections(),adapters:workspace.models.adapters,assignments:workspace.models.effectiveAssignments(), module_definitions: workspace.registry.list(), chain, adaptation, adaptation_error,
+    return { project,prompt_customizations:structuredClone(this.promptCustomizations),prompt_settings:structuredClone(this.promptSettings),generation_timings:structuredClone(Object.fromEntries(workspace.generationTimingByTask)),reference_models,module_settings:structuredClone(workspace.moduleSettings),auto_prompt,prompt_config:structuredClone(workspace.registry.promptConfig), models: await workspace.models.list(),model_tests:this.modelTests.list(),connections:await workspace.models.connections(),adapters:workspace.models.adapters,assignments:workspace.models.effectiveAssignments(), module_definitions: workspace.registry.list(), chain, adaptation, adaptation_error,
       project_location: workspace.repository instanceof DraftRepository?null:workspace.repository instanceof DocumentRepository?workspace.repository.filename:workspace.repository?.directory ?? null,
       project_record_id:this.currentRecordId,project_format:workspace.repository instanceof DraftRepository?'draft':workspace.repository instanceof DocumentRepository?'ediro':'legacy',project_storage_version:workspace.repository instanceof DocumentRepository?workspace.repository.storageVersion:undefined,save_state:workspace.saveState,save_error:workspace.saveError,
       recent_workspaces: await this.recentWorkspaces(),
@@ -163,6 +169,7 @@ export class DesktopController {
     try {
       // Validate at the privileged boundary; never trust renderer objects.
       const command = commandSchema.parse(raw);
+      if(command.type==='mask:preview')return {ok:true,mask_preview:await this.workspace.previewMask(command.project_id,command.task_id,command.mode,command.feather,command.composite_strokes)};
       if(command.type==='reference:cancel-preview'){this.referencePreviews.get(command.request_id)?.abort();return {ok:true};}
       if(['project:create','project:open','workspace:resume','workspace:remove'].includes(command.type))this.cancelReferencePreviews();
       if(command.type==='reference-model:prepare'){
@@ -201,6 +208,7 @@ export class DesktopController {
       if(command.type==='module:infer'){
         if(this.inferences.size)throw new Error('已有模块推理正在运行，请等待或取消。');
         const controller=new AbortController();this.inferences.set(command.request_id,controller);
+        let previewTimer:ReturnType<typeof setTimeout>|undefined,previewClosed=false;
         try{
           const prepared=await this.workspace.serial(async()=>{
             if(controller.signal.aborted)throw new Error('推理已取消。');
@@ -216,7 +224,27 @@ export class DesktopController {
             const ids=new Set(plan.job.adapted_input.blocks?.filter(b=>b.type==='image').map(b=>b.asset_id)??plan.job.adapted_input.image_asset_ids??[]);
             return {plan,project,automatic,originalText,context:{model,job:plan.job,readImage:async(id:string)=>{const asset=assets.find(a=>a.asset_id===id);if(!ids.has(id)||!asset)throw new Error('推理请求不能读取上下文之外的素材。');return repository.readAsset(asset);},resolveCredential:()=>this.workspace.models.credential(model)}};
           });
-          const suggestion=await executeModuleInference(this.executors,prepared.context,prepared.plan,controller.signal);
+          let previewText='',lastPreviewAt=0;
+          const sendPreview=()=>{
+            previewTimer=undefined;
+            if(previewClosed||controller.signal.aborted||this.workspace.project!==prepared.project)return;
+            const target=prepared.project.recipe.modules.find(module=>module.enabled&&module.reference_type==='prompt'&&module.auto_prompt);
+            if(target?.module_id!==command.module_id||target.user_instruction!==prepared.originalText)return;
+            const w=this.window();if(w.isDestroyed()||w.webContents.isDestroyed())return;
+            lastPreviewAt=Date.now();
+            const event:ModuleInferenceProgress={request_id:command.request_id,project_id:command.project_id,module_id:command.module_id,text:previewText};
+            w.webContents.send('ediro:inference-progress',event);
+          };
+          const onTextDelta=(delta:string)=>{
+            if(previewClosed||controller.signal.aborted||!delta)return;
+            previewText+=delta;
+            const delay=50-(Date.now()-lastPreviewAt);
+            if(delay<=0){if(previewTimer)clearTimeout(previewTimer);sendPreview();}
+            else if(!previewTimer)previewTimer=setTimeout(sendPreview,delay);
+          };
+          const suggestion=await executeModuleInference(this.executors,{...prepared.context,...(prepared.automatic?{onTextDelta}:{})},prepared.plan,controller.signal);
+          if(previewTimer){clearTimeout(previewTimer);sendPreview();}
+          previewClosed=true;
           if(prepared.automatic)return await this.workspace.serial(async()=>{
             if(controller.signal.aborted)throw new Error('推理已取消，原文未修改。');
             const project=this.workspace.requireProject();
@@ -229,7 +257,7 @@ export class DesktopController {
             return {ok:true,suggestion,state:await this.view()};
           });
           return {ok:true,suggestion};
-        }finally{this.inferences.delete(command.request_id);}
+        }finally{previewClosed=true;if(previewTimer)clearTimeout(previewTimer);this.inferences.delete(command.request_id);}
       }
       if(command.type==='model:test'){
         const model=await this.workspace.serial(()=>this.workspace.models.execution(command.model_config_id));
@@ -240,29 +268,37 @@ export class DesktopController {
         const w = this.window();
         let selected_asset_id:string|undefined;
         switch (command.type) {
+          case 'prompt-settings:save':
           case 'prompt-customizations:save':{
-            const prompts=await savePromptCustomizations(this.runtimeDirectory,command.customizations);
+            const prompts=command.type==='prompt-settings:save'
+              ?await savePromptSettings(this.runtimeDirectory,command.settings)
+              :await savePromptCustomizations(this.runtimeDirectory,command.customizations);
             // Enqueued jobs and in-flight inference already own their snapshots.
-            this.workspace.registry=new ModuleRegistry(undefined,prompts.config,prompts.customizations.roles);
+            this.workspace.registry=new ModuleRegistry(undefined,prompts.config,prompts.customizations.roles,prompts.settings.inference_instructions);
             this.promptCustomizations=prompts.customizations;
+            this.promptSettings=prompts.settings;
             if(this.workspace.project)this.workspace.project.recipe=this.workspace.registry.resolveRecipe(this.workspace.project.recipe);
             break;
           }
+          case 'prompt-presets:save':{
+            const prompts=await savePromptPresetLibrary(this.runtimeDirectory,command.presets);
+            // Saving a library entry never changes the instructions used by tasks.
+            this.promptSettings=prompts.settings;
+            break;
+          }
           case 'prompt-customizations:import':{
-            const selected=await dialog.showOpenDialog(w,{title:'导入自定义指令',properties:['openFile'],filters:[{name:'Ediro 自定义指令',extensions:['json']}]});
+            const selected=await dialog.showOpenDialog(w,{title:'导入提示词配置',properties:['openFile'],filters:[{name:'Ediro 提示词配置',extensions:['json']}]});
             if(selected.canceled||!selected.filePaths[0])return {ok:true,cancelled:true};
-            return {ok:true,prompt_customizations:await importPromptCustomizations(selected.filePaths[0])};
+            const imported=await importPromptSettings(selected.filePaths[0]);
+            return {ok:true,prompt_settings:imported,prompt_customizations:imported.version===2?imported.customizations:imported};
           }
           case 'prompt-customizations:export':{
-            const selected=await dialog.showSaveDialog(w,{title:'导出自定义指令',defaultPath:'Ediro-自定义指令.json',filters:[{name:'Ediro 自定义指令',extensions:['json']}],properties:['showOverwriteConfirmation']});
+            const selected=await dialog.showSaveDialog(w,{title:'导出提示词配置',defaultPath:'Ediro-提示词配置.json',filters:[{name:'Ediro 提示词配置',extensions:['json']}],properties:['showOverwriteConfirmation']});
             if(selected.canceled||!selected.filePath)return {ok:true,cancelled:true};
-            await exportPromptCustomizations(selected.filePath,command.customizations);
+            await exportPromptSettings(selected.filePath,command.settings??{...this.promptSettings,customizations:command.customizations});
             return {ok:true};
           }
           case 'module-settings:save':this.workspace.moduleSettings=await saveModuleSettings(this.runtimeDirectory,command.settings);break;
-          case 'mask:save-composite':await this.workspace.saveCompositeMask(command.project_id,command.task_id,command.strokes);break;
-          case 'mask:save-draft':await this.workspace.saveMaskDraft(command.project_id,command.draft);break;
-          case 'mask:preview':return {ok:true,mask_preview:await this.workspace.previewMask(command.project_id,command.task_id,command.mode,command.feather,command.composite_strokes)};
           case 'mask:start':await this.workspace.enqueueMask(command.project_id,command.draft);break;
           case 'mask:reprocess':{const selected_asset_id=await this.workspace.reprocessMask(command.project_id,command.task_id,command.mode,command.feather,command.composite_strokes);return {ok:true,state:await this.view(),selected_asset_id};}
           case 'job:model-input':{
@@ -354,6 +390,11 @@ export class DesktopController {
           case 'module:reference-type': await this.workspace.changeReferenceType(command.module_id,command.reference_type); break;
           case 'module:tool': await this.workspace.saveToolReference(command.module_id,Buffer.from(command.png_base64,'base64'),command.state,command.instruction); break;
           case 'assets:drop': selected_asset_id=await this.importOrRecover(command.paths,command.module_id); break;
+          case 'assets:paste': {
+            if (this.workspace.requireProject().project_id !== command.project_id) throw new Error('工程已切换，请在当前模块重新粘贴图片。');
+            await this.workspace.importPastedImages(command.images, command.module_id);
+            break;
+          }
           case 'asset:relink': {
             const selected = await dialog.showOpenDialog(w,{title:'重新定位同一份源图片',properties:['openFile'],filters:[{name:'图片',extensions:['png','jpg','jpeg','webp']}]});
             if(selected.canceled)return {ok:true,cancelled:true};
@@ -443,7 +484,6 @@ export class DesktopController {
       await this.openProjectFile(paths[0]);return;
     }
     if(!moduleId&&paths.length===1){
-      await this.workspace.flush();
       const matches=await this.documents.findOutputs(paths[0],this.hiddenRecords);
       const sidecar=matches.length||await this.projects.records.find(paths[0])||await (this.workspace.repository as ProjectRepository).findOutputRecord(paths[0]);
       if(sidecar){const choice=await this.showMessage({type:'question',buttons:['取消','仅作为素材','恢复工作'],defaultId:1,cancelId:0,message:'找到这张图片的 Ediro 产出记录',detail:'恢复工作会在新工程中打开这一版的参数和创作模块；仅作为素材则加入当前工作。'});if(choice.response===0)return;if(choice.response===2)return this.recover(paths[0],matches);}

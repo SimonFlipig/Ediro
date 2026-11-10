@@ -136,6 +136,9 @@ app.whenReady().then(async()=>{
       const controls=[...document.querySelectorAll('.settings-page-navigation button,.settings-page-actions button,.module-settings-row select')];
       const clipped=[];
       for(const el of controls){
+        // Additional module defaults legitimately extend below this scroll pane.
+        // Check reachability after scrolling each control into view.
+        el.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});
         const r=el.getBoundingClientRect(),name=el.getAttribute('aria-label')||el.textContent.trim();
         if(!r.width||!r.height||r.left<0||r.top<0||r.right>innerWidth+1||r.bottom>innerHeight+1){clipped.push(name+':viewport');continue;}
         for(let parent=el.parentElement;parent;parent=parent.parentElement){
@@ -145,11 +148,12 @@ app.whenReady().then(async()=>{
           if(/auto|scroll|hidden|clip/.test(style.overflowY)&&(r.top<top-1||r.bottom>top+parent.clientHeight+1))clipped.push(name+':vertical');
         }
       }
-      return {width:innerWidth,height:innerHeight,controlCount:controls.length,clipped,
+      document.querySelector('.module-settings-body').scrollTop=0;
+      return {width:innerWidth,height:innerHeight,controlCount:controls.length,blurControlCount:document.querySelectorAll('.module-settings-row select[aria-label$="模糊强度"]').length,clipped,
         overflow:[...document.querySelectorAll('.settings-page-heading,.module-settings-body,.module-settings-row')].filter(el=>el.scrollWidth>el.clientWidth+2).map(el=>el.className),
         previewCount:document.querySelectorAll('.module-settings-body img,.module-settings-body canvas').length};
     })()`);
-    assert.equal(layout.controlCount,9);assert.deepEqual(layout.clipped,[]);assert.deepEqual(layout.overflow,[]);assert.equal(layout.previewCount,0);assert.equal(win.isVisible(),false);
+    assert.equal(layout.controlCount,14+layout.blurControlCount);assert.deepEqual(layout.clipped,[]);assert.deepEqual(layout.overflow,[]);assert.equal(layout.previewCount,0);assert.equal(win.isVisible(),false);
     const file=path.join(base,`module-settings-${width}x${height}.png`);
     await phase(`capture-${width}x${height}-write`);
     const frame=await freshFrame(`capture ${width}x${height}`);
@@ -159,7 +163,7 @@ app.whenReady().then(async()=>{
 
   await phase('default-module-settings');
   await load();await openSettings();await openModules();
-  assert.equal(await js(`document.querySelectorAll('.module-settings-row select').length`),5);
+  assert.equal(await js(`document.querySelectorAll('.module-settings-row select').length`),10);
   assert.equal(await js(`document.querySelector('select[aria-label="提示词默认角色"]').value`),'general');
   assert.equal(await js(`document.querySelectorAll('.module-settings-row select[aria-label$="模糊强度"]').length`),0);
   assert.deepEqual(await values(),expectedValues(1024,1024));
@@ -346,7 +350,7 @@ app.whenReady().then(async()=>{
   assert.equal(await js(`document.querySelector('.module-editor textarea').value`),compositionBefore.user_instruction);
   await waitPreview(512);await select(editorSelect('最长边'),'1024');await waitPreview(1024);await select(editorSelect('模糊强度'),'weak');await waitPreview(1024);
   const savedInstruction='模块独立预处理参数已保存';await setText(savedInstruction);
-  await click('保存并关闭','.module-editor');await until(async()=>!await visible('.module-editor'),'save module reference settings');
+  await click('应用并关闭','.module-editor');await until(async()=>!await visible('.module-editor'),'save module reference settings');
   assert.deepEqual(currentModule(composition.module_id).reference_settings,draftSettings);assert.equal(currentModule(composition.module_id).user_instruction,savedInstruction);
   assert.deepEqual(currentModule(secondComposition.module_id).reference_settings,secondComposition.reference_settings);assert.equal(await readFile(settingsFile,'utf8'),globalBeforeEditor);
   await openEditorId(composition.module_id);assert.deepEqual(await editorValues(),draftSettings);assert.equal(await js(`document.querySelector('.module-editor textarea').value`),savedInstruction);await waitPreview(1024);await click('取消','.module-editor');

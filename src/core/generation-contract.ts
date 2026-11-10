@@ -15,6 +15,8 @@ export const parameterFieldSchema=z.object({
   values:z.array(z.string()).optional(),minimum:z.number().optional(),maximum:z.number().optional(),
   value_labels:z.record(z.string(),z.string()).optional(),
   default:scalar.optional(),feature:z.string().optional(),help:z.string().optional(),
+  display_scopes:z.array(z.enum(['workflow','model-defaults'])).optional(),
+  default_placement:z.enum(['primary','advanced']).optional(),fixed:z.boolean().optional(),
   required:z.boolean().optional(),integer:z.boolean().optional(),
   formats:z.array(z.string()).optional(),forbidden_values_by_format:z.record(z.string(),z.array(z.string())).optional(),
 });

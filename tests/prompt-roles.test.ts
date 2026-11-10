@@ -4,7 +4,8 @@ import { compileRecipe } from '../src/core/compiler.js';
 import { defaultParameters, recipeSchema, type Recipe } from '../src/core/domain.js';
 import { defaultModuleSettings, moduleSettingsSchema } from '../src/core/module-settings.js';
 import { ModuleRegistry } from '../src/core/modules.js';
-import { resolvePromptRole } from '../src/core/prompt-roles.js';
+import { promptRoles,resolvePromptRole } from '../src/core/prompt-roles.js';
+import { automaticPromptTask,buildPromptSystemInstruction,sharedPromptTaskRules } from '../src/core/module-inference-tasks.js';
 
 test('新提示词采用默认角色，默认变更不覆盖已有模块，复制保留原选择',()=>{
   const registry=new ModuleRegistry(),settings=structuredClone(defaultModuleSettings);
@@ -39,4 +40,22 @@ test('角色定义不会作为额外文字发给生图模型',()=>{
   const general=compileRecipe(recipe,registry);
   prompt.prompt_role='merchandiser';
   assert.deepEqual(compileRecipe(recipe,registry),general);
+});
+
+test('共用系统任务按需加入参考要求，未参与模块不被预先假定，角色原文保留',()=>{
+  assert.equal(automaticPromptTask.instruction,sharedPromptTaskRules.instruction);
+  assert.equal(automaticPromptTask.output_instruction,sharedPromptTaskRules.output_instruction);
+  for(const role of promptRoles){
+    const system=buildPromptSystemInstruction(role.instruction);
+    assert.ok(system.startsWith('# 角色\n'+role.instruction+'\n\n# 任务\n'));
+    assert.doesNotMatch(system,/# 参考用途|role=target|module_id|subject 提供主体身份|composition 只提供布局|style 只提供环境类型/);
+    const scoped=buildPromptSystemInstruction(role.instruction,'本次主体参考要求 SENTINEL');
+    assert.ok(scoped.includes('# 参考用途\n本次主体参考要求 SENTINEL\n\n# 输出'));
+    assert.match(system,/用户明确要求在画面中展示的字面文字必须保留/);
+    assert.doesNotMatch(role.instruction,/reference_scope|Return concrete image-generation instructions|Preserve user intent/);
+  }
+  const custom='  自定义工作方式。\n# 用户原有标题\n保留这些空白。\t';
+  assert.ok(buildPromptSystemInstruction(custom).startsWith('# 角色\n'+custom+'\n\n# 任务\n'));
+  assert.equal(buildPromptSystemInstruction(' \n\t '),buildPromptSystemInstruction(''));
+  assert.equal(buildPromptSystemInstruction(''),'# 任务\n'+sharedPromptTaskRules.instruction+'\n\n# 输出\n'+sharedPromptTaskRules.output_instruction);
 });

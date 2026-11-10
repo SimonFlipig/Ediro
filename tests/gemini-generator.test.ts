@@ -6,7 +6,7 @@ import { ExecutionRegistry } from '../src/adapters/execution-registry.js';
 import { seedModels } from '../src/core/models.js';
 import type { CloudExecutionContext } from '../src/core/ports.js';
 import type { Job,Block } from '../src/core/domain.js';
-import {geminiCompatibilitySchema} from '../src/core/domain.js';
+import {MAX_SYSTEM_INSTRUCTION_CHARS,geminiCompatibilitySchema} from '../src/core/domain.js';
 import {MB,validateGeminiUpload,geminiUploadLimits} from '../src/core/image-limits.js';
 function context(bytes:Buffer):CloudExecutionContext {const model=seedModels()[2],blocks:Block[]=[{type:'text',text:'first',source_module_id:'mod_one',reference_type:'subject',reference_id:'ref_one'},{type:'image',asset_id:'asset_one',source_module_id:'mod_one',reference_type:'subject',reference_id:'ref_one'},{type:'text',text:'last',source_module_id:'mod_two',reference_type:'prompt',reference_id:'ref_two'}];
   const job={recipe_snapshot:{core_parameters:model.defaults},chain_snapshot:{blocks,mode:'reference_generation'},adapted_input:{kind:'native_blocks',blocks,adjustments:[]}} as unknown as Job;
@@ -15,7 +15,7 @@ test('Google 请求保留图文顺序与参数；JPEG 响应如实保存，忽�
   const input=await sharp({create:{width:20,height:10,channels:3,background:'#fff'}}).png().toBuffer(),output=await sharp(input).jpeg().toBuffer();let requestBody:any,url='';
   const adapter=new GeminiGenerator(async(u,init)=>{url=String(u);requestBody=JSON.parse(init!.body as string);assert.equal((init!.headers as Record<string,string>)['x-goog-api-key'],'test-key');return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{thought:true,inlineData:{mimeType:'image/png',data:input.toString('base64')}},{text:'done'},{inlineData:{mimeType:'image/jpeg',data:output.toString('base64')}}]}}],usageMetadata:{totalTokenCount:42},responseId:'request-one'});});
   const c=context(input);c.model.endpoint='https://api.aipix.one';const result=await new ExecutionRegistry().register(adapter).execute(c,new AbortController().signal,async()=>{});
-  assert.equal(url,'https://api.aipix.one/v1beta/models/gemini-3-pro-image:generateContent');assert.deepEqual(requestBody.contents[0].parts.map((p:any)=>p.text??'image'),['first','image','last']);assert.deepEqual(requestBody.generationConfig.imageConfig,{aspectRatio:'1:1',imageSize:'2K'});
+  assert.equal(url,'https://api.aipix.one/v1beta/models/gemini-3-pro-image:generateContent');assert.deepEqual(requestBody.contents[0].parts.map((p:any)=>p.text??'image'),['first','image','last']);assert.deepEqual(requestBody.generationConfig.imageConfig,{aspectRatio:'1:1',imageSize:'2K'});assert.equal(requestBody.systemInstruction,undefined);
   assert.equal(result.images.length,1);assert.equal(result.images[0].format,'jpeg');assert.equal(result.images[0].width,20);assert.equal(result.text,'done');assert.equal(result.usage!.totalTokenCount,42);
 });
 test('原生路径规范化；未知协议不自动回退',async()=>{assert.equal(geminiRoot('https://api.aipix.one/v1beta'),'https://api.aipix.one/v1beta');assert.equal(geminiRoot('https://api.aipix.one/gemini'),'https://api.aipix.one/gemini/v1beta');assert.throws(()=>geminiRoot('https://api.aipix.one/v1'),/原生连接/);
@@ -64,4 +64,164 @@ test('理解用途只请求文本结果，不发送生图参数；不需要修�
 });
 test('Google 自动尺寸不强制 aspectRatio，非标准期望只作为提示表达',async()=>{
   const c=context(awaitBuffer);c.job.recipe_snapshot.core_parameters.aspect_ratio='auto';c.job.output_geometry={selection:'auto',basis:'composition',ratio:'137:90',target:'auto',adjustments:['由模型自动决定']};const adapter=new GeminiGenerator(async(_url,init)=>{const body=JSON.parse(init!.body as string);assert.equal(body.generationConfig.imageConfig.aspectRatio,undefined);assert.equal(body.generationConfig.imageConfig.imageSize,'2K');assert.match(body.contents[0].parts.at(-1).text,/137:90/);return Response.json({candidates:[{content:{parts:[{inlineData:{mimeType:'image/png',data:awaitBuffer.toString('base64')}}]}}]});});await adapter.execute(c,new AbortController().signal,async()=>{});
+});
+
+test('理解请求将系统文字放在顶层 systemInstruction，保留原生与拍平输入顺序和真实捕获',async()=>{
+  for(const separated of [false,true]){
+    const c=context(awaitBuffer);c.model.purpose='understanding';c.model.model='gemini-understanding';
+    const systemInstruction='  固定规则\n仅输出描述正文。  ';
+    if(separated)c.job.adapted_input={kind:'separated_inputs',prompt:'有序参考图',image_asset_ids:['asset_one','asset_two','asset_one'],adjustments:[]};
+    else c.job.adapted_input.blocks!.splice(2,0,{type:'image',asset_id:'asset_two',source_module_id:'mod_one',reference_type:'subject',reference_id:'ref_one'},{type:'image',asset_id:'asset_one',source_module_id:'mod_one',reference_type:'subject',reference_id:'ref_one'});
+    c.job.adapted_input.system_instruction=systemInstruction;
+    const jpeg=await sharp(awaitBuffer).jpeg().toBuffer(),read:string[]=[];let captured='',calls=0;
+    c.readImage=async id=>{read.push(id);return id==='asset_two'?jpeg:awaitBuffer;};
+    c.recordModelInput=async input=>{assert.equal(input.body.encoding,'json');if(input.body.encoding==='json')captured=input.body.json;};
+    const before=structuredClone(c.job.adapted_input);
+    const adapter=new GeminiGenerator(async(_url,init)=>{
+      calls++;assert.equal(init?.body,captured);const body=JSON.parse(String(init?.body));
+      assert.deepEqual(body.systemInstruction,{parts:[{text:systemInstruction}]});assert.equal(body.contents.length,1);assert.equal(body.contents[0].role,'user');
+      const parts=body.contents[0].parts;
+      assert.deepEqual(parts.map((part:any)=>part.text??part.inlineData.mimeType),separated?['有序参考图','image/png','image/jpeg','image/png']:['first','image/png','image/jpeg','image/png','last']);
+      assert.equal(parts[1].inlineData.data,parts[3].inlineData.data);
+      return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:'完整描述'}]}}]});
+    });
+    assert.equal(adapter.description.supports_system_instruction,true);
+    assert.equal((await adapter.execute(c,new AbortController().signal,async()=>{})).text,'完整描述');
+    assert.equal(calls,1);assert.deepEqual(read,['asset_one','asset_two','asset_one']);assert.deepEqual(c.job.adapted_input,before);
+  }
+});
+
+test('旧的或空白系统指令不产生 systemInstruction 字段',async()=>{
+  for(const value of [undefined,'',' \n\t ']){
+    const c=context(awaitBuffer);c.model.purpose='understanding';c.job.adapted_input.system_instruction=value;
+    await new GeminiGenerator(async(_url,init)=>{
+      const body=JSON.parse(String(init?.body));assert.equal(Object.hasOwn(body,'systemInstruction'),false);
+      assert.deepEqual(body.contents[0].parts.map((part:any)=>part.text??'image'),['first','image','last']);
+      return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:'完整描述'}]}}]});
+    }).execute(c,new AbortController().signal,async()=>{});
+  }
+});
+
+test('非法系统指令和生图误入在读取图片、捕获及请求之前拒绝',async()=>{
+  let calls=0,reads=0,credentials=0,captures=0;
+  for(const value of [null,{},['规则'],'字'.repeat(MAX_SYSTEM_INSTRUCTION_CHARS+1),'生图不应携带系统指令']){
+    const c=context(awaitBuffer);if(value!=='生图不应携带系统指令')c.model.purpose='understanding';
+    (c.job.adapted_input as unknown as {system_instruction:unknown}).system_instruction=value;
+    c.readImage=async()=>{reads++;return awaitBuffer;};c.resolveCredential=async()=>{credentials++;return 'key';};c.recordModelInput=async()=>{captures++;};
+    await assert.rejects(new GeminiGenerator(async()=>{calls++;return Response.json({});}).execute(c,new AbortController().signal,async()=>{}),/系统指令.*未发送请求/);
+  }
+  assert.deepEqual({calls,reads,credentials,captures},{calls:0,reads:0,credentials:0,captures:0});
+});
+
+test('理解系统指令被上游拒绝时不丢弃或改写后重试',async()=>{
+  const c=context(awaitBuffer);c.model.purpose='understanding';c.job.adapted_input.system_instruction='固定规则';let calls=0;
+  await assert.rejects(new GeminiGenerator(async(_url,init)=>{
+    calls++;assert.deepEqual(JSON.parse(String(init?.body)).systemInstruction,{parts:[{text:'固定规则'}]});
+    return Response.json({error:{message:'test-key unsupported systemInstruction'}},{status:400});
+  }).execute(c,new AbortController().signal,async()=>{}),error=>error instanceof Error&&/拒绝请求参数/.test(error.message)&&!error.message.includes('test-key'));
+  assert.equal(calls,1);assert.equal(c.job.adapted_input.system_instruction,'固定规则');
+});
+
+test('Gemini 流式及非流式完整发送超过32000字符的编译系统指令，并接受编译总长度边界',async()=>{
+  const compiled='角'.repeat(32000)+'\n固定规则：按模块职责理解参考信息。';
+  for(const instruction of [compiled,'系'.repeat(MAX_SYSTEM_INSTRUCTION_CHARS)])for(const streaming of [false,true]){
+    const c=context(awaitBuffer);c.model.purpose='understanding';c.model.model='gemini-understanding';c.job.adapted_input.system_instruction=instruction;
+    if(streaming)c.onTextDelta=()=>{};
+    let body:any,captured='',calls=0;
+    c.recordModelInput=async input=>{if(input.body.encoding==='json')captured=input.body.json;};
+    const adapter=new GeminiGenerator(async(_url,init)=>{
+      calls++;assert.equal(init?.body,captured);body=JSON.parse(String(init?.body));
+      const result={candidates:[{finishReason:'STOP',content:{parts:[{text:'完整正文'}]}}]};
+      return streaming?new Response('data: '+JSON.stringify(result)+'\n\n',{headers:{'Content-Type':'text/event-stream'}}):Response.json(result);
+    });
+    const result=await new ExecutionRegistry().register(adapter).execute(c,new AbortController().signal,async()=>{});
+    assert.deepEqual(body.systemInstruction,{parts:[{text:instruction}]});assert.deepEqual(body.contents[0].parts.map((part:any)=>part.text??'image'),['first','image','last']);
+    assert.equal(result.text,'完整正文');assert.equal(calls,1);
+  }
+});
+
+test('Gemini 生图等待十分钟，理解仍等待三分钟，成功结果不携带诊断字段',async t=>{
+  const timeouts:number[]=[];
+  t.mock.method(AbortSignal,'timeout',(milliseconds:number)=>{timeouts.push(milliseconds);return new AbortController().signal;});
+  for(const understanding of [false,true]){
+    const c=context(awaitBuffer);c.diagnostics={stage:'preparing'};
+    if(understanding)c.model.purpose='understanding';
+    const before=structuredClone(c.job);
+    const adapter=new GeminiGenerator(async()=>Response.json({responseId:'body-request-1',candidates:[{finishReason:'STOP',content:{parts:understanding?[{text:'完整描述'}]:[{inlineData:{mimeType:'image/png',data:awaitBuffer.toString('base64')}}]}}]}));
+    const result=await adapter.execute(c,new AbortController().signal,async()=>{});
+    assert.equal(c.diagnostics.timeout_ms,understanding?180_000:600_000);
+    assert.equal(Object.hasOwn(result,'diagnostics'),false);
+    assert.deepEqual(c.job,before);
+  }
+  assert.deepEqual(timeouts,[600_000,180_000]);
+});
+
+test('Gemini 响应体超时明确提示，保留已收字节和响应头编号且不重试或写入任务',async t=>{
+  const deadline=new AbortController();
+  t.mock.method(AbortSignal,'timeout',()=>deadline.signal);
+  const c=context(awaitBuffer);c.diagnostics={stage:'preparing'};
+  const before=structuredClone(c.job),chunk=new TextEncoder().encode('{"candidates":[');let calls=0,pulls=0;
+  const adapter=new GeminiGenerator(async()=>{
+    calls++;
+    return new Response(new ReadableStream<Uint8Array>({pull(stream){
+      if(pulls++===0){stream.enqueue(chunk);return;}
+      deadline.abort(new DOMException('test-key private upstream detail','TimeoutError'));
+      stream.error(deadline.signal.reason);
+    }},{highWaterMark:0}),{headers:{'x-request-id':'header-request-123'}});
+  });
+  await assert.rejects(adapter.execute(c,new AbortController().signal,async()=>{}),error=>error instanceof Error&&/超过 10 分钟/.test(error.message)&&/计费状态未知/.test(error.message)&&!error.message.includes('test-key'));
+  assert.equal(calls,1);
+  assert.equal(c.diagnostics.stage,'response_body');assert.equal(c.diagnostics.reason,'timeout');
+  assert.equal(c.diagnostics.timeout_ms,600_000);assert.equal(c.diagnostics.http_status,200);
+  assert.equal(c.diagnostics.received_bytes,chunk.length);assert.equal(c.diagnostics.upstream_request_id,'header-request-123');
+  assert.equal(c.diagnostics.error_name,'TimeoutError');assert.ok(!JSON.stringify(c.diagnostics).includes('test-key'));
+  assert.deepEqual(c.job,before);
+});
+
+test('Gemini 等待响应头超时与用户取消读取响应分别记录原因，不自动重试',async t=>{
+  const deadline=new AbortController();
+  t.mock.method(AbortSignal,'timeout',()=>deadline.signal);
+  const timed=context(awaitBuffer);timed.diagnostics={stage:'preparing'};let calls=0;
+  const timedAdapter=new GeminiGenerator(async()=>{calls++;deadline.abort(new DOMException('private timeout detail','TimeoutError'));throw deadline.signal.reason;});
+  await assert.rejects(timedAdapter.execute(timed,new AbortController().signal,async()=>{}),/超过 10 分钟/);
+  assert.equal(timed.diagnostics.stage,'request');assert.equal(timed.diagnostics.reason,'timeout');
+  assert.equal(timed.diagnostics.http_status,undefined);assert.equal(calls,1);
+
+  t.mock.restoreAll();
+  const caller=new AbortController(),cancelled=context(awaitBuffer);cancelled.diagnostics={stage:'preparing'};let pulls=0;
+  const cancelAdapter=new GeminiGenerator(async()=>{
+    calls++;
+    return new Response(new ReadableStream<Uint8Array>({pull(stream){
+      if(pulls++===0){stream.enqueue(new TextEncoder().encode('{'));return;}
+      caller.abort(new DOMException('private cancel detail','AbortError'));stream.error(caller.signal.reason);
+    }},{highWaterMark:0}),{headers:{'request-id':'cancel-request-1'}});
+  });
+  await assert.rejects(cancelAdapter.execute(cancelled,caller.signal,async()=>{}),error=>error instanceof Error&&/请求已取消/.test(error.message)&&!error.message.includes('超过'));
+  assert.equal(cancelled.diagnostics.stage,'response_body');assert.equal(cancelled.diagnostics.reason,'cancelled');
+  assert.equal(cancelled.diagnostics.upstream_request_id,'cancel-request-1');assert.equal(calls,2);
+});
+
+test('Gemini 无效 JSON 只记录分类和安全错误名，不回显敏感响应片段',async()=>{
+  const c=context(awaitBuffer);c.diagnostics={stage:'preparing'};
+  const raw='test-key private prompt image-base64';let calls=0;
+  const adapter=new GeminiGenerator(async()=>{calls++;return new Response(raw,{headers:{'x-goog-request-id':'bad-json-request'}});});
+  await assert.rejects(adapter.execute(c,new AbortController().signal,async()=>{}),error=>error instanceof Error&&/响应读取或解析失败/.test(error.message)&&!error.message.includes(raw));
+  assert.equal(calls,1);assert.equal(c.diagnostics.stage,'response_parse');assert.equal(c.diagnostics.reason,'invalid_json');
+  assert.equal(c.diagnostics.http_status,200);assert.equal(c.diagnostics.error_name,'SyntaxError');
+  assert.equal(c.diagnostics.received_bytes,Buffer.byteLength(raw));assert.equal(c.diagnostics.upstream_request_id,'bad-json-request');
+  assert.ok(!JSON.stringify(c.diagnostics).includes('test-key'));assert.equal(Object.hasOwn(c.diagnostics,'message'),false);
+});
+
+test('Gemini 结构或图片校验失败仍可从已解析正文保留请求编号，任务不增加诊断',async()=>{
+  for(const badStructure of [true,false]){
+    const c=context(awaitBuffer);c.diagnostics={stage:'preparing'};const before=structuredClone(c.job);let calls=0;
+    const adapter=new GeminiGenerator(async()=>{
+      calls++;
+      return Response.json({responseId:'body-request-bad-image',candidates:[{content:{parts:[{inlineData:{mimeType:'image/png',data:badStructure?123:Buffer.from('not an image').toString('base64')}}]}}]},{headers:{'x-request-id':'header-request-fallback'}});
+    });
+    await assert.rejects(adapter.execute(c,new AbortController().signal,async()=>{}),badStructure?/响应结构/:/图片无法完整解码/);
+    assert.equal(calls,1);assert.equal(c.diagnostics.upstream_request_id,'body-request-bad-image');
+    assert.equal(c.diagnostics.stage,badStructure?'response_validation':'image_decode');assert.equal(c.diagnostics.http_status,200);
+    assert.deepEqual(c.job,before);
+  }
 });

@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import type {DesktopApi,ViewAsset} from '../shared/api.js';
 import type {MaskMode,MaskStroke} from '../core/mask.js';
 
@@ -7,8 +7,10 @@ import type {MaskMode,MaskStroke} from '../core/mask.js';
 export function useMaskPreview(api:DesktopApi,projectId:string,taskId:string|undefined,raw:ViewAsset|undefined,mode:MaskMode,feather:number,saved:ViewAsset|undefined,enabled:boolean,strokes:MaskStroke[],fullSize?:{width:number;height:number}){
   const direct=mode==='natural'&&!fullSize;
   const context=JSON.stringify([projectId,taskId,raw?.asset_id,mode]);
-  const key=JSON.stringify([context,mode==='strict'?feather:0,mode==='strict'?strokes:[]]);
-  const [preview,setPreview]=useState<{context:string;key:string;url?:string;error?:string}|null>(null);
+  // Stroke snapshots are immutable. An identity token avoids serializing the
+  // entire drawing for every live point and again when a preview returns.
+  const key=useMemo(()=>({}),[context,mode==='strict'?feather:0,mode==='strict'?strokes:undefined]);
+  const [preview,setPreview]=useState<{context:string;key:object;url?:string;error?:string}|null>(null);
   const lastImage=useRef<{context:string;asset:ViewAsset}|null>(null);
   const [,wake]=useState(0);
   const running=useRef(false),timer=useRef<ReturnType<typeof setTimeout>|null>(null),mounted=useRef(true);
@@ -27,7 +29,7 @@ export function useMaskPreview(api:DesktopApi,projectId:string,taskId:string|und
         publish(response.ok&&response.mask_preview?{url:response.mask_preview}:{error:response.error??'预览失败，请重新调整处理方式。'});
       }catch(error){publish({error:error instanceof Error?error.message:'预览失败'});}
       finally{running.current=false;if(mounted.current)wake(n=>n+1);}
-    })();},80);
+    })();},16);
   });
   const error=!saved&&preview?.key===key?preview.error:undefined;
   const candidate=saved??(direct?raw:preview?.context===context&&preview.url&&raw?{...raw,...fullSize,name:'局部修改预览',original_url:preview.url,preview_url:preview.url}:undefined);

@@ -15,6 +15,11 @@ const api: DesktopApi = {
     ipcRenderer.on('ediro:before-close',callback);ipcRenderer.send('ediro:close-listener-ready');return()=>ipcRenderer.removeListener('ediro:before-close',callback);
   },
   execute: command => ipcRenderer.invoke('ediro:command', command),
+  onInferenceProgress: listener => {
+    const callback=(_event:unknown,progress:import('../shared/api.js').ModuleInferenceProgress)=>listener(progress);
+    ipcRenderer.on('ediro:inference-progress',callback);
+    return ()=>{ipcRenderer.removeListener('ediro:inference-progress',callback);};
+  },
   subscribe: listener => {
     const callback = (_event: unknown, state: WorkspaceView) => listener(state);
     ipcRenderer.on('ediro:state', callback);

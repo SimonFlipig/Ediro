@@ -6,7 +6,7 @@ A Windows desktop workspace for e-commerce visuals. Combine product, composition
 
 Ediro runs independently and does not require Codex or another workspace application. Real generation requires your own model connection and API key. The free simulation engine lets you explore the workflow; it does not demonstrate real model quality.
 
-[Download the latest release](https://github.com/SimonFlipig/Ediro/releases/latest) · [v0.1.3 release notes (Chinese)](docs/RELEASE_NOTES_v0.1.3.md) · [Report an issue](https://github.com/SimonFlipig/Ediro/issues)
+[Download the latest release](https://github.com/SimonFlipig/Ediro/releases/latest) · [v0.1.4 release notes (Chinese)](docs/RELEASE_NOTES_v0.1.4.md) · [Report an issue](https://github.com/SimonFlipig/Ediro/issues)
 
 ![Ediro workspace with assets, reference modules, image preview, result versions, and generation settings](docs/screenshots/workspace.png)
 
@@ -31,7 +31,7 @@ Both packages include the runtime, so end users do not need Node.js. The current
 
 The release includes the author's selected default module prompts. Results still depend on the model, input images, and your instructions; the same prompts do not guarantee identical results across models.
 
-The **核心指令 (Core instructions)** settings page supports custom module and role instructions, restoring defaults, and importing or exporting your overrides. Previews compile only the item being edited and do not display factory instruction text. See the [custom instruction guide (Chinese)](docs/核心指令自定义.md).
+The **核心指令 (Core instructions)** settings page displays read-only factory defaults and supports custom module generation instructions, module inference instructions, and role instructions. You can save named presets, restore defaults, and import or export your configuration. Previews show only the item being edited. See the [custom instruction guide (Chinese)](docs/核心指令自定义.md).
 
 ## Feature screenshots
 
@@ -51,7 +51,8 @@ Paint the area you want to change, describe the edit, and choose natural blendin
 
 - A self-contained `.ediro` project stores assets, outputs, creative settings, history, and recovery records.
 - Launching the app or choosing **新工作 (New work)** opens an empty workspace. The first successful asset import or valid queued generation creates the default project. **另存为 (Save As)** can also save an empty project.
-- Edits are saved automatically after about two seconds of inactivity. Press `Ctrl+S` to save immediately. Ediro saves before switching projects or closing normally; if saving fails, it keeps the window open and reports the problem.
+- Ordinary edits remain in memory until generation starts or finishes, you switch projects, or you close normally. Press `Ctrl+S` to save immediately. If saving fails, Ediro keeps the window open and reports the problem.
+- Mask drafts and unconfirmed blending strokes remain in the current editing window. Their strokes are saved when you generate or confirm the result version. Leaving the window discards unconfirmed strokes; `Ctrl+S` does not save them.
 - Opening an existing `.ediro` file edits that file in place. **Save As** creates and switches to a separate copy, preserving the original.
 - After restarting, use **项目记录 (Project history)** or drag in a `.ediro` file to resume. Ediro does not automatically reopen the last project.
 - Exported images are separate from the project. Keep the `.ediro` file to continue editing. Removing a project uses the Recycle Bin and leaves exported images and other projects in place.

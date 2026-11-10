@@ -99,8 +99,9 @@ test('Banana 双图实际请求、档位、局部贴回、补画和版本恢复�
     const corner=((edit.crop!.y+10)*800+edit.crop!.x+10)*4;assert.deepEqual([...data.subarray(corner,corner+4)],mode==='strict'?[18,52,86,255]:[238,170,102,255]);
   }
   const added=[...d.strokes,{tool:'paint' as const,size:30,points:[[(edit.crop!.x+10)/800,(edit.crop!.y+10)/600] as [number,number]]}];
-  await w.saveCompositeMask(p.project_id,job.task_id,added);
-  const preview=await w.previewMask(p.project_id,job.task_id,'strict',4,added),id=await w.reprocessMask(p.project_id,job.task_id,'strict',4,added);assert.ok(!ids.includes(id));
+  const savedEdit=structuredClone(edit),preview=await w.previewMask(p.project_id,job.task_id,'strict',4,added);
+  assert.deepEqual(edit,savedEdit);
+  const id=await w.reprocessMask(p.project_id,job.task_id,'strict',4,added);assert.ok(!ids.includes(id));
   assert.deepEqual(Buffer.from(preview.split(',')[1],'base64'),await repo.readAsset(p.assets.find(a=>a.asset_id===id)!));
   assert.equal(calls(),1);assert.deepEqual(edit.draft,d);assert.deepEqual(await repo.readAsset(p.assets.find(a=>a.asset_id===edit.raw_asset_ids[0])!),generatedBytes);
   await w.open(repo);assert.equal(w.project!.jobs[0].mask_edit!.guide_asset_id,edit.guide_asset_id);assert.deepEqual(w.project!.jobs[0].mask_edit!.composite_strokes,added);

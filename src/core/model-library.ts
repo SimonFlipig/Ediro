@@ -29,6 +29,7 @@ export type PublicConnection = Omit<Connection,'credential_ref'> & { has_credent
 export type ModelEntry = z.infer<typeof modelEntrySchema>;
 export type LibraryData = z.infer<typeof librarySchema>;
 export interface AdapterDescription {
+  supports_system_instruction?:boolean;
   generation_contract?:GenerationContract;
   geometry_support?:'ratio'|'size'|'free_ratio';
   adapter_id: string; version: number; title: string; kind: ModelConfig['kind']; installed: boolean;

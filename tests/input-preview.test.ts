@@ -6,6 +6,9 @@ import { ModuleRegistry } from '../src/core/modules.js';
 import { seedModels } from '../src/core/models.js';
 import { defaultParameters, newId, type Project } from '../src/core/domain.js';
 import type { WorkspaceView } from '../src/shared/api.js';
+import { createPromptSettings } from '../src/core/prompt-settings.js';
+import { getAutoPromptState } from '../src/core/auto-prompt.js';
+import { defaultModuleSettings } from '../src/core/module-settings.js';
 
 function fixture():WorkspaceView {
   const registry=new ModuleRegistry(),subject=registry.create('subject'),prompt=registry.create('prompt');
@@ -21,13 +24,18 @@ test('排序保存响应即使携带旧链，也立即按新配方派生完整�
   assert.deepEqual(state.chain,old); // do not mutate incoming state or historic chains.
   assert.equal(preview.chain!.blocks[0].reference_type,'prompt');
   assert.deepEqual(preview.chain,compileRecipe(state.project!.recipe));
-  assert.deepEqual(preview.adaptation!.blocks,preview.chain!.blocks);
+  assert.equal(preview.chain!.format_version,4);
+  assert.notDeepEqual(preview.adaptation!.blocks,preview.chain!.blocks);
+  assert.match(preview.adaptation!.blocks!.filter(b=>b.type==='text').map(b=>b.text).join(''),/^## 1\. prompt\n\n生成商品图\n\n## 2\. subject\n\n/);
+  assert.deepEqual(preview.adaptation!.blocks!.filter(b=>b.type==='image'),preview.chain!.blocks.filter(b=>b.type==='image'));
   assert.deepEqual(preview.chain!.blocks.filter(b=>b.type==='image').map(b=>b.asset_id),['asset_first','asset_second']);
 });
 test('提示词编辑无需刷新就进入预览；原快照保持不变',()=>{
-  const state=fixture(),old=structuredClone(state.chain);state.project!.recipe.modules[1].user_instruction='新的生成要求';
-  assert.equal(synchronizeInputPreview(state).chain!.blocks.at(-1)!.type,'text');
-  assert.equal((synchronizeInputPreview(state).chain!.blocks.at(-1)! as {text:string}).text,'新的生成要求');
+  const state=fixture(),old=structuredClone(state.chain);state.project!.recipe.modules[1].user_instruction='新的生成要求 <tag> & "商品"';
+  const preview=synchronizeInputPreview(state);
+  assert.equal(preview.chain!.blocks.at(-1)!.type,'text');
+  assert.equal((preview.chain!.blocks.at(-1)! as {text:string}).text,'新的生成要求 <tag> & "商品"');
+  assert.ok(preview.adaptation!.blocks!.filter(b=>b.type==='text').map(b=>b.text).join('').includes('## 2. prompt\n\n新的生成要求 <tag> & "商品"'));
   assert.deepEqual(state.chain,old);
 });
 test('未知模块和模型配置明确报错，不显示旧的可执行输入',()=>{
@@ -45,7 +53,8 @@ test('已有模块的卡片核心语义与发送预览统一采用最新定义�
   const current=state.module_definitions.find(d=>d.type==='subject')!;
   assert.equal(preview.project!.recipe.modules[0].base_instruction,current.base_instruction);
   assert.equal(preview.project!.recipe.modules[0].numbered_instruction,current.numbered_instruction);
-  assert.equal((preview.chain!.blocks[0] as {text:string}).text,`subject:\n${current.base_instruction}`);
+  assert.equal((preview.chain!.blocks[0] as {text:string}).text,current.base_instruction);
+  assert.ok(preview.adaptation!.blocks!.filter(b=>b.type==='text').map(b=>b.text).join('').includes(`## 1. subject\n\n${current.base_instruction}`));
   assert.deepEqual(state,before);
 });
 
@@ -62,4 +71,21 @@ test('自动提示词状态跟随当前配方，手改结果不失效，生图�
   assert.equal(preview.auto_prompt?.needs_inference,true);
   assert.ok(preview.adaptation_error);
   assert.equal(synchronizeInputPreview({...preview,project:null}).auto_prompt,undefined);
+});
+
+test('前端自动提示词状态使用程序中的有效推理规则，与主进程一致且不进入生图预览',()=>{
+  const state=fixture(),target=state.project!.recipe.modules[1];target.auto_prompt=true;
+  state.prompt_settings=createPromptSettings();
+  state.prompt_settings.inference_instructions={subject:'PRIVATE_SUBJECT_INFERENCE_RULE',style:'UNUSED_STYLE_RULE'};
+  const registry=new ModuleRegistry(state.module_definitions,state.prompt_config,state.prompt_customizations?.roles,state.prompt_settings.inference_instructions);
+  const host=getAutoPromptState(state.project!.recipe,registry,defaultModuleSettings,state.project!.assets)!;
+  target.auto_prompt_input_key=host.input_key;
+  const preview=synchronizeInputPreview(state);
+  assert.equal(preview.auto_prompt!.input_key,host.input_key);
+  assert.equal(preview.auto_prompt!.needs_inference,false);
+  for(const value of [preview.project,preview.chain,preview.adaptation])assert.ok(!JSON.stringify(value).includes('PRIVATE_SUBJECT_INFERENCE_RULE'));
+  state.prompt_settings.inference_instructions.style='另一个未参与的规则';
+  assert.equal(synchronizeInputPreview(state).auto_prompt!.input_key,host.input_key);
+  state.prompt_settings.inference_instructions.subject='CHANGED_SUBJECT_RULE';
+  assert.equal(synchronizeInputPreview(state).auto_prompt!.needs_inference,true);
 });

@@ -1,6 +1,12 @@
 import type { Asset, Job, ModelConfig, Project } from './domain.js';
 import type { ModelInput } from './model-input.js';
 import type { ReferenceSettings } from './module-settings.js';
+import type { ExecutionDiagnostics } from './execution-diagnostics.js';
+
+export interface PastedImage {
+  name: string;
+  bytes: Uint8Array;
+}
 
 export interface ProjectStorePort {
   readonly transient?:boolean;
@@ -10,19 +16,25 @@ export interface ProjectStorePort {
   load(): Promise<Project>;
   save(project: Project): Promise<void>;
   importImage(filename: string): Promise<Asset>;
+  importPastedImage(image: PastedImage): Promise<Asset>;
+  discardPastedImage(asset: Asset): Promise<void>;
   readAsset(asset: Asset): Promise<Buffer>;
   saveOutput(bytes: Buffer, name: string, format: 'png' | 'jpeg' | 'webp'): Promise<Asset>;
   relinkImage(asset: Asset, filename: string): Promise<Asset>;
   saveOutputRecords(project: Project, job: Job): Promise<void>;
   stageResult(job:Job,result:ExecutionResult):Promise<void>;
-  pendingResult(taskId:string):Promise<ExecutionResult>;
+  pendingResult(taskId:string):Promise<PendingExecutionResult>;
   clearPendingResult(taskId:string):Promise<void>;
   saveModelInput(taskId:string,input:ModelInput):Promise<void>;
   loadModelInput(taskId:string):Promise<ModelInput|null>;
 }
 export interface CloudExecutionContext {
+  // Runtime-local failure tracing, excluded from project storage and results.
+  diagnostics?:ExecutionDiagnostics;
   preprocessReferenceImage?(bytes:Buffer,settings:ReferenceSettings):Promise<Buffer>;
   text_output_limit?:number;
+  // Optional transient output; only the validated final result may be persisted.
+  onTextDelta?(delta:string):void;
   job: Job;
   model: ModelConfig;
   // Lazy reads preserve rich-media ordering without loading all image bytes
@@ -36,6 +48,11 @@ export interface ExecutionResult {
   text?: string;
   request_id?: string;
   usage?: Record<string,number>;
+}
+// Stored with the returned pixels so a crash before the final project commit
+// can restore response metadata without consulting a changed model library.
+export interface PendingExecutionResult extends ExecutionResult {
+  execution_summary?:Job['execution_summary'];
 }
 export interface CloudExecutionPort {
   execute(context: CloudExecutionContext, signal: AbortSignal,

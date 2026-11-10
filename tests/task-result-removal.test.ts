@@ -49,6 +49,8 @@ test('移除失败或取消占位持久化，拒绝切换工程、未知任务�
   await w.serial(()=>w.hideTaskResult(project.project_id,cancelled.task_id));
   await w.serial(()=>w.hideTaskResult(project.project_id,cancelled.task_id));
   assert.deepEqual(active,previousActive);assert.deepEqual(project.recipe,recipe);
+  assert.equal((await repository.load()).jobs[0].hidden_from_results,undefined,'removing a placeholder stays in memory until a save checkpoint');
+  await w.flush();
   const saved=await repository.load();
   assert.equal(saved.jobs[0].hidden_from_results,true);assert.equal(saved.jobs[1].hidden_from_results,true);
   assert.equal(saved.jobs[2].hidden_from_results,undefined);assert.equal(saved.jobs.length,3);
@@ -89,15 +91,18 @@ test('移除任务后单文件工程重开仍保留历史、已有输出引用�
   assert.equal(calls(),0);await w.shutdown();await reopened.close();
 });
 
-test('移除占位保存失败会恢复标记；重试保存后才持久生效',async()=>{
+test('移除占位先保留在内存；关键节点保存失败保留修改，重试保存后持久生效',async()=>{
   const {workspace:w,repository,task}=await fixture();
   const job=await task('cancelled'),before=structuredClone(job),projectId=w.project!.project_id;
   const save=repository.save.bind(repository);
   repository.save=async()=>{throw Error('controlled storage failure');};
-  await assert.rejects(()=>w.hideTaskResult(projectId,job.task_id),/controlled storage failure/);
-  assert.deepEqual(job,before);assert.deepEqual((await repository.load()).jobs[0],before);
-  repository.save=save;
   await w.hideTaskResult(projectId,job.task_id);
+  assert.equal(job.hidden_from_results,true);assert.equal(w.saveState,'pending');
+  await assert.rejects(()=>w.flush(),/controlled storage failure/);
+  assert.equal(job.hidden_from_results,true);assert.equal(w.saveState,'error');
+  assert.deepEqual((await repository.load()).jobs[0],before);
+  repository.save=save;
+  await w.flush();
   assert.equal((await repository.load()).jobs[0].hidden_from_results,true);
   await w.shutdown();
 });

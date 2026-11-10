@@ -1,13 +1,18 @@
 import { z } from 'zod';
-import {MAX_GEMINI_REQUEST_MB} from './image-limits.js';
+import {MAX_GEMINI_REQUEST_MB, MAX_MODULE_IMAGE_REFERENCES} from './image-limits.js';
 import type { OutputGeometry } from './output-geometry.js';
 import type { ModuleInferenceTask } from './module-inference-tasks.js';
 import { promptConfigSchema,modelNameSchema,type PromptConfig } from './prompt-config.js';
 import { generationContractSchema,inputStrategySchema,resolutionSchema,extensionValueSchema,parameterLimitSchema,sizeLimitsSchema,type PlanSummary,type SizeLimits,type ParameterField } from './generation-contract.js';
-import {referenceSettingsSchema} from './module-settings.js';
+import {referenceSettingsSchema,referencePrecisionSchema} from './module-settings.js';
 import {promptRoleSchema} from './prompt-roles.js';
 
 export const idSchema = z.string().regex(/^[a-zA-Z][a-zA-Z0-9_-]{1,95}$/);
+// Compiled instructions combine one role and four independently bounded module
+// rules (32,000 each), plus shared rules and up to 40 module bindings. Module
+// rule text is emitted once per type. Editable text and output limits stay put.
+export const MAX_SYSTEM_INSTRUCTION_CHARS = 192000;
+export const systemInstructionSchema = z.string().max(MAX_SYSTEM_INSTRUCTION_CHARS);
 const text = z.string().max(32000);
 export const moduleSchema = z.object({
   module_id: idSchema,
@@ -19,8 +24,9 @@ export const moduleSchema = z.object({
   numbered_instruction:text.optional(),
   model_name:modelNameSchema.optional(),
   user_instruction: text,
-  asset_ids: z.array(idSchema).max(64),
+  asset_ids: z.array(idSchema).max(MAX_MODULE_IMAGE_REFERENCES),
   reference_settings: referenceSettingsSchema.optional(),
+  reference_precision: referencePrecisionSchema.optional(),
   reference_mode: z.enum(['image_text','text_only']).optional(),
   auto_prompt: z.boolean().optional(),
   prompt_role: promptRoleSchema.optional(),
@@ -49,7 +55,7 @@ export const parametersSchema = z.object({
   }).strict().optional(),
   gemini_options:z.object({
     reference_precision:z.enum(['default','low','medium','high']).optional(),
-    reference_overrides:z.record(idSchema,z.enum(['low','medium','high','ultra_high'])).optional(),
+    reference_overrides:z.record(idSchema,referencePrecisionSchema).optional(),
     google_search:z.boolean().optional(),
     response_mode:z.enum(['image','image_text']).optional(),
   }).strict().optional(),
@@ -96,7 +102,7 @@ export interface ModuleDefinition {
 export type Block =
   | { type: 'text'; text: string; numbered_text?:string; text_role?:'instruction'|'header'|'user'|'image_label'; model_name?:string; source_module_id: string; reference_type: string; reference_id: string }
   | { type: 'image'; asset_id: string; image_name?:string; model_name?:string; source_module_id: string; reference_type: string; reference_id: string };
-export interface CompiledChain { format_version?:2; prompt_config?:PromptConfig; blocks: Block[]; mode: 'text_to_image' | 'reference_generation' }
+export interface CompiledChain { format_version?:2|3|4; prompt_config?:PromptConfig; system_instruction?:string; blocks: Block[]; mode: 'text_to_image' | 'reference_generation' }
 export interface Asset {
   asset_id: string;
   name: string;
@@ -140,6 +146,8 @@ export const geminiCompatibilitySchema=z.object({
 export const modelConfigSchema = z.object({
   preset_id:z.string().optional(),
   family:z.enum(['reasoning','nano','gpt-image']).optional(),
+  model_variant_override:z.string().trim().min(1).max(100).optional(),
+  nano_model_override:z.enum(['pro','2','2.1']).optional(),
   independent_defaults:z.boolean().optional(),
   legacy_defaults_pending:z.boolean().optional(),
   model_config_id: idSchema,
@@ -175,11 +183,12 @@ export const modelConfigSchema = z.object({
   defaults: parametersSchema,
   generation_contract:generationContractSchema.optional(),
 });
-export type ModelConfig = z.infer<typeof modelConfigSchema> & { geometry_support?:'ratio'|'size'|'free_ratio'; connection_id?: string; connection_revision?: number; adapter_version?: number; purpose?: 'generation' | 'understanding'; capability_source?: 'documented' | 'user' | 'tested'; validation?: {test_id:string;model_revision:number;connection_revision:number;adapter_version:number;checked_at:string;operation:'understand'}; validation_status?:'untested'|'passed'|'stale' };
+export type ModelConfig = z.infer<typeof modelConfigSchema> & { adapter_parameters?:{key:string;title:string;values?:string[];maximum?:number}[]; geometry_support?:'ratio'|'size'|'free_ratio'; connection_id?: string; connection_revision?: number; adapter_version?: number; purpose?: 'generation' | 'understanding'; capability_source?: 'documented' | 'user' | 'tested'; validation?: {test_id:string;model_revision:number;connection_revision:number;adapter_version:number;checked_at:string;operation:'understand'}; validation_status?:'untested'|'passed'|'stale' };
 export type PublicModel = Omit<ModelConfig, 'credential_ref'> & { has_credential: boolean; readiness_error?:string; declared_capabilities?:Capabilities; unavailable_operations?:string[] };
 export type JobStatus = 'queued' | 'preparing' | 'running' | 'post_processing' | 'succeeded' | 'failed' | 'cancelled';
 export interface AdaptedInput {
   kind: 'native_blocks' | 'separated_inputs';
+  system_instruction?: string;
   blocks?: Block[];
   prompt?: string;
   image_asset_ids?: string[];
@@ -203,7 +212,7 @@ export interface Job {
   recipe_snapshot: Recipe;
   chain_snapshot: CompiledChain;
   // Non-sensitive resolved config: credentials/endpoint are not UI history.
-  model_snapshot: Pick<ModelConfig, 'model_config_id' | 'preset_id' | 'title' | 'provider' | 'model' | 'adapter_id' | 'revision' | 'kind' | 'images_compatibility' | 'gemini_compatibility'>;
+  model_snapshot: Pick<ModelConfig, 'model_config_id' | 'preset_id' | 'title' | 'provider' | 'model' | 'adapter_id' | 'revision' | 'kind' | 'images_compatibility' | 'gemini_compatibility' | 'nano_model_override' | 'model_variant_override'>;
   adapted_input: AdaptedInput;
   output_asset_ids: string[];
 }

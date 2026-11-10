@@ -125,6 +125,7 @@ test('a reasoning-only library creates an editable unselected workspace and bloc
   recipe.modules.at(-1)!.user_instruction = '可以编辑提示词，稍后添加生图模型。';
   await workspace.saveRecipe(recipe);
   await workspace.addModule('prompt');
+  await workspace.flush();
   assert.equal((await repository.load()).recipe.modules[3].user_instruction, recipe.modules[3].user_instruction);
   await workspace.open(repository);
   assert.equal(workspace.project!.recipe.model_config_id, 'model_unselected');
@@ -166,6 +167,7 @@ test('existing mock recipes and historical snapshots survive hiding while select
   const edited = structuredClone(workspace.project!.recipe);
   edited.modules.at(-1)!.user_instruction = '模型暂不可用时仍可编辑';
   await workspace.saveRecipe(edited);
+  await workspace.flush();
   assert.equal((await repository.load()).recipe.model_config_id, 'model_mock_native');
   assert.deepEqual((await repository.load()).jobs[0], beforeHistory);
   assert.equal(calls(), 0);

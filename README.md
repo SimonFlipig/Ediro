@@ -6,7 +6,7 @@
 
 Ediro 独立运行，不依赖 Codex 或其他工作台。真实生成需要自行配置模型连接与 API Key；模拟引擎可以免费检查工作流程，不代表真实模型效果。
 
-[下载最新版](https://github.com/SimonFlipig/Ediro/releases/latest) · [v0.1.3 发布说明](docs/RELEASE_NOTES_v0.1.3.md) · [反馈问题](https://github.com/SimonFlipig/Ediro/issues)
+[下载最新版](https://github.com/SimonFlipig/Ediro/releases/latest) · [v0.1.4 发布说明](docs/RELEASE_NOTES_v0.1.4.md) · [反馈问题](https://github.com/SimonFlipig/Ediro/issues)
 
 ![Ediro 工作台：素材、参考模块、预览、结果版本和生成参数](docs/screenshots/workspace.png)
 
@@ -14,7 +14,7 @@ Ediro 独立运行，不依赖 Codex 或其他工作台。真实生成需要自�
 
 ## 获取与启动
 
-目标平台为 **Windows x64**。在 [GitHub Releases](https://github.com/SimonFlipig/Ediro/releases) 获取发布版本，本次变更见 [v0.1.3 发布说明](docs/RELEASE_NOTES_v0.1.3.md)：
+目标平台为 **Windows x64**。在 [GitHub Releases](https://github.com/SimonFlipig/Ediro/releases) 获取发布版本，本次变更见 [v0.1.4 发布说明](docs/RELEASE_NOTES_v0.1.4.md)：
 
 - **安装版**：下载 `Ediro-<版本>-windows-x64-setup.exe`，安装后从桌面或开始菜单启动。一般保留当前用户的默认安装目录；如需安装到 `Program Files`，请选择为所有用户安装并允许管理员权限请求。
 - **便携版**：下载 `Ediro-<版本>-windows-x64-portable.zip`，完整解压到可写文件夹，运行其中的 `Ediro.exe`，不要直接在压缩包内运行。
@@ -31,7 +31,7 @@ Ediro 独立运行，不依赖 Codex 或其他工作台。真实生成需要自�
 
 默认包含作者选定的模块提示词配置。模型能力、输入图片和用户要求仍会影响结果，不保证所有模型产生相同效果。
 
-设置中的“核心指令”支持自定义模块与角色指令、恢复默认及导入导出。预览只编译当前编辑项，不显示出厂指令正文；详见[核心指令自定义](docs/核心指令自定义.md)。
+设置中的“核心指令”可阅读只读出厂默认，并自定义模块生图指令、模块推理指令与角色指令，支持命名预设、恢复默认及导入导出。预览只处理当前编辑项；详见[核心指令自定义](docs/核心指令自定义.md)。
 
 ## 功能截图
 
@@ -51,7 +51,8 @@ Ediro 独立运行，不依赖 Codex 或其他工作台。真实生成需要自�
 
 - `.ediro` 是自包含工程，保存素材、结果、创作参数、历史及恢复记录。
 - 启动或“新工作”先进入空白状态；首次成功加入素材或有效生成入队时创建默认工程。显式“另存为”也可以保存空白工作。
-- 普通编辑停顿约 2 秒后自动保存；`Ctrl+S` 可立即保存。切换和正常关闭前补存，保存失败会保留窗口并提示。
+- 普通编辑先保留在内存中，在生成前后、切换工程和正常关闭时保存；`Ctrl+S` 可立即保存。保存失败会保留窗口并提示。
+- 蒙版草稿与结果合成试画只保留在当前编辑窗口，生成或“确认保存此版本”时才保存相应笔迹；离开窗口会丢弃未确认的试画，`Ctrl+S` 不保存这些试画。
 - 打开已有 `.ediro` 直接编辑该文件；“另存为”创建独立副本并切换，保留原工程。
 - 重启后通过“项目记录”或拖入 `.ediro` 继续，不会自动打开上次工程。
 - 导出图片与工程独立，继续编辑需保留 `.ediro`。工程删除使用回收站，导出图片和其他工程保留。

@@ -1,6 +1,7 @@
 // Storage budgets are separate from the selected channel's upload limits.
 export const MB=1024*1024;
 export const MAX_STORED_IMAGE_BYTES=192*MB; // Includes lossless full-resolution composites (40 MP decode limit).
+export const MAX_MODULE_IMAGE_REFERENCES = 64;
 export const MAX_IMAGES_FILE_MB=50;
 export const MAX_IMAGES_REQUEST_MB=100;
 export const MAX_GEMINI_REQUEST_MB=100;

@@ -7,6 +7,7 @@ export type MaskCrop=z.infer<typeof maskCropSchema>;
 
 export const maskStrokeSchema = z.object({
   tool: z.enum(['paint', 'erase']),
+  closed: z.boolean().optional(),
   size: z.number().min(1).max(1000),
   points: z.array(z.tuple([z.number().min(0).max(1), z.number().min(0).max(1)])).min(1).max(10000),
 });
@@ -45,11 +46,19 @@ export function currentMaskFeather(variant:Pick<MaskEdit['variants'][number],'mo
 
 // Pixel processing is provided by the host; the task contract is provider neutral.
 export interface MaskPixelsPort {
+  createPreview?(input:MaskPreviewInput):Promise<MaskPreviewSession>;
   guidance(mask:Buffer):Promise<Buffer>;
   alignGuidedResult(generated:Buffer,width:number,height:number):Promise<Buffer>;
   rasterize(width:number,height:number,strokes:MaskStroke[]):Promise<Buffer>;
   prepare(source:Buffer, draft:MaskDraft,crop?:MaskCrop):Promise<{source:Buffer; mask:Buffer;requestSource?:Buffer}>;
   compose(source:Buffer, mask:Buffer, generated:Buffer, feather:number,crop?:MaskCrop,mode?:MaskMode):Promise<Buffer>;
+}
+export interface MaskPreviewInput {
+  source:Buffer; generated:Buffer; width:number; height:number; crop?:MaskCrop; guided:boolean;
+}
+export interface MaskPreviewSession {
+  render(strokes:MaskStroke[],mode:MaskMode,feather:number):Promise<Buffer>;
+  dispose():void;
 }
 
 // Plan in original-image pixels. Expanding context is allowed; resampling is not.
@@ -86,6 +95,29 @@ export function planMaskCrop(draft:MaskDraft,limits?:SizeLimits):MaskCrop {
   return {x:place(wanted.x,wanted.width,width,draft.width),y:place(wanted.y,wanted.height,height,draft.height),width,height};
 }
 
+// Decide closure only for the current gesture, in displayed pixels so the
+// endpoint tolerance follows zoom without bridging a large part of the loop.
+export function closeMaskStroke(stroke:MaskStroke,width:number,height:number,scale=1):MaskStroke {
+  if(stroke.closed||stroke.points.length<4||![width,height,scale].every(n=>Number.isFinite(n)&&n>0))return stroke;
+  const points=stroke.points.map(([x,y])=>[x*width*scale,y*height*scale]);
+  let left=Infinity,top=Infinity,right=-Infinity,bottom=-Infinity,length=0,twiceArea=0;
+  for(let i=0;i<points.length;i++){
+    const [x,y]=points[i],[nx,ny]=points[(i+1)%points.length];
+    left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);
+    twiceArea+=x*ny-nx*y;
+    if(i+1<points.length)length+=Math.hypot(nx-x,ny-y);
+  }
+  const spanX=right-left,spanY=bottom-top,shortSide=Math.min(spanX,spanY),area=Math.abs(twiceArea)/2;
+  const brush=stroke.size*scale;
+  // Reject clicks, retraced lines and tiny hooks. Complex self-crossing marks
+  // whose signed areas cancel are conservatively left as ordinary strokes.
+  if(shortSide<2||area<Math.max(4,Math.min(64,brush*brush/8),spanX*spanY*.04))return stroke;
+  const first=points[0],last=points.at(-1)!,gap=Math.hypot(last[0]-first[0],last[1]-first[1]);
+  const tolerance=Math.min(12,Math.max(6,brush/2),shortSide*.2,length*.08);
+  if(gap>tolerance)return stroke;
+  return {...stroke,closed:true};
+}
+
 export function sameMaskStrokes(a:MaskStroke[],b:MaskStroke[]){return JSON.stringify(a)===JSON.stringify(b);}
 
 // Shared shape construction keeps the visible selection and exported mask aligned.
@@ -93,7 +125,9 @@ export function maskSelectionSvg(width:number, height:number, strokes:MaskStroke
   const marks = strokes.map(s => {
     const color=s.tool==='paint'?'white':'black';
     if(s.points.length===1) return `<circle cx="${s.points[0][0]*width}" cy="${s.points[0][1]*height}" r="${s.size/2}" fill="${color}"/>`;
-    return `<polyline points="${s.points.map(([x,y])=>`${x*width},${y*height}`).join(' ')}" fill="none" stroke="${color}" stroke-width="${s.size}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const points=s.points.map(([x,y])=>`${x*width},${y*height}`).join(' ');
+    if(s.closed)return `<polygon points="${points}" fill="${color}" fill-rule="evenodd" stroke="${color}" stroke-width="${s.size}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    return `<polyline points="${points}" fill="none" stroke="${color}" stroke-width="${s.size}" stroke-linecap="round" stroke-linejoin="round"/>`;
   }).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="black"/>${marks}</svg>`;
 }

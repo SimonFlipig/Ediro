@@ -46,6 +46,7 @@ test('无匹配接入仍可恢复、编辑并保存，生成被阻止；后来�
   const {w,repo,library,job,calls}=await fixture(t);await library.deleteModel('model_old');
   await w.restoreResult(w.project!.project_id,job.output_asset_ids[0]);
   const recipe=structuredClone(w.project!.recipe);recipe.modules.at(-1)!.user_instruction='恢复后可编辑';await w.saveRecipe(recipe);
+  await w.flush();
   assert.equal((await repo.load()).recipe.modules.at(-1)!.user_instruction,'恢复后可编辑');
   await assert.rejects(()=>w.enqueue(false),/模型配置不存在/);assert.equal(calls(),1);
   await enroll(library,'model_new');await w.selectModel('model_new');

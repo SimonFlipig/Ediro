@@ -1,16 +1,19 @@
 import type { Asset, Recipe } from './domain.js';
 import type { ModuleRegistry } from './modules.js';
 import { isReferenceModuleType, resolveReferenceSettings, type ModuleSettings } from './module-settings.js';
-import { promptRoles, resolvePromptRole } from './prompt-roles.js';
+import { resolvePromptRole } from './prompt-roles.js';
+import { buildPromptSystemInstruction } from './module-inference-tasks.js';
+import { buildModuleInferenceReferenceRules,hasModuleInferenceInstruction,participatingInferenceModules } from './module-inference-instructions.js';
 
 export interface AutoPromptState {
   module_id: string;
   input_key: string;
+  // Suggest refreshing the prompt; users may still generate with the current text.
   needs_inference: boolean;
 }
 
-// JSON objects have no meaningful key order; arrays retain the user's module
-// and image order. Hashing keeps project data bounded even with long prompts.
+// JSON objects have no meaningful key order; image arrays retain their order.
+// Hashing keeps project data bounded even with long prompts.
 function canonicalJson(value:unknown):string{
   return JSON.stringify(value,(_key,current:unknown)=>{
     if(current&&typeof current==='object'&&!Array.isArray(current)){
@@ -61,12 +64,12 @@ export function getAutoPromptState(recipe:Recipe,registry:ModuleRegistry,moduleS
   if(!target)return undefined;
   const assetMap=new Map(assets.map(asset=>[asset.asset_id,asset]));
   const resolved=registry.resolveRecipe(recipe);
-  const modules=resolved.modules.filter(module=>module.enabled).map(module=>({
+  const participating=participatingInferenceModules(resolved.modules,target.module_id,'enabled_modules');
+  const modules=participating.map(module=>({
     module_id:module.module_id,
     reference_type:module.reference_type,
     model_name:module.model_name,
-    base_instruction:module.base_instruction,
-    numbered_instruction:module.numbered_instruction,
+    ...(hasModuleInferenceInstruction(module.reference_type)?{}:{base_instruction:module.base_instruction,numbered_instruction:module.numbered_instruction}),
     ...(module.module_id===target.module_id?{}:{user_instruction:module.user_instruction}),
     ...(module.module_id===target.module_id&&resolvePromptRole(module)!=='general'?{prompt_role:resolvePromptRole(module)}:{}),
     tool_state:module.tool_state,
@@ -79,9 +82,13 @@ export function getAutoPromptState(recipe:Recipe,registry:ModuleRegistry,moduleS
       return {asset_id,...(asset?.location.type==='external'?{sha256:asset.location.sha256}:{})};
     }),
   }));
-  const role=resolvePromptRole(target),instruction=registry.roleInstruction(role),factory=promptRoles.find(item=>item.id===role)!.instruction;
-  // Keep existing keys when there is no effective role change. Updating or
-  // restoring a custom role invalidates reuse without scheduling inference.
-  const input_key='auto-v1:'+sha256(canonicalJson({target_module_id:target.module_id,modules,...(instruction!==factory?{role_instruction:instruction}:{})}));
+  // Include the same effective rules sent to inference, including factory roles.
+  // A rule update suggests a refresh without changing text or scheduling a call.
+  const referenceRules=buildModuleInferenceReferenceRules(participating,type=>registry.inferenceInstruction(type));
+  const system_instruction=buildPromptSystemInstruction(registry.roleInstruction(resolvePromptRole(target)),referenceRules);
+  const payload={target_module_id:target.module_id,modules,system_instruction};
+  // Only the fingerprint ignores module positions; sending and image order stay intact.
+  modules.sort((left,right)=>left.module_id<right.module_id?-1:left.module_id>right.module_id?1:0);
+  const input_key='auto-v5:'+sha256(canonicalJson(payload));
   return {module_id:target.module_id,input_key,needs_inference:target.auto_prompt_input_key!==input_key};
 }

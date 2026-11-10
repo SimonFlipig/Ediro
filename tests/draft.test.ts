@@ -12,7 +12,7 @@ import {MockGenerator} from '../src/adapters/mock-generator.js';
 async function fixture(){
   const base=path.resolve('.local/test-projects');await mkdir(base,{recursive:true});const root=await mkdtemp(path.join(base,'draft-'));
   let calls=0,existedAtCall=false;const mock=new MockGenerator(1);
-  const w=new Workspace(new ModelLibrary(seedModels(),async()=>{},{has:async()=>false,set:async()=>{}}),{execute:async(...args)=>{calls++;existedAtCall=w.repository instanceof DocumentRepository&&!!await stat(w.repository.filename);return mock.execute(...args);}},undefined,undefined,2000);
+  const w=new Workspace(new ModelLibrary(seedModels(),async()=>{},{has:async()=>false,set:async()=>{}}),{execute:async(...args)=>{calls++;existedAtCall=w.repository instanceof DocumentRepository&&!!await stat(w.repository.filename);return mock.execute(...args);}});
   const draft=new DraftRepository(path.join(root,'scratch'),path.join(root,'Project'),path.join(root,'cache'),repo=>{w.repository=repo;});
   await w.create(draft,'未命名工作');
   const files=async()=>readdir(path.join(root,'Project')).catch(()=>[]);
@@ -47,6 +47,29 @@ test('纯文生图先保存项目与排队快照，再执行模型；空提示�
   const recipe=structuredClone(w.project!.recipe);recipe.modules.at(-1)!.user_instruction='仅文字生成';await w.saveRecipe(recipe);
   await w.serial(()=>w.enqueue(true));await settle(w);assert.equal(f.calls(),1);assert.equal(f.existedAtCall(),true);assert.equal(w.project!.jobs[0].status,'succeeded');assert.equal(w.project!.project_id,id);assert.equal((await f.files()).length,1);
   const stored=await w.repository!.load();assert.equal(stored.jobs[0].status,'succeeded');assert.equal(stored.assets[0].kind,'output');await f.close();
+});
+test('粘贴截图建立单文件工程，后续粘贴按顺序追加，重开仍可读原始图片',async t=>{
+  const f = await fixture(), {w} = f;
+  t.after(() => f.close());
+  const id = w.project!.recipe.modules[1].module_id;
+  const png = await sharp({create:{width:32,height:24,channels:4,background:'#c34a'}}).png().toBuffer();
+  const jpeg = await sharp(png).jpeg().toBuffer();
+  await w.importPastedImages([{name:'', bytes:new Uint8Array(png)}], id);
+  assert.ok(w.repository instanceof DocumentRepository);
+  const filename = w.repository.filename;
+  await w.importPastedImages([{name:'商品.jpg',bytes:jpeg}, {name:'细节.png',bytes:png}], id);
+  await w.flush();
+
+  const reopened = await DocumentRepository.open(filename, path.join(f.root,'fresh-cache'));
+  t.after(() => reopened.close());
+  const project = await reopened.load();
+  assert.equal(project.project_id, w.project!.project_id);
+  assert.deepEqual(project.assets.map(a => a.name), ['剪贴板图片.png','商品.jpg','细节.png']);
+  assert.ok(project.assets.every(a => a.location.type === 'managed' && a.kind === 'import' && !a.hidden_from_materials));
+  assert.deepEqual(project.recipe.modules.find(m => m.module_id === id)!.asset_ids, project.assets.map(a => a.asset_id));
+  assert.ok(project.recipe.modules.filter(m => m.module_id !== id).every(m => !m.asset_ids.length));
+  assert.deepEqual(await Promise.all(project.assets.map(a => reopened.readAsset(a))), [png,jpeg,png]);
+  assert.equal(f.calls(),0);
 });
 test('首次建项目写入失败时保留空白输入，不发送生成请求',async()=>{
   const f=await fixture(),{w}=f;

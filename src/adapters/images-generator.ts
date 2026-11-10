@@ -2,6 +2,7 @@ import sharp from 'sharp';
 import { z } from 'zod';
 import type { AdapterDescription } from '../core/model-library.js';
 import type { CloudExecutionContext, ExecutionResult } from '../core/ports.js';
+import type { ExecutionDiagnostics } from '../core/execution-diagnostics.js';
 import { defaultImagesCompatibility } from '../core/domain.js';
 import { captureModelInput } from './capture-model-input.js';
 import { readReferenceImage } from './reference-image.js';
@@ -9,6 +10,7 @@ import { imagesProfile } from '../protocols/generation-profiles.js';
 import { normalizeParameters,extensionOptions,validateGenerationParameters } from '../core/generation-parameters.js';
 import { validSize } from '../core/generation-contract.js';
 import {validateImagesUpload} from '../core/image-limits.js';
+import { GENERATION_TIMEOUT_MS,readGenerationJson,recordExecutionError,recordRequestId,recordResponse,requestAbortMessage } from './generation-response.js';
 const validImagesSize=(w:number,h:number)=>validSize(w,h,imagesProfile.size_limits!);
 
 const sizes:Record<string,string>={'1:1':'1024x1024','3:2':'1536x1024','2:3':'1024x1536'};
@@ -20,22 +22,18 @@ export function imagesRoot(endpoint:string){
   if(p.endsWith('/v1beta')||p.endsWith('/images/generations')||p.endsWith('/images/edits'))throw new Error('请输入 Images 服务根地址或 /v1 地址。');
   url.pathname=p.endsWith('/v1')?p:`${p}/v1`;return url.toString().replace(/\/$/,'');
 }
-async function json(response:Response){
-  const reader=response.body?.getReader();if(!reader)throw new Error('空响应');
-  const chunks:Uint8Array[]=[];let size=0;
-  try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>60*1024*1024)throw new Error('响应过大');chunks.push(value);}return JSON.parse(Buffer.concat(chunks).toString('utf8'));}
-  finally{await reader.cancel().catch(()=>{});}
-}
 const resultSchema=z.object({data:z.array(z.object({b64_json:z.string().optional(),url:z.string().optional()})).max(10),id:z.string().optional(),usage:z.record(z.string(),z.unknown()).optional()});
 export class ImagesGenerator {
   readonly description:AdapterDescription={generation_contract:imagesProfile,geometry_support:'size',adapter_id:'openai-images',version:6,title:'OpenAI Images／兼容协议',kind:'cloud',installed:true,purposes:['generation'],requires_credential:true,supports_probe:true,interleaving:['separated'],operations:['generate','referenceEdit','nativeMaskEdit'],parameters:[{key:'aspect_ratio',title:'比例'},{key:'quality',title:'质量',values:qualities},{key:'output_format',title:'格式',values:['png','jpeg','webp']},{key:'count',title:'数量',maximum:10}]};
   constructor(private request:typeof fetch=fetch){}
-  private async call(url:string,key:string,body:string|FormData|undefined,signal:AbortSignal){
+  private async call(url:string,key:string,body:string|FormData|undefined,signal:AbortSignal,diagnostics?:ExecutionDiagnostics,timeoutMs?:number){
+    if(diagnostics)diagnostics.stage='request';
     let response:Response;
     try{response=await this.request(url,{method:body?'POST':'GET',headers:{Authorization:`Bearer ${key}`,...(typeof body==='string'?{'Content-Type':'application/json'}:{})},body,signal,redirect:'error'});}
-    catch{throw new Error(signal.aborted?signal.reason?.name==='TimeoutError'?'等待 Images 服务超过 10 分钟，客户端已停止等待；上游可能仍在生成，计费状态未知，未自动重试。':'请求已取消，上游计费状态未知；未自动重试。':'无法连接 Images 服务，上游是否收到请求未知；未自动重试。');}
-    if(!response.ok){await response.body?.cancel().catch(()=>{});throw new Error(response.status===401||response.status===403?'Images 鉴权失败或权限不足。':response.status===429?'Images 额度不足或请求受限。':response.status===413?'Images 渠道拒绝了请求体大小，请缩小送入范围或按渠道上限调低请求预算；未自动重试。':`Images 服务返回 HTTP ${response.status}，请核对模型与参数；未自动重试。`);}
-    try{return await json(response);}catch{throw new Error('Images 响应读取或解析失败，上游计费状态未知；未自动重试。');}
+    catch(error){recordExecutionError(diagnostics,error,signal);throw new Error(signal.aborted?requestAbortMessage('Images',signal,timeoutMs):'无法连接 Images 服务，上游是否收到请求未知；未自动重试。');}
+    recordResponse(diagnostics,response);
+    if(!response.ok){if(diagnostics)diagnostics.reason='http_error';await response.body?.cancel().catch(()=>{});throw new Error(response.status===401||response.status===403?'Images 鉴权失败或权限不足。':response.status===429?'Images 额度不足或请求受限。':response.status===413?'Images 渠道拒绝了请求体大小，请缩小送入范围或按渠道上限调低请求预算；未自动重试。':`Images 服务返回 HTTP ${response.status}，请核对模型与参数；未自动重试。`);}
+    try{return await readGenerationJson(response,signal,diagnostics);}catch(error){recordExecutionError(diagnostics,error,signal);throw new Error(signal.aborted?requestAbortMessage('Images',signal,timeoutMs):'Images 响应读取或解析失败，上游计费状态未知；未自动重试。');}
   }
   async probe(endpoint:string,key:string,signal:AbortSignal){
     const data=z.object({data:z.array(z.object({id:z.string().min(1).max(200)})).max(10000)}).parse(await this.call(`${imagesRoot(endpoint)}/models`,key,undefined,signal));
@@ -43,6 +41,9 @@ export class ImagesGenerator {
   }
   async execute(context:CloudExecutionContext,signal:AbortSignal,progress:(stage:string,value:number)=>Promise<void>):Promise<ExecutionResult>{
     const {job,model}=context,input=job.adapted_input,p=normalizeParameters(job.recipe_snapshot.core_parameters,model);
+    const systemInstruction=input.system_instruction;
+    if(systemInstruction!==undefined&&(typeof systemInstruction!=='string'||systemInstruction.length>32000))throw new Error('系统指令须为不超过 32000 字符的纯文字；未发送请求。');
+    if(systemInstruction?.trim())throw new Error('Images 生图请求不支持独立系统指令；未发送请求。');
     validateGenerationParameters(p,model);
     if(model.purpose==='understanding'||input.kind!=='separated_inputs')throw new Error('Images 适配器需要参考图集合与提示词，仅支持生图用途。');
     const compatibility=model.images_compatibility??defaultImagesCompatibility;
@@ -81,10 +82,14 @@ export class ImagesGenerator {
     const requestUrl=`${imagesRoot(model.endpoint)}/images/${ids.length?'edits':'generations'}`;
     await captureModelInput(context,new URL(requestUrl).pathname,body);
     if(signal.aborted)throw new Error('任务已取消，未发送请求。');
-    const raw=await this.call(requestUrl,await context.resolveCredential(),body,AbortSignal.any([signal,AbortSignal.timeout(600_000)]));
+    if(context.diagnostics)context.diagnostics.timeout_ms=GENERATION_TIMEOUT_MS;
+    const raw=await this.call(requestUrl,await context.resolveCredential(),body,AbortSignal.any([signal,AbortSignal.timeout(GENERATION_TIMEOUT_MS)]),context.diagnostics,GENERATION_TIMEOUT_MS);
+    if(raw&&typeof raw==='object'&&'id' in raw)recordRequestId(context.diagnostics,raw.id);
+    if(context.diagnostics)context.diagnostics.stage='response_validation';
     const parsed=resultSchema.safeParse(raw);if(!parsed.success)throw new Error('Images 返回结构不受支持，没有保存不完整结果。');const data=parsed.data;
     if(data.data.length!==p.count)throw new Error('Images 返回数量与任务不一致，没有保存不完整结果。');
     const images:ExecutionResult['images']=[];
+    if(context.diagnostics)context.diagnostics.stage='image_decode';
     for(const item of data.data){const encoded=item.b64_json;
       if(!encoded)throw new Error('Images 未按请求返回 Base64 图片；当前不下载 URL 结果，未自动重试。');
       if(encoded.length%4===1||!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded))throw new Error('Images 返回无效 Base64 图片。');

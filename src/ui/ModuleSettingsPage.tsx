@@ -1,11 +1,10 @@
 import {useRef,useState} from 'react';
-import {defaultModuleSettings,type ModuleSettings} from '../core/module-settings.js';
+import {defaultModuleSettings,referencePrecisionModules,referencePrecisionOptions,type ModuleSettings,type ReferencePrecision} from '../core/module-settings.js';
+import {referencePrecisionDefault} from '../core/reference-precision.js';
 import {promptRoles,type PromptRole} from '../core/prompt-roles.js';
 import type {Command,WorkspaceView} from '../shared/api.js';
 import {SettingsPageHeader} from './SettingsPageHeader.js';
 import './model-settings.css';
-
-const referenceModules=[{type:'composition',title:'构图'},{type:'style',title:'风格'}] as const;
 
 export function ModuleSettingsPage({settings=defaultModuleSettings,models,onModels,onPrompts,onClose,onSave}: {
   settings?:ModuleSettings;models?:WorkspaceView['reference_models'];onModels:()=>void;onPrompts:()=>void;onClose:()=>void;onSave:(command:Command)=>Promise<boolean>;
@@ -27,6 +26,10 @@ export function ModuleSettingsPage({settings=defaultModuleSettings,models,onMode
     if(Object.entries(patch).every(([key,value])=>settings[type][key as keyof ModuleSettings['composition']]===value))return;
     await save({...settings,[type]:{...settings[type],...patch}});
   };
+  const updatePrecision=async(type:typeof referencePrecisionModules[number]['type'],precision:ReferencePrecision)=>{
+    if(referencePrecisionDefault({reference_type:type},settings)===precision)return;
+    await save({...settings,reference_precision:{...settings.reference_precision,[type]:precision}});
+  };
   const promptRole=settings.prompt?.role??defaultModuleSettings.prompt.role;
   const prepare=async(kind:'depth'|'segment')=>{
     if(preparingRef.current)return;
@@ -40,7 +43,7 @@ export function ModuleSettingsPage({settings=defaultModuleSettings,models,onMode
     <SettingsPageHeader page="modules" busy={busy} busyLabel="正在保存…" onModels={onModels} onModules={()=>{}} onPrompts={onPrompts} onClose={onClose}/>
     <div className="module-settings-body">
       <div className="module-settings-content">
-        <header className="settings-detail-heading"><div><span className="settings-eyebrow">模块设置</span><h2>模块默认值</h2><p>用于新模块的默认参数，修改后自动保存，重新启动后保留。已有模块可在展开编辑中独立调整。</p></div></header>
+        <header className="settings-detail-heading"><div><span className="settings-eyebrow">模块设置</span><h2>模块默认值</h2><p>用于新模块的默认参数，修改后自动保存，重新启动后保留。旧模块尚未配置的参数沿用此处默认值；参考图精度可在生图设置中逐图调整。</p></div></header>
         <div className="module-settings-list">
           <section className="module-settings-row" aria-labelledby="module-settings-prompt">
             <div className="module-settings-row-heading"><h3 id="module-settings-prompt">提示词</h3><p>推理角色</p></div>
@@ -49,22 +52,26 @@ export function ModuleSettingsPage({settings=defaultModuleSettings,models,onMode
               <p id="default-prompt-role-description">{promptRoles.find(role=>role.id===promptRole)?.description}新建提示词模块采用此角色，已有模块的选择保持不变。</p>
             </div>
           </section>
-          {referenceModules.map(module=>{
-            const current=settings[module.type],kind=current.preprocess;
+          {referencePrecisionModules.map(module=>{
+            const preprocessType=module.type==='composition'||module.type==='style'?module.type:undefined;
+            const current=preprocessType?settings[preprocessType]:undefined,kind=current?.preprocess;
             const modelKind=kind==='depth'||kind==='segment'?kind:null;
             const status=modelKind?(preparing===modelKind?'downloading':models?.[modelKind]??'missing'):null;
             return <section className="module-settings-row" key={module.type} aria-labelledby={`module-settings-${module.type}`}>
               <div className="module-settings-row-heading"><h3 id={`module-settings-${module.type}`}>{module.title}</h3><p>生图参考图</p></div>
               <div className="module-settings-fields">
-                <label><span className="module-settings-field-label">最长边</span><select aria-label={`${module.title}参考图最长边`} value={current.max_edge} disabled={busy} onChange={event=>void update(module.type,{max_edge:Number(event.target.value) as 512|1024})}><option value={1024}>1K（1024 像素）</option><option value={512}>512 像素</option></select></label>
-                <label><span className="module-settings-field-label">处理方式</span><select aria-label={`${module.title}参考图处理方式`} value={kind} disabled={busy} onChange={event=>void update(module.type,{preprocess:event.target.value as ModuleSettings['composition']['preprocess']})}><option value="none">仅缩图</option><option value="blur">模糊</option><option value="depth">深度</option><option value="segment">区域分割</option></select></label>
-                {kind==='blur'&&<label><span className="module-settings-field-label">模糊强度</span><select aria-label={`${module.title}参考图模糊强度`} value={current.blur_strength} disabled={busy} onChange={event=>void update(module.type,{blur_strength:event.target.value as ModuleSettings['composition']['blur_strength']})}><option value="weak">弱</option><option value="medium">中</option><option value="strong">强</option></select></label>}
+                <label><span className="module-settings-field-label">参考图识别精度</span><select aria-label={`${module.title}参考图识别精度`} value={referencePrecisionDefault({reference_type:module.type},settings)} disabled={busy} onChange={event=>void updatePrecision(module.type,event.target.value as ReferencePrecision)}>{referencePrecisionOptions.map(option=><option key={option.value} value={option.value}>{option.title}</option>)}</select></label>
+                {current&&preprocessType&&<>
+                  <label><span className="module-settings-field-label">最长边</span><select aria-label={`${module.title}参考图最长边`} value={current.max_edge} disabled={busy} onChange={event=>void update(preprocessType,{max_edge:Number(event.target.value) as 512|1024})}><option value={1024}>1K（1024 像素）</option><option value={512}>512 像素</option></select></label>
+                  <label><span className="module-settings-field-label">处理方式</span><select aria-label={`${module.title}参考图处理方式`} value={kind} disabled={busy} onChange={event=>void update(preprocessType,{preprocess:event.target.value as ModuleSettings['composition']['preprocess']})}><option value="none">仅缩图</option><option value="blur">模糊</option><option value="depth">深度</option><option value="segment">区域分割</option></select></label>
+                  {kind==='blur'&&<label><span className="module-settings-field-label">模糊强度</span><select aria-label={`${module.title}参考图模糊强度`} value={current.blur_strength} disabled={busy} onChange={event=>void update(preprocessType,{blur_strength:event.target.value as ModuleSettings['composition']['blur_strength']})}><option value="weak">弱</option><option value="medium">中</option><option value="strong">强</option></select></label>}
+                </>}
                 {modelKind&&<div className="module-settings-resource" role="status"><span>{status==='ready'?'本地资源已就绪':status==='downloading'?'正在下载资源…':'需要下载一次本地资源'}</span>{status==='missing'&&<button disabled={busy||!!preparing} onClick={()=>void prepare(modelKind)}>下载资源</button>}</div>}
               </div>
             </section>;
           })}
         </div>
-        <p className="settings-hint">处理结果用于生图，原图保持不变。缩图保持比例，小图不放大；主体图保持原样，推理模型仍读取清晰缩图。旧模块尚无独立参数时沿用此处默认值。</p>
+        <p className="settings-hint">参考图识别精度用于支持逐图精度的生图模型，不改变输出分辨率。处理结果用于生图，原图保持不变。缩图保持比例，小图不放大；主体图保持原样，推理模型仍读取清晰缩图。</p>
         {error&&<p className="settings-notice" role="alert">{error}</p>}
       </div>
     </div>

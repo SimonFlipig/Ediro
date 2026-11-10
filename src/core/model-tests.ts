@@ -23,7 +23,7 @@ export class ModelTests {
     try{
       try{await this.persist(this.list());}catch(error){this.records=previous;throw error;}
       const registry=new ModuleRegistry(),module=registry.create('prompt');module.user_instruction='连接测试：请计算 17 × 23，只返回最终整数，不解释。';
-      const recipe={recipe_id:newId('recipe'),schema_version:1 as const,modules:[module],model_config_id:model.model_config_id,core_parameters:{...model.defaults}},chain=compileRecipe(recipe,registry);
+      const recipe={recipe_id:newId('recipe'),schema_version:1 as const,modules:[module],model_config_id:model.model_config_id,core_parameters:{...model.defaults}},chain=compileRecipe(recipe,registry,{purpose:'understanding'});
       const plan=planExecution(recipe,[],model,registry,chain);
       const job:Job={task_id:record.test_id,status:'running',stage:'推理链路测试',progress:0,created_at:record.created_at,recipe_snapshot:plan.recipe,execution_plan:plan.summary,chain_snapshot:chain,model_snapshot:{model_config_id:model.model_config_id,title:model.title,provider:model.provider,model:model.model,adapter_id:model.adapter_id,revision:model.revision,kind:model.kind},adapted_input:plan.adapted,output_asset_ids:[]};
       try{

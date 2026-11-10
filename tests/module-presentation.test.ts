@@ -20,6 +20,9 @@ test('中文说明只用于展示，原生与降级发送继续使用核心语�
   assert.equal(describeInputBlock(chain.blocks[4],prompt,registry.get('prompt')),'生成产品图');
   const native=adaptChain(chain,seedModels()[0]);
   assert.ok(JSON.stringify(native).includes(semanticPrompts.viewpoint.native));
+  assert.equal(chain.format_version,4);
+  assert.match(native.blocks!.filter(b=>b.type==='text').map(b=>b.text).join(''),/^## 1\. viewpoint\n\n/);
+  assert.deepEqual(native.blocks!.filter(b=>b.type==='image'),chain.blocks.filter(b=>b.type==='image'));
   const separated=adaptChain(chain,seedModels()[1]);
   assert.ok(separated.prompt!.includes(semanticPrompts.viewpoint.numbered.replace('{images}','image_1')));
   assert.ok(!JSON.stringify(native).includes(semanticPrompts.viewpoint.description));
@@ -59,5 +62,21 @@ test('自定义模块标题、图片标签和旧文本块不能通过输入预�
   assert.equal(describeInputBlock({...text,type:'text',text_role:'header',text:'PRIVATE HEADER'},module,definition),module.title);
   assert.equal(describeInputBlock({...text,type:'text',text_role:undefined,text:'PRIVATE LEGACY'},module,definition),definition.description);
   assert.equal(describeInputBlock({...text,type:'text',text_role:undefined,text:'用户要求'},module,definition),'用户要求');
-  assert.deepEqual(chain,before);assert.ok(JSON.stringify(adaptChain(chain,seedModels()[0])).includes('PRIVATE HEADER'));
+  assert.deepEqual(chain,before);
+  for(const model of [seedModels()[0],seedModels()[1]]){
+    const adapted=adaptChain(chain,model),sent=adapted.prompt??adapted.blocks!.filter(b=>b.type==='text').map(b=>b.text).join('');
+    if(adapted.kind==='native_blocks'){
+      assert.match(sent,/^## 1\. viewpoint\n\n/);
+      assert.deepEqual(adapted.blocks!.filter(block=>block.type==='image').map(block=>block.image_name),['image_1']);
+      assert.doesNotMatch(sent,/<module|<image_ref/);
+    }else {
+      assert.match(sent,/<module type="viewpoint" name="viewpoint">/);
+      assert.match(sent,/<image_ref id="image_1"\/>/);
+    }
+    assert.doesNotMatch(sent,/PRIVATE HEADER|PRIVATE LABEL/);
+  }
+  const legacy=compileRecipe(recipe,registry,{purpose:'understanding'});
+  assert.equal(legacy.format_version,2);
+  assert.ok(JSON.stringify(adaptChain(legacy,seedModels()[0])).includes('PRIVATE HEADER'));
+  assert.deepEqual(adaptChain(legacy,seedModels()[0]).blocks,legacy.blocks);
 });

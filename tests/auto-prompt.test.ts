@@ -6,6 +6,8 @@ import { defaultParameters, recipeSchema, type Asset, type Recipe } from '../src
 import { defaultModuleSettings } from '../src/core/module-settings.js';
 import { ModuleRegistry } from '../src/core/modules.js';
 import { defaultPromptConfig } from '../src/core/prompt-config.js';
+import { buildPromptSystemInstruction } from '../src/core/module-inference-tasks.js';
+import { defaultModuleInferenceInstructions } from '../src/core/module-inference-instructions.js';
 
 function fixture(){
   const registry=new ModuleRegistry(),settings=structuredClone(defaultModuleSettings);
@@ -29,7 +31,7 @@ test('只选第一个启用的自动提示词目标，关闭开关时不拦生�
 });
 
 test('成功 key 随工程保存并复用，目标正文任意手动修改不强制重新推理',()=>{
-  const f=fixture(),first=f.state();assert.equal(first.needs_inference,true);assert.match(first.input_key,/^auto-v1:[a-f0-9]{64}$/);
+  const f=fixture(),first=f.state();assert.equal(first.needs_inference,true);assert.match(first.input_key,/^auto-v5:[a-f0-9]{64}$/);
   f.target.auto_prompt_input_key=first.input_key;assert.equal(f.state().needs_inference,false);
   for(const text of ['人工修订', '', '复杂字符 🪑\u0000']){f.target.user_instruction=text;assert.deepEqual(f.state(),{...first,needs_inference:false});}
   const reopened=recipeSchema.parse(JSON.parse(JSON.stringify(f.recipe)));
@@ -62,11 +64,22 @@ test('生成模型、输出参数、图像预处理和未启用模块不影响�
   f.subject.reference_mode='text_only';assert.equal(f.state().input_key,key);
 });
 
-test('其它启用模块的文字、顺序、类型、图片和参考模式变化均会过期',()=>{
+test('模块换位不建议更新，不修改实际顺序或正文，也不清除已有更新建议',()=>{
+  const f=fixture(),key=f.state().input_key;f.target.auto_prompt_input_key=key;
+  f.recipe.modules.reverse();const reordered=structuredClone(f.recipe);
+  assert.equal(f.state().needs_inference,false);assert.equal(f.state().input_key,key);
+  assert.deepEqual(f.recipe,reordered);
+  const reopened=recipeSchema.parse(JSON.parse(JSON.stringify(f.recipe)));
+  assert.equal(getAutoPromptState(reopened,f.registry,f.settings,f.assets)!.needs_inference,false);
+  f.subject.user_instruction='蓝色柜子';assert.equal(f.state().needs_inference,true);
+  f.recipe.modules.reverse();assert.equal(f.state().needs_inference,true);
+  assert.equal(f.target.user_instruction,'原文');assert.equal(f.target.auto_prompt_input_key,key);
+});
+
+test('其它启用模块的文字、类型、图片和参考模式变化均会过期',()=>{
   const changes:Array<(f:ReturnType<typeof fixture>)=>void>=[
     f=>{f.subject.user_instruction='黑色沙发';},
     f=>{f.otherPrompt.user_instruction='保留品牌文字';},
-    f=>{[f.recipe.modules[0],f.recipe.modules[1]]=[f.recipe.modules[1],f.recipe.modules[0]];},
     f=>{f.style.reference_type='composition';},
     f=>{f.composition.asset_ids.push('asset_other');},
     f=>{f.composition.asset_ids=['asset_replaced'];},
@@ -94,13 +107,30 @@ test('外部图片同 ID 换内容按 sha 失效，同内容重定位和名称�
   location.sha256='b'.repeat(64);assert.notEqual(f.state().input_key,key);
 });
 
-test('当前模块定义变化会失效，已冻结在旧 recipe 的定义不影响当前结果',()=>{
-  const f=fixture(),key=f.state().input_key;
-  f.subject.base_instruction='旧工程携带的旧定义';assert.equal(f.state().input_key,key);
-  const config=structuredClone(defaultPromptConfig);config.modules.subject={native_instruction:'新的主体要求'};
+test('四模块生图指令不影响复用，参与模块的有效推理规则变化才失效',()=>{
+  const f=fixture(),withoutViewpoint=f.state().input_key;
+  const unusedViewpoint=new ModuleRegistry(undefined,defaultPromptConfig,{}, {viewpoint:'未参与的视角规则'});
+  assert.equal(getAutoPromptState(f.recipe,unusedViewpoint,f.settings,f.assets)!.input_key,withoutViewpoint);
+  const viewpoint=f.registry.create('viewpoint');viewpoint.user_instruction='正面观察';f.recipe.modules.push(viewpoint);
+  const key=f.state().input_key;f.target.auto_prompt_input_key=key;
+  for(const module of [f.subject,f.composition,f.style,viewpoint]){
+    module.base_instruction='旧工程携带的旧定义';module.numbered_instruction='旧工程的编号定义';
+  }
+  assert.equal(f.state().input_key,key);
+  for(const type of ['subject','composition','style','viewpoint'] as const){
+    const config=structuredClone(defaultPromptConfig);config.modules[type]={native_instruction:'新的生图要求',numbered_instruction:'新的编号生图要求'};
+    assert.equal(getAutoPromptState(f.recipe,new ModuleRegistry(undefined,config),f.settings,f.assets)!.input_key,key);
+    const same=new ModuleRegistry(undefined,defaultPromptConfig,{}, {[type]:defaultModuleInferenceInstructions[type]});
+    assert.equal(getAutoPromptState(f.recipe,same,f.settings,f.assets)!.needs_inference,false);
+    for(const instruction of ['新的独立推理要求','']){
+      const changed=new ModuleRegistry(undefined,defaultPromptConfig,{}, {[type]:instruction});
+      const state=getAutoPromptState(f.recipe,changed,f.settings,f.assets)!;
+      assert.notEqual(state.input_key,key);assert.equal(state.needs_inference,true);
+    }
+  }
+  const config=structuredClone(defaultPromptConfig);config.modules.prompt={native_instruction:'新的目标语义'};
   assert.notEqual(getAutoPromptState(f.recipe,new ModuleRegistry(undefined,config),f.settings,f.assets)!.input_key,key);
-  delete config.modules.subject;config.modules.prompt={native_instruction:'新的目标语义'};
-  assert.notEqual(getAutoPromptState(f.recipe,new ModuleRegistry(undefined,config),f.settings,f.assets)!.input_key,key);
+  assert.equal(f.target.user_instruction,'原文');assert.equal(f.target.auto_prompt_input_key,key);
 });
 
 test('对象键顺序不影响复用，图片顺序与相邻文字边界不会碰撞',()=>{
@@ -114,14 +144,22 @@ test('对象键顺序不影响复用，图片顺序与相邻文字边界不会�
 test('浏览器可用同步摘要符合完整 SHA-256 且长文本不扩大持久化 key',()=>{
   const registry=new ModuleRegistry(),target=registry.create('prompt');target.module_id='mod_target';target.auto_prompt=true;
   const recipe:Recipe={recipe_id:'recipe_hash',schema_version:1,modules:[target],model_config_id:'model_mock_native',core_parameters:{...defaultParameters}};
-  const canonical='{"modules":[{"base_instruction":"","images":[],"model_name":"prompt","module_id":"mod_target","reference_type":"prompt"}],"target_module_id":"mod_target"}';
-  assert.equal(getAutoPromptState(recipe,registry,defaultModuleSettings)!.input_key,'auto-v1:'+createHash('sha256').update(canonical).digest('hex'));
+  const system_instruction=buildPromptSystemInstruction(registry.roleInstruction('general'));
+  const canonical=JSON.stringify({modules:[{base_instruction:'',images:[],model_name:'prompt',module_id:'mod_target',reference_type:'prompt'}],system_instruction,target_module_id:'mod_target'});
+  assert.equal(getAutoPromptState(recipe,registry,defaultModuleSettings)!.input_key,'auto-v5:'+createHash('sha256').update(canonical).digest('hex'));
+  const legacyCanonical='{"modules":[{"base_instruction":"","images":[],"model_name":"prompt","module_id":"mod_target","reference_type":"prompt"}],"target_module_id":"mod_target"}';
+  for(const prefix of ['auto-v1:','auto-v2:','auto-v3:','auto-v4:']){
+    target.auto_prompt_input_key=prefix+createHash('sha256').update(prefix==='auto-v3:'||prefix==='auto-v4:'?canonical:legacyCanonical).digest('hex');
+    const before=structuredClone(recipe);
+    assert.equal(getAutoPromptState(recipe,registry,defaultModuleSettings)!.needs_inference,true);
+    assert.deepEqual(recipe,before,'new rules only suggest refreshing; they never change existing text or saved keys');
+  }
   const other=registry.create('prompt');other.module_id='mod_other';other.user_instruction='中文 🪑'.repeat(4000);recipe.modules.push(other);
   const longCanonical=JSON.stringify({modules:[
-    {base_instruction:'',images:[],model_name:'prompt',module_id:'mod_target',reference_type:'prompt'},
     {base_instruction:'',images:[],model_name:'prompt',module_id:'mod_other',reference_type:'prompt',user_instruction:other.user_instruction},
-  ],target_module_id:'mod_target'});
+    {base_instruction:'',images:[],model_name:'prompt',module_id:'mod_target',reference_type:'prompt'},
+  ],system_instruction,target_module_id:'mod_target'});
   const longKey=getAutoPromptState(recipe,registry,defaultModuleSettings)!.input_key;
-  assert.equal(longKey,'auto-v1:'+createHash('sha256').update(longCanonical).digest('hex'));
+  assert.equal(longKey,'auto-v5:'+createHash('sha256').update(longCanonical).digest('hex'));
   assert.equal(longKey.length,72);
 });

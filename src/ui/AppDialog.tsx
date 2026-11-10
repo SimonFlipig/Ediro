@@ -9,15 +9,16 @@ export function AppDialog({title,children,actions,onDismiss}:{title:string;child
   const dismiss=useRef(onDismiss);dismiss.current=onDismiss;
   useEffect(()=>{
     const previous=document.activeElement instanceof HTMLElement?document.activeElement:null;
-    const buttons=[...panel.current!.querySelectorAll<HTMLButtonElement>('button')];
-    (buttons.find(button=>button.textContent==='知道了')??buttons[0])?.focus();
+    const focusable=()=>[...panel.current!.querySelectorAll<HTMLElement>('input:not(:disabled),textarea:not(:disabled),select:not(:disabled),button:not(:disabled),a[href],[tabindex="0"]')].filter(element=>element.getClientRects().length>0);
+    const controls=focusable();
+    (controls.find(element=>element.matches('input,textarea,select'))??controls.find(element=>element.textContent==='知道了')??controls[0])?.focus();
     const key=(event:KeyboardEvent)=>{
       const dialogs=document.querySelectorAll('.app-dialog');if(dialogs[dialogs.length-1]!==panel.current)return;
       if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();if(!running.current)dismiss.current();}
       if(event.key==='Tab'){
-        const buttons=[...panel.current!.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
-        const index=buttons.indexOf(document.activeElement as HTMLButtonElement);
-        event.preventDefault();buttons[(index+(event.shiftKey?-1:1)+buttons.length)%buttons.length]?.focus();
+        const controls=focusable();
+        const index=controls.indexOf(document.activeElement as HTMLElement);
+        event.preventDefault();controls[(index+(event.shiftKey?-1:1)+controls.length)%controls.length]?.focus();
       }
     };
     document.addEventListener('keydown',key,true);

@@ -11,7 +11,7 @@ import { seedModels } from '../src/core/models.js';
 import { loadPromptConfig } from '../src/adapters/prompt-config-repository.js';
 import { releasePromptConfig } from '../src/core/release-prompt-config.js';
 
-test('自由语义名与模块编号共用编译规则，保留模块身份及重复图片',()=>{
+test('自由语义名进入图文编号标题与拍平 XML 属性，模块身份及重复图片不变',()=>{
   const config=structuredClone(defaultPromptConfig);
   config.module_header='## {module_number}. {module}';
   config.modules.subject={model_name:'主体与外观 / Main Subject',native_instruction:'',numbered_instruction:''};
@@ -21,19 +21,36 @@ test('自由语义名与模块编号共用编译规则，保留模块身份及�
   b.user_instruction='纯文字模块';angle.asset_ids=['asset_same'];off.enabled=false;off.user_instruction='跳过';
   const recipe:Recipe={recipe_id:'recipe_names',schema_version:1,modules:[off,registry.create('style'),a,b,angle,prompt],model_config_id:'model_mock_native',core_parameters:{...defaultParameters}};
   const chain=compileRecipe(recipe,registry),flat=adaptChain(chain,seedModels()[1]);
+  assert.equal(chain.format_version,4);
   assert.deepEqual(chain.blocks.filter(b=>b.type==='text'&&b.text_role==='header').map(b=>b.text),['## 1. 主体与外观 / Main Subject','## 2. 主体与外观 / Main Subject','## 3. Camera Angle']);
+  assert.equal(flat.prompt!.match(/<module type="subject" name="主体与外观 \/ Main Subject">/g)?.length,2);
+  assert.doesNotMatch(flat.prompt!,/##/);
   assert.deepEqual(flat.image_asset_ids,['asset_same','asset_same','asset_same']);
   assert.match(flat.prompt!,/原样保留 subject 和 image_9/);
   assert.equal(a.reference_type,'subject');assert.equal(a.title,'主体');
   assert.doesNotThrow(()=>moduleSchema.parse(a));
-  assert.deepEqual(adaptChain(chain,seedModels()[0]).blocks,chain.blocks);
+  const native=adaptChain(chain,seedModels()[0]);
+  assert.deepEqual(native.blocks!.filter(b=>b.type==='image'),chain.blocks.filter(b=>b.type==='image'));
+  const nativeText=native.blocks!.filter(b=>b.type==='text').map(b=>b.text).join('');
+  assert.deepEqual([...nativeText.matchAll(/^## (\d+)\. (.+)$/gm)].map(match=>[match[1],match[2]]),[['1','主体与外观 / Main Subject'],['2','主体与外观 / Main Subject'],['3','Camera Angle']]);
+  assert.ok(nativeText.includes(a.user_instruction));assert.ok(nativeText.includes(b.user_instruction));
+  assert.doesNotMatch(nativeText,/<module|<image_ref/);
   recipe.modules=[angle,a,prompt];
-  assert.match(adaptChain(compileRecipe(recipe,registry),seedModels()[1]).prompt!,/^## 1. Camera Angle/);
+  assert.match(adaptChain(compileRecipe(recipe,registry),seedModels()[1]).prompt!,/^<generation_request>\n<image_mapping>[^<]+<\/image_mapping>\n<module type="viewpoint" name="Camera Angle">/);
   config.modules.viewpoint.header=false;
   const hidden=adaptChain(compileRecipe(recipe,new ModuleRegistry(undefined,config)),seedModels()[1]).prompt!;
-  assert.ok(!hidden.includes('Camera Angle'));assert.match(hidden,/## 2. 主体与外观/);
+  assert.match(hidden,/<module type="viewpoint" name="Camera Angle">/);assert.match(hidden,/<module type="subject" name="主体与外观 \/ Main Subject">/);
   config.module_header='';
-  assert.ok(!adaptChain(compileRecipe(recipe,new ModuleRegistry(undefined,config)),seedModels()[1]).prompt!.includes('主体与外观'));
+  assert.equal(adaptChain(compileRecipe(recipe,new ModuleRegistry(undefined,config)),seedModels()[1]).prompt,hidden);
+  const titled=adaptChain(compileRecipe(recipe,new ModuleRegistry(undefined,config)),seedModels()[0]).blocks!.filter(block=>block.type==='text').map(block=>block.text).join('');
+  assert.deepEqual([...titled.matchAll(/^## (\d+)\. (.+)$/gm)].map(match=>[match[1],match[2]]),[['1','Camera Angle'],['2','主体与外观 / Main Subject']]);
+
+  config.module_header='## {module_number}. {module}';
+  const understanding=compileRecipe(recipe,new ModuleRegistry(undefined,config),{purpose:'understanding'});
+  assert.equal(understanding.format_version,2);
+  const legacy=adaptChain(understanding,seedModels()[1]).prompt!;
+  assert.ok(!legacy.includes('Camera Angle'));assert.match(legacy,/## 2. 主体与外观/);
+  assert.deepEqual(adaptChain(understanding,seedModels()[0]).blocks,understanding.blocks);
 });
 
 test('模型语义名允许中文空格标点，拒绝空白、换行及过长名称；新标题格式可导出重载',()=>{
@@ -56,17 +73,20 @@ test('调优规则独立于显示名称，快照冻结规则，手写引用不�
   subject.title='我的产品';subject.asset_ids=['asset_a','asset_a'];subject.user_instruction='Match subject to image_9.';neutral.asset_ids=['asset_b'];
   const recipe:Recipe={recipe_id:'recipe_test',schema_version:1,modules:[subject,neutral,registry.create('prompt')],model_config_id:'model_mock_native',core_parameters:{...defaultParameters}};
   const chain=compileRecipe(recipe,registry),flat=adaptChain(chain,seedModels()[1]);
-  assert.match(flat.prompt!,/^subject:\nPreserve image_1, image_2\./);
+  assert.match(flat.prompt!,/^<generation_request>\n<image_mapping>[^<]+<\/image_mapping>\n<module type="subject" name="subject">\n<reference_rules>Preserve image_1, image_2\.<\/reference_rules>/);
   assert.match(flat.prompt!,/Match subject to image_9\./);assert.ok(!flat.prompt!.includes(subject.title));
   assert.deepEqual(chain.blocks.filter(b=>b.type==='image').map(b=>b.image_name),['image_1','image_2','image_3']);
   assert.deepEqual(flat.image_asset_ids,['asset_a','asset_a','asset_b']);
+  const native=adaptChain(chain,seedModels()[0]).blocks!.filter(block=>block.type==='text').map(block=>block.text).join('');
+  assert.match(native,/^## 1\. subject\n\nKeep image_1, image_2\./);
+  assert.doesNotMatch(native,/Preserve image_1/);assert.ok(native.includes(subject.user_instruction));
   registry.promptConfig.revision='changed';assert.equal(chain.prompt_config?.revision,'private-test');
   subject.enabled=false;const reordered=compileRecipe(recipe,registry);
   assert.deepEqual(reordered.blocks.filter(b=>b.type==='image').map(b=>b.image_name),['image_1']);
-  assert.equal(adaptChain(reordered,seedModels()[1]).prompt,'image_1');
+  assert.equal(adaptChain(reordered,seedModels()[1]).prompt,'<generation_request>\n<image_mapping>image_N refers to the Nth attached image (1-based), in attachment order. Image numbers are independent of module numbers.</image_mapping>\n<module type="image_text" name="image_text">\n<image_ref id="image_1"/>\n</module>\n</generation_request>');
 });
 
-test('模块内单换行、同类模块间双换行；保留用户换行并跳过空模块和停用模块',()=>{
+test('理解任务保持模块内外分隔符、用户换行并跳过空模块和停用模块',()=>{
   const config=structuredClone(defaultPromptConfig);
   config.image_label='';config.module_header='{module}: {images}';
   config.modules.subject={native_instruction:'Keep {images}.',numbered_instruction:'Keep {images}.'};
@@ -74,15 +94,16 @@ test('模块内单换行、同类模块间双换行；保留用户换行并跳�
   first.asset_ids=['asset_a','asset_b'];first.user_instruction='line one\n\nline two\n';
   second.asset_ids=['asset_c'];second.user_instruction='second note';off.enabled=false;off.user_instruction='not sent';
   const recipe:Recipe={recipe_id:'recipe_spacing',schema_version:1,modules:[first,off,registry.create('style'),second,registry.create('prompt')],model_config_id:'model_mock_native',core_parameters:{...defaultParameters}};
-  const chain=compileRecipe(recipe,registry);
+  const chain=compileRecipe(recipe,registry,{purpose:'understanding'});
+  assert.equal(chain.format_version,2);
   assert.equal(adaptChain(chain,seedModels()[1]).prompt,'subject: image_1, image_2\nKeep image_1, image_2.\nline one\n\nline two\n\n\nsubject: image_3\nKeep image_3.\nsecond note');
   assert.deepEqual(adaptChain(chain,seedModels()[0]).blocks,chain.blocks);
   assert.equal(chain.blocks.find(b=>b.type==='text'&&b.text_role==='user')?.type,'text');
   assert.ok(chain.blocks.some(b=>b.type==='text'&&b.text===first.user_instruction));
   config.intra_module_separator=' | ';config.inter_module_separator=' <NEXT> ';
-  assert.equal(adaptChain(compileRecipe(recipe,new ModuleRegistry(undefined,config)),seedModels()[1]).prompt,'subject: image_1, image_2 | Keep image_1, image_2. | line one\n\nline two\n <NEXT> subject: image_3 | Keep image_3. | second note');
+  assert.equal(adaptChain(compileRecipe(recipe,new ModuleRegistry(undefined,config),{purpose:'understanding'}),seedModels()[1]).prompt,'subject: image_1, image_2 | Keep image_1, image_2. | line one\n\nline two\n <NEXT> subject: image_3 | Keep image_3. | second note');
   config.intra_module_separator='';config.inter_module_separator='';
-  assert.equal(adaptChain(compileRecipe(recipe,new ModuleRegistry(undefined,config)),seedModels()[1]).prompt,'subject: image_1, image_2Keep image_1, image_2.line one\n\nline two\nsubject: image_3Keep image_3.second note');
+  assert.equal(adaptChain(compileRecipe(recipe,new ModuleRegistry(undefined,config),{purpose:'understanding'}),seedModels()[1]).prompt,'subject: image_1, image_2Keep image_1, image_2.line one\n\nline two\nsubject: image_3Keep image_3.second note');
 });
 
 test('旧配置只在当前使用时升级，历史链保留旧连接符',async()=>{
@@ -94,11 +115,15 @@ test('旧配置只在当前使用时升级，历史链保留旧连接符',async(
   assert.equal(promptConfigSchema.parse(legacy).version,1);
   const registry=new ModuleRegistry(),m=registry.create('image_text'),p=registry.create('prompt');m.asset_ids=['asset_a'];m.user_instruction='note';p.user_instruction='next';
   const recipe:Recipe={recipe_id:'recipe_legacy',schema_version:1,modules:[m,p],model_config_id:'model_mock_native',core_parameters:{...defaultParameters}};
-  const chain=compileRecipe(recipe);chain.prompt_config=structuredClone(legacy);
+  const chain=compileRecipe(recipe,registry,{purpose:'understanding'});chain.prompt_config=structuredClone(legacy);
+  assert.equal(chain.format_version,2);
   const frozen=JSON.stringify(chain);
   assert.equal(adaptChain(chain,seedModels()[1]).prompt,'image_1\n\nnote\n\nnext');
   assert.equal(JSON.stringify(chain),frozen);
-  assert.equal(adaptChain(compileRecipe(recipe,new ModuleRegistry(undefined,legacy)),seedModels()[1]).prompt,'image_1\nnote\n\nnext');
+  const migratedRegistry=new ModuleRegistry(undefined,legacy);
+  assert.equal(adaptChain(compileRecipe(recipe,migratedRegistry,{purpose:'understanding'}),seedModels()[1]).prompt,'image_1\nnote\n\nnext');
+  const generation=compileRecipe(recipe,migratedRegistry);
+  assert.equal(generation.format_version,4);assert.match(adaptChain(generation,seedModels()[1]).prompt!,/^<generation_request>\n/);
   const dir=await mkdtemp(path.join(tmpdir(),'ediro-legacy-spacing-'));
   try{const file=path.join(dir,'prompt-config.v1.json'),raw=JSON.stringify(legacy);await writeFile(file,raw);assert.equal((await loadPromptConfig(dir)).version,2);const {readFile}=await import('node:fs/promises');assert.equal(await readFile(file,'utf8'),raw);}finally{await rm(dir,{recursive:true,force:true});}
 });
@@ -126,14 +151,21 @@ test('首次安装使用发布提示词，两种输入模式均展开模块及�
     const chain=compileRecipe(recipe,registry),flat=adaptChain(chain,seedModels()[1]);
     const native=adaptChain(chain,seedModels()[0]).blocks!.filter(b=>b.type==='text').map(b=>b.text).join('');
     for(const text of [native,flat.prompt!]){
-      assert.match(text,/## 1\. subject\n/);
-      assert.match(text,/Preserve the subject's structure, colors, and proportions as shown in image_1/);
-      assert.match(text,/## 2\./);
-      assert.match(text,/Adjust the camera viewpoint to "/);
       assert.match(text,/environment type, props, accessories, color palette, and lighting/);
       assert.match(text,/composition, object placement, relative scale, or spatial relationships/);
       assert.doesNotMatch(text,/\{(?:viewpoint|images|module_number|module)\}/);
     }
+    assert.match(native,/^## 1\. subject\n\n/);
+    assert.match(native,/Preserve the subject's structure, colors, and proportions as shown in image_1/);
+    assert.match(native,/\n\n## 2\. viewpoint\n\n/);
+    assert.match(native,/Adjust the camera viewpoint to "/);
+    assert.match(native,/\n\n## 3\. style\n\n/);
+    assert.doesNotMatch(native,/<generation_request>|<reference_rules>|&quot;|&apos;/);
+    assert.match(flat.prompt!,/^<generation_request>\n<image_mapping>[^<]+<\/image_mapping>\n<module type="subject" name="subject">/);
+    assert.match(flat.prompt!,/Preserve the subject&apos;s structure, colors, and proportions as shown in image_1/);
+    assert.match(flat.prompt!,/<module type="viewpoint" name="viewpoint">/);
+    assert.match(flat.prompt!,/Adjust the camera viewpoint to &quot;/);
+    assert.doesNotMatch(flat.prompt!,/## \d+\./);
     assert.match(flat.prompt!,/Use image_3 only as references/);
     assert.deepEqual(flat.image_asset_ids,['asset_subject','asset_angle','asset_style']);
     assert.deepEqual(chain.prompt_config,config);

@@ -7,7 +7,7 @@ import sharp from 'sharp';
 import { seedModels,ModelLibrary } from '../src/core/models.js';
 import { ModuleRegistry } from '../src/core/modules.js';
 import { planExecution } from '../src/core/execution-plan.js';
-import { InputStrategyRegistry,defaultInputStrategies,adaptChain } from '../src/core/compiler.js';
+import { InputStrategyRegistry,defaultInputStrategies,adaptChain,compileRecipe } from '../src/core/compiler.js';
 import { normalizeParameters,validateGenerationParameters,parameterFields,updateParameters } from '../src/core/generation-parameters.js';
 import { generationContractSchema } from '../src/core/generation-contract.js';
 import { GeminiGenerator } from '../src/adapters/gemini-generator.js';
@@ -15,7 +15,8 @@ import { ImagesGenerator } from '../src/adapters/images-generator.js';
 import { openModelLibrary } from '../src/adapters/model-library-repository.js';
 import { migrateModels,type AdapterDescription } from '../src/core/model-library.js';
 import { ProjectRepository,projectFilename } from '../src/adapters/project-repository.js';
-import type { Job,Recipe,Project } from '../src/core/domain.js';
+import { MAX_SYSTEM_INSTRUCTION_CHARS,type Job,type Recipe,type Project,type CompiledChain } from '../src/core/domain.js';
+import { roleInstructionsSchema } from '../src/core/prompt-customization.js';
 
 function fixture(index=2){
   const model=seedModels()[index];model.geometry_support=index===3?'size':'ratio';
@@ -86,6 +87,76 @@ test('新增组合策略可以注册；不允许丢图或去重，不需要修�
   strategies.register({id:'bad',title:'丢图',form:'numbered_flat',compile:()=>({kind:'separated_inputs',prompt:'text',image_asset_ids:[],adjustments:[]})});
   assert.throws(()=>planExecution({...f.recipe,input_strategy:'bad'},f.assets,f.model,f.registry,undefined,strategies),/丢弃/);
   assert.throws(()=>defaultInputStrategies.get('missing'),/未安装/);
+});
+
+test('推理系统指令独立通过两种组合策略，保留原文与图片顺序且不改变旧输入',()=>{
+  const f=fixture();f.model.purpose='understanding';f.model.capabilities.operations=['understand'];
+  const role='角'.repeat(32000);assert.equal(roleInstructionsSchema.parse({general:role}).general,role);
+  assert.equal(roleInstructionsSchema.safeParse({general:role+'色'}).success,false,'自定义角色仍限制为32000字符');
+  const original=compileRecipe(f.recipe,f.registry),instruction=role+'\n固定规则：仅按当前角色处理，保留明确用户要求。\n';
+  assert.ok(instruction.length>32000);
+  for(const strategy of ['interleaved','numbered_flat'] as const){
+    const recipe={...f.recipe,input_strategy:strategy};
+    const legacy=planExecution(recipe,f.assets,f.model,f.registry,original);
+    const plan=planExecution(recipe,f.assets,f.model,f.registry,{...original,system_instruction:instruction});
+    assert.equal(plan.chain.system_instruction,instruction);assert.equal(plan.adapted.system_instruction,instruction);
+    const {system_instruction,...userInput}=plan.adapted;
+    assert.deepEqual(userInput,legacy.adapted);assert.deepEqual(plan.chain.blocks,legacy.chain.blocks);
+    assert.equal(Object.hasOwn(legacy.chain,'system_instruction'),false);
+    assert.equal(Object.hasOwn(legacy.adapted,'system_instruction'),false);
+  }
+  assert.equal(Object.hasOwn(original,'system_instruction'),false);
+});
+
+test('规划拒绝非法系统指令和生图角色，空白系统指令不进入快照或适配输入',()=>{
+  const f=fixture(),chain=compileRecipe(f.recipe,f.registry);
+  assert.throws(()=>planExecution(f.recipe,f.assets,f.model,f.registry,{...chain,system_instruction:'推理角色'}),/仅用于理解／推理/);
+  f.model.purpose='understanding';f.model.capabilities.operations=['understand'];
+  for(const invalid of [null,7,['角色'],'x'.repeat(MAX_SYSTEM_INSTRUCTION_CHARS+1)]){
+    assert.throws(()=>planExecution(f.recipe,f.assets,f.model,f.registry,{...chain,system_instruction:invalid} as unknown as CompiledChain),new RegExp(`不超过 ${MAX_SYSTEM_INSTRUCTION_CHARS} 字符`));
+  }
+  assert.equal(planExecution(f.recipe,f.assets,f.model,f.registry,{...chain,system_instruction:'x'.repeat(MAX_SYSTEM_INSTRUCTION_CHARS)}).adapted.system_instruction?.length,MAX_SYSTEM_INSTRUCTION_CHARS);
+  for(const blank of ['', ' \n\t ']){
+    const input={...chain,system_instruction:blank},plan=planExecution(f.recipe,f.assets,f.model,f.registry,input);
+    assert.equal(Object.hasOwn(plan.chain,'system_instruction'),false);
+    assert.equal(Object.hasOwn(plan.adapted,'system_instruction'),false);
+    assert.equal(input.system_instruction,blank);
+  }
+});
+
+test('组合策略只能保留系统指令，不能新增、改写或借修改克隆覆盖原文',()=>{
+  const f=fixture(),chain=compileRecipe(f.recipe,f.registry),instruction='冻结的角色';
+  const strategy=(value:string|undefined,mutate=false)=>new InputStrategyRegistry().register({id:'custom',title:'自定义',form:'numbered_flat',compile:input=>{
+    if(mutate)input.system_instruction=value;
+    return {...defaultInputStrategies.get('numbered_flat').compile(input),system_instruction:value};
+  }});
+  for(const value of ['伪造角色',''])assert.throws(()=>adaptChain(chain,f.model,'custom',strategy(value)),/不得新增或改写/);
+  for(const mutate of [false,true])assert.throws(()=>adaptChain({...chain,system_instruction:instruction},f.model,'custom',strategy('覆盖角色',mutate)),/不得新增或改写/);
+  for(const value of [instruction,undefined])assert.equal(adaptChain({...chain,system_instruction:instruction},f.model,'custom',strategy(value)).system_instruction,instruction);
+  assert.equal(Object.hasOwn(adaptChain(chain,f.model,'custom',strategy(undefined)),'system_instruction'),false);
+  assert.equal(Object.hasOwn(chain,'system_instruction'),false);
+});
+
+test('系统指令快照存档往返保留原文，旧任务不补入角色且非法新字段拒绝保存',async()=>{
+  const directory=await mkdtemp(path.join(os.tmpdir(),'ediro-system-snapshot-')),repo=new ProjectRepository(directory),f=fixture();
+  f.recipe.modules=[f.recipe.modules[1]];f.model.purpose='understanding';f.model.capabilities.operations=['understand'];
+  const chain=compileRecipe(f.recipe,f.registry),instruction='角'.repeat(32000)+'\n保存时冻结的公共规则。\n';
+  const jobs=(['interleaved','numbered_flat'] as const).map((strategy,index)=>{
+    const saved=job(planExecution({...f.recipe,input_strategy:strategy},[],f.model,f.registry,{...chain,system_instruction:instruction}));
+    saved.task_id=`task_system_${index}`;return saved;
+  });
+  const legacy=job(planExecution(f.recipe,[],f.model,f.registry,chain));legacy.task_id='task_legacy';jobs.push(legacy);
+  const project:Project={schema_version:3,project_id:'project_system',name:'system snapshots',created_at:'now',updated_at:'now',recipe:f.recipe,assets:[],jobs,revisions:[]};
+  await repo.save(project);const reopened=await repo.load();
+  for(const saved of reopened.jobs.slice(0,2)){
+    assert.equal(saved.chain_snapshot.system_instruction,instruction);assert.equal(saved.adapted_input.system_instruction,instruction);
+  }
+  assert.deepEqual(reopened.jobs[2].chain_snapshot,legacy.chain_snapshot);
+  assert.deepEqual(reopened.jobs[2].adapted_input,legacy.adapted_input);
+  for(const field of ['chain_snapshot','adapted_input'] as const){
+    const invalid=structuredClone(project);invalid.jobs[0][field].system_instruction='x'.repeat(MAX_SYSTEM_INSTRUCTION_CHARS+1);
+    await assert.rejects(()=>repo.save(invalid));
+  }
 });
 
 test('能力按声明收窄，未知参数拒绝，格式切换清除不适用字段',()=>{

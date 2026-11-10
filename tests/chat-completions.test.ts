@@ -4,7 +4,7 @@ import sharp from 'sharp';
 import { ChatCompletionsAdapter, chatRoot } from '../src/adapters/chat-completions.js';
 import { chatProfile } from '../src/protocols/chat-profile.js';
 import { ExecutionRegistry } from '../src/adapters/execution-registry.js';
-import { modelConfigSchema, defaultParameters, type ModelConfig, type Job, type Block, type Recipe } from '../src/core/domain.js';
+import { MAX_SYSTEM_INSTRUCTION_CHARS,modelConfigSchema, defaultParameters, type ModelConfig, type Job, type Block, type Recipe } from '../src/core/domain.js';
 import type { CloudExecutionContext } from '../src/core/ports.js';
 import { ModuleRegistry } from '../src/core/modules.js';
 import { prepareModuleInference, executeModuleInference } from '../src/core/module-inference.js';
@@ -32,6 +32,9 @@ function success(content='完整文字建议',message:Record<string,unknown>={})
 const signal=()=>new AbortController().signal;
 const quiet=async()=>{};
 const imageBytes=await sharp({create:{width:12,height:8,channels:3,background:'white'}}).png().toBuffer();
+const event=(value:unknown)=>`data: ${typeof value==='string'?value:JSON.stringify(value)}\n\n`;
+const chunk=(content:string|null,finish_reason:string|null=null,delta:Record<string,unknown>={})=>({id:'request_stream',choices:[{index:0,delta:{content,...delta},finish_reason}]});
+const streamResponse=(events:unknown[])=>new Response(events.map(event).join(''),{headers:{'Content-Type':'text/event-stream'}});
 
 test('Chat roots accept HTTPS API bases, preserve vendor paths and reject credentials or complete actions',()=>{
   for(const [input,expected] of [
@@ -207,14 +210,188 @@ test('Module subject inference reaches Chat Completions with frozen image contex
   subject.asset_ids=['asset_front','asset_side','asset_front'];subject.user_instruction='保留瓶身标识';prompt.user_instruction='不要发送其它模块';
   const config=model(3),recipe:Recipe={recipe_id:'recipe_chat',schema_version:1,modules:[subject,prompt],model_config_id:'model_generation',core_parameters:defaultParameters};
   const before=structuredClone(recipe),prepared=prepareModuleInference(recipe,subject.module_id,'把瓶盖改成白色',config,registry);
-  const read:string[]=[];let calls=0;
+  const read:string[]=[];let calls=0,body:any;
+  assert.equal(prepared.job.adapted_input.system_instruction,undefined,'主体分析不套用提示词模块的通用或陈列师角色');
   const adapter=new ChatCompletionsAdapter(async(_url,init)=>{
-    calls++;const body=JSON.parse(String(init?.body));assert.equal(body.max_completion_tokens,16384);
-    assert.equal(body.messages[0].content.filter((part:any)=>part.type==='image_url').length,3);
-    assert.match(body.messages[0].content[0].text,/把瓶盖改成白色/);assert.ok(!JSON.stringify(body).includes('不要发送其它模块'));
+    calls++;body=JSON.parse(String(init?.body));
     return success('白色瓶盖，保留瓶身标识。');
   });
   const suggestion=await executeModuleInference(new ExecutionRegistry().register(adapter),{model:config,job:prepared.job,readImage:async id=>{read.push(id);return imageBytes;},resolveCredential:async()=>'test-key'},prepared,signal());
+  assert.equal(body.max_completion_tokens,16384);assert.equal(body.messages.length,1);assert.equal(body.messages[0].role,'user');
+  const user=body.messages[0];assert.equal(user.content.filter((part:any)=>part.type==='image_url').length,3);
+  assert.match(user.content.filter((part:any)=>part.type==='text').map((part:any)=>part.text).join('\n'),/把瓶盖改成白色/);assert.ok(!JSON.stringify(body).includes('不要发送其它模块'));
   assert.equal(calls,1);assert.equal(suggestion.original_text,'把瓶盖改成白色');assert.equal(suggestion.text,'白色瓶盖，保留瓶身标识。');
   assert.equal(suggestion.images_sent,3);assert.deepEqual(read,['asset_front','asset_side','asset_front']);assert.deepEqual(recipe,before);
+});
+
+test('Streaming previews real early content before completion, ignores reasoning, and accepts usage tails',async()=>{
+  let transport!:ReadableStreamDefaultController<Uint8Array>,cancelled=false,calls=0,settled=false;
+  let firstDelta!:()=>void;const arrived=new Promise<void>(resolve=>{firstDelta=resolve;}),deltas:string[]=[];
+  const c=context();c.onTextDelta=delta=>{deltas.push(delta);firstDelta();};
+  const adapter=new ChatCompletionsAdapter(async(_url,init)=>{
+    calls++;const body=JSON.parse(String(init?.body));assert.equal(body.stream,true);assert.equal(body.stream_options,undefined);
+    return new Response(new ReadableStream<Uint8Array>({start(value){transport=value;transport.enqueue(new TextEncoder().encode(event(chunk(null,null,{reasoning_content:'private thoughts'}))+event(chunk('  第一段'))));},cancel(){cancelled=true;}}),{headers:{'Content-Type':'text/event-stream'}});
+  });
+  const pending=adapter.execute(c,signal(),quiet);void pending.then(()=>{settled=true;},()=>{settled=true;});
+  await arrived;assert.deepEqual(deltas,['  第一段']);assert.equal(settled,false);
+  transport.enqueue(new TextEncoder().encode(event(chunk('，第二段。  '))+event(chunk(null,'stop'))+event({id:'request_stream',choices:[],usage:{prompt_tokens:5,completion_tokens:8,details:{private:true},negative:-1}})+event('[DONE]')));
+  const result=await pending;
+  assert.deepEqual(result,{images:[],text:'第一段，第二段。',request_id:'request_stream',usage:{prompt_tokens:5,completion_tokens:8}});
+  assert.deepEqual(deltas,['  第一段','，第二段。  ']);assert.equal(calls,1);assert.equal(cancelled,true);
+});
+
+test('Streaming requires stop plus DONE and rejects cut-off, malformed, unsupported and multiple-choice output without retry',async()=>{
+  const events:unknown[][]=[
+    [chunk('partial')],[chunk('partial','stop')],[chunk('partial'),'[DONE]'],[chunk('partial','length'),'[DONE]'],
+    [chunk('partial','content_filter'),'[DONE]'],[chunk(null,'stop'),'[DONE]'],
+    [chunk('text',null,{refusal:'private refusal'})],[chunk('text',null,{tool_calls:[{id:'tool'}]})],
+    [chunk('text',null,{function_call:{name:'private tool'}})],[chunk('text',null,{audio:{id:'private audio'}})],
+    [{choices:[{index:1,delta:{content:'other candidate'},finish_reason:'stop'}]},'[DONE]'],
+    [{choices:[{index:0,delta:{content:'first'}},{index:1,delta:{content:'second'}}]},'[DONE]'],
+    [chunk('complete','stop'),chunk('late'),'[DONE]'],
+    [chunk('complete','stop'),{choices:[],error:{message:'private upstream error'}},'[DONE]'],
+    [chunk('first'),{...chunk('second','stop'),id:'different_request'},'[DONE]'],
+    [chunk('x'.repeat(32001),'stop'),'[DONE]'],['private invalid JSON'],
+    [{choices:[{index:0,delta:{content:[{text:'wrong shape'}]},finish_reason:'stop'}]},'[DONE]'],
+  ];
+  for(const sequence of events){
+    let calls=0;const c=context();c.onTextDelta=()=>{};
+    const adapter=new ChatCompletionsAdapter(async()=>{calls++;return streamResponse(sequence);});
+    await assert.rejects(adapter.execute(c,signal(),quiet),error=>error instanceof Error&&error.message.includes('未自动重试')&&!/private|different_request/.test(error.message));assert.equal(calls,1);
+  }
+});
+
+test('Streaming enforces byte limits and incomplete SSE frames and leaves old text intact on errors',async()=>{
+  for(const source of [new Response(event(chunk('partial'))+'data: private broken frame',{headers:{'Content-Type':'text/event-stream'}}),streamResponse([chunk(null,null,{reasoning_content:'x'.repeat(2*1024*1024)})]),success('nonstream response')]){
+    const c=context(),before=structuredClone(c.job);c.onTextDelta=()=>{};let calls=0;
+    await assert.rejects(new ChatCompletionsAdapter(async()=>{calls++;return source;}).execute(c,signal(),quiet),/未采用不完整结果.*未自动重试/);
+    assert.equal(calls,1);assert.deepEqual(c.job,before);
+  }
+});
+
+test('Streaming cancellation interrupts a stalled body after a preview without retries or final result',async()=>{
+  const abort=new AbortController(),c=context(),deltas:string[]=[];let calls=0,cancelled=false;
+  let firstDelta!:()=>void;const arrived=new Promise<void>(resolve=>{firstDelta=resolve;});
+  c.onTextDelta=delta=>{deltas.push(delta);firstDelta();};
+  const adapter=new ChatCompletionsAdapter(async()=>{calls++;return new Response(new ReadableStream<Uint8Array>({start(controller){controller.enqueue(new TextEncoder().encode(event(chunk('部分文字'))));},cancel(){cancelled=true;}}),{headers:{'Content-Type':'text/event-stream'}});});
+  const pending=adapter.execute(c,abort.signal,quiet);await arrived;abort.abort();
+  await assert.rejects(pending,/已取消.*未自动重试/);assert.deepEqual(deltas,['部分文字']);assert.equal(calls,1);assert.equal(cancelled,true);
+});
+
+test('System instructions use the explicit compatible role in streamed and complete requests without changing user image order',async()=>{
+  for(const streaming of [false,true])for(const role of [undefined,'system','developer'] as const){
+    const c=context([blockText('第一张'),blockImage('asset_one'),blockText('第二张'),blockImage('asset_two'),blockImage('asset_one'),blockText('当前要求')],3);
+    const systemInstruction='  固定角色\n只返回需要的正文。  ';
+    c.job.adapted_input.system_instruction=systemInstruction;
+    if(role)c.job.recipe_snapshot.core_parameters.extensions={'openai-chat-completions':{instruction_role:role}};
+    const jpeg=await sharp(imageBytes).jpeg().toBuffer(),read:string[]=[],deltas:string[]=[];let captured='',calls=0;
+    c.readImage=async id=>{read.push(id);return id==='asset_two'?jpeg:imageBytes;};
+    c.recordModelInput=async input=>{assert.equal(input.body.encoding,'json');if(input.body.encoding==='json')captured=input.body.json;};
+    if(streaming)c.onTextDelta=delta=>deltas.push(delta);
+    const before=structuredClone(c.job.adapted_input);
+    const adapter=new ChatCompletionsAdapter(async(_url,init)=>{
+      calls++;assert.equal(init?.body,captured);const body=JSON.parse(String(init?.body));
+      assert.equal(body.messages.length,2);assert.deepEqual(body.messages[0],{role:role??'system',content:systemInstruction});
+      assert.equal(body.messages[1].role,'user');assert.equal(body.instruction_role,undefined);assert.equal(body.stream,streaming);
+      const parts=body.messages[1].content;
+      assert.deepEqual(parts.map((part:any)=>part.type==='text'?part.text:part.image_url.url.split(';')[0]),['第一张','data:image/png','第二张','data:image/jpeg','data:image/png','当前要求']);
+      assert.equal(parts[1].image_url.url,parts[4].image_url.url);
+      return streaming?streamResponse([chunk('完整正文','stop'),'[DONE]']):success('完整正文');
+    });
+    assert.equal(adapter.description.supports_system_instruction,true);
+    const result=await adapter.execute(c,signal(),quiet);
+    assert.equal(result.text,'完整正文');assert.equal(calls,1);assert.deepEqual(read,['asset_one','asset_two','asset_one']);
+    assert.deepEqual(deltas,streaming?['完整正文']:[]);assert.deepEqual(c.job.adapted_input,before);
+  }
+});
+
+test('Missing or blank system instructions keep the legacy one-user payload even with developer compatibility selected',async()=>{
+  for(const value of [undefined,'',' \n\t ']){
+    const c=context([blockText('第一段'),blockText('第二段')]);c.job.adapted_input.system_instruction=value;
+    c.job.recipe_snapshot.core_parameters.extensions={'openai-chat-completions':{instruction_role:'developer'}};
+    await new ChatCompletionsAdapter(async(_url,init)=>{
+      assert.deepEqual(JSON.parse(String(init?.body)),{model:'vendor-model',messages:[{role:'user',content:'第一段\n第二段'}],stream:false,max_completion_tokens:16384});return success();
+    }).execute(c,signal(),quiet);
+  }
+});
+
+test('Invalid system instruction values fail before image reads, capture, credentials or network requests',async()=>{
+  let calls=0,reads=0,credentials=0,captures=0;
+  for(const value of [null,{},['规则'],'字'.repeat(MAX_SYSTEM_INSTRUCTION_CHARS+1)]){
+    const c=context([blockImage('asset_one')],1);
+    (c.job.adapted_input as unknown as {system_instruction:unknown}).system_instruction=value;
+    c.readImage=async()=>{reads++;return imageBytes;};c.resolveCredential=async()=>{credentials++;return 'key';};c.recordModelInput=async()=>{captures++;};
+    await assert.rejects(new ChatCompletionsAdapter(async()=>{calls++;return success();}).execute(c,signal(),quiet),new RegExp(`系统指令.*${MAX_SYSTEM_INSTRUCTION_CHARS}`));
+  }
+  assert.deepEqual({calls,reads,credentials,captures},{calls:0,reads:0,credentials:0,captures:0});
+});
+
+test('Rejected system or developer messages never retry with another role or flatten instructions into user content',async()=>{
+  for(const streaming of [false,true])for(const role of ['system','developer'] as const){
+    const c=context();c.job.adapted_input.system_instruction='固定指令';
+    c.job.recipe_snapshot.core_parameters.extensions={'openai-chat-completions':{instruction_role:role}};
+    if(streaming)c.onTextDelta=()=>{};
+    let calls=0;const before=structuredClone(c.job.adapted_input);
+    await assert.rejects(new ChatCompletionsAdapter(async(_url,init)=>{
+      calls++;assert.equal(JSON.parse(String(init?.body)).messages[0].role,role);
+      return Response.json({error:{message:'test-secret-key unsupported role'}},{status:400});
+    }).execute(c,signal(),quiet),error=>error instanceof Error&&/拒绝请求参数.*未自动重试/.test(error.message)&&!error.message.includes('test-secret-key'));
+    assert.equal(calls,1);assert.deepEqual(c.job.adapted_input,before);
+  }
+});
+
+test('Default system role cannot bypass declared role values or a disabled capability and is never changed to developer automatically',async()=>{
+  let calls=0,reads=0,captures=0,credentials=0;
+  for(const limits of [{values:['developer']},{enabled:false}])for(const streaming of [false,true]){
+    const c=context([blockImage('asset_one')],1);c.job.adapted_input.system_instruction='固定规则';
+    c.model.capabilities.parameter_limits={instruction_role:limits};
+    if(streaming)c.onTextDelta=()=>{};
+    c.readImage=async()=>{reads++;return imageBytes;};c.recordModelInput=async()=>{captures++;};c.resolveCredential=async()=>{credentials++;return 'key';};
+    const before=structuredClone({model:c.model,input:c.job.adapted_input,parameters:c.job.recipe_snapshot.core_parameters});
+    await assert.rejects(new ChatCompletionsAdapter(async()=>{calls++;return success();}).execute(c,signal(),quiet),/系统指令角色.*显式选择.*未发送请求/);
+    assert.deepEqual({model:c.model,input:c.job.adapted_input,parameters:c.job.recipe_snapshot.core_parameters},before);
+  }
+  assert.deepEqual({calls,reads,captures,credentials},{calls:0,reads:0,captures:0,credentials:0});
+});
+
+test('An explicitly selected allowed developer role satisfies a developer-only channel without rewriting its configuration',async()=>{
+  const c=context();c.job.adapted_input.system_instruction='固定规则';
+  c.model.capabilities.parameter_limits={instruction_role:{values:['developer']}};
+  c.job.recipe_snapshot.core_parameters.extensions={'openai-chat-completions':{instruction_role:'developer'}};
+  const before=structuredClone(c.model);let body:any,calls=0;
+  await new ChatCompletionsAdapter(async(_url,init)=>{calls++;body=JSON.parse(String(init?.body));return success();}).execute(c,signal(),quiet);
+  assert.deepEqual(body.messages,[{role:'developer',content:'固定规则'},{role:'user',content:'优化这段描述'}]);
+  assert.equal(calls,1);assert.deepEqual(c.model,before);
+});
+
+test('Legacy user-only requests do not require an effective system role when that role is restricted or disabled',async()=>{
+  for(const limits of [{values:['developer']},{enabled:false}])for(const systemInstruction of [undefined,'',' \n\t ']){
+    const c=context();c.job.adapted_input.system_instruction=systemInstruction;c.model.capabilities.parameter_limits={instruction_role:limits};
+    let body:any,calls=0;
+    await new ChatCompletionsAdapter(async(_url,init)=>{calls++;body=JSON.parse(String(init?.body));return success();}).execute(c,signal(),quiet);
+    assert.deepEqual(body.messages,[{role:'user',content:'优化这段描述'}]);assert.equal(calls,1);
+  }
+});
+
+test('Compiled system instructions above 32000 characters reach Chat intact while the output limit remains 32000',async()=>{
+  const compiled='角'.repeat(32000)+'\n固定规则：仅返回可直接使用的正文。';
+  for(const instruction of [compiled,'系'.repeat(MAX_SYSTEM_INSTRUCTION_CHARS)])for(const streaming of [false,true]){
+    const c=context();c.job.adapted_input.system_instruction=instruction;
+    if(streaming)c.onTextDelta=()=>{};
+    let body:any,captured='',calls=0;
+    c.recordModelInput=async input=>{if(input.body.encoding==='json')captured=input.body.json;};
+    const adapter=new ChatCompletionsAdapter(async(_url,init)=>{
+      calls++;assert.equal(init?.body,captured);body=JSON.parse(String(init?.body));
+      return streaming?streamResponse([chunk('完整正文','stop'),'[DONE]']):success('完整正文');
+    });
+    const result=await new ExecutionRegistry().register(adapter).execute(c,signal(),quiet);
+    assert.equal(body.messages[0].content,instruction);assert.equal(body.messages[1].content,'优化这段描述');
+    assert.equal(result.text,'完整正文');assert.equal(calls,1);
+  }
+  for(const streaming of [false,true]){
+    const c=context();c.job.adapted_input.system_instruction=compiled;if(streaming)c.onTextDelta=()=>{};let calls=0;
+    const adapter=new ChatCompletionsAdapter(async()=>{calls++;return streaming?streamResponse([chunk('字'.repeat(32001),'stop'),'[DONE]']):success('字'.repeat(32001));});
+    await assert.rejects(new ExecutionRegistry().register(adapter).execute(c,signal(),quiet),streaming?/超过读取限制/:/超过 32000 字符/);
+    assert.equal(calls,1);
+  }
 });

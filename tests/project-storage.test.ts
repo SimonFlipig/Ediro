@@ -21,7 +21,7 @@ async function settle(w:Workspace){for(let i=0;i<500;i++){if(await w.serial(asyn
 test('旧目录删除校验拒绝越界、链接及其他工程仍引用的素材',async()=>{
   const base=await root(),library=new ProjectLibrary(base),source=library.repository(await library.createDirectory()),a=workspace();await a.create(source,'被引用的项目');
   const asset=await source.saveInternalImage(await png(),'共享图片','internal');a.project!.assets.push(asset);await a.persist();
-  const peer=library.repository(await library.createDirectory()),b=workspace();await b.create(peer,'引用方');await b.importFiles([await source.resolveAssetPath(asset,false)]);
+  const peer=library.repository(await library.createDirectory()),b=workspace();await b.create(peer,'引用方');await b.importFiles([await source.resolveAssetPath(asset,false)]);await b.flush();
   await assert.rejects(()=>library.trashTarget(path.basename(source.directory)),/仍引用/);
   b.project!.assets=[];await b.persist();assert.equal((await library.trashTarget(path.basename(source.directory))).filename,source.directory);
   await assert.rejects(()=>library.trashTarget('../outside'));
@@ -38,7 +38,6 @@ async function edit(w:Workspace,base:string){
   await w.serial(()=>w.enqueueMask(w.project!.project_id,d));await settle(w);
   assert.equal(w.project!.jobs[0].status,'succeeded',w.project!.jobs[0].error);
   const task=w.project!.jobs[0],strokes=[...d.strokes,{tool:'erase' as const,size:3,points:[[.5,.5] as [number,number]]}];
-  await w.saveCompositeMask(w.project!.project_id,task.task_id,strokes);
   const output=await w.reprocessMask(w.project!.project_id,task.task_id,'strict',2,strokes);
   return {d,task,strokes,output};
 }
@@ -104,7 +103,8 @@ test('项目记录列出超过 50 项、封面与草稿状态可辨识，改名�
   const base=await root(),library=new ProjectLibrary(base),repo=library.repository(await library.createDirectory()),w=workspace();await w.create(repo,'未命名工作');
   const {task,output}=await edit(w,base),p=w.project!;
   assert.equal(p.name,'original');assert.equal(projectSummary(p).cover_asset_id,output);assert.equal(projectSummary(p).status,'saved');
-  await w.saveCompositeMask(p.project_id,task.task_id,[...task.mask_edit!.composite_strokes!,{tool:'paint',size:2,points:[[.1,.1]]}]);assert.equal(projectSummary(p).status,'draft');
+  // Earlier versions saved unfinished composition work; retain its summary on read.
+  task.mask_edit!.composite_strokes=[...task.mask_edit!.composite_strokes!,{tool:'paint',size:2,points:[[.1,.1]]}];await repo.save(p);assert.equal(projectSummary(await repo.load()).status,'draft');
   for(let i=0;i<54;i++){const dir=await library.createDirectory();await library.repository(dir).save({...p,name:`项目 ${i}`,assets:[],jobs:[],mask_drafts:[],revisions:[],recipe:{...p.recipe,modules:p.recipe.modules.map(m=>({...m,asset_ids:[]}))}});}
   const records=await library.list();assert.equal(records.length,55);
   const id=path.basename(repo.directory);assert.ok(await stat(await library.cover(id,output)));
@@ -124,11 +124,11 @@ test('同一存放位置可打包多个快照，同秒重名不覆盖，已有�
   for(const asset of initial.assets)assert.ok((await archived.readAsset(asset)).length);
   assert.ok(await archived.loadModelInput(task.task_id));
   assert.deepEqual(await readFile(path.join(repo.directory,projectFilename)),before);
-  const next=structuredClone(w.project!);next.mask_drafts![0].instruction='第二个版本的修改';
+  const next=structuredClone(w.project!);next.recipe.modules[0].user_instruction='第二个版本的修改';
   const second=await repo.packageInto(next,destination);
   assert.equal(second,`${first}_2`);assert.equal((await readdir(destination)).length,3);
   assert.equal(await readFile(marker,'utf8'),'保留');assert.deepEqual(await readFile(path.join(first,projectFilename)),manifest);
-  assert.equal((await new ProjectRepository(second).load()).mask_drafts![0].instruction,'第二个版本的修改');
+  assert.equal((await new ProjectRepository(second).load()).recipe.modules[0].user_instruction,'第二个版本的修改');
   assert.deepEqual(await readFile(path.join(repo.directory,projectFilename)),before);
   await assert.rejects(()=>repo.packageInto(next,path.join(repo.directory,'model-inputs')),/打包位置/);
 });
@@ -137,7 +137,7 @@ test('旧工具参考图离开 output 前先更新跨项目引用，失败后可
   const base=await root(),library=new ProjectLibrary(base),legacy=path.join(library.runtimeDirectory,'workspaces/work-tool01'),repo=new ProjectRepository(legacy,library.outputDirectory),w=workspace();await w.create(repo,'旧工具');
   const tool=await repo.saveOutput(await png(),'旧工具.png','png');tool.kind='generated';w.project!.assets.push(tool);await w.persist();
   if(tool.location.type!=='external')throw Error('external');const file=tool.location.path;
-  const other=path.join(library.runtimeDirectory,'workspaces/work-tool02'),otherRepo=new ProjectRepository(other,library.outputDirectory),second=workspace();await second.create(otherRepo,'引用工具');await second.importFiles([file]);
+  const other=path.join(library.runtimeDirectory,'workspaces/work-tool02'),otherRepo=new ProjectRepository(other,library.outputDirectory),second=workspace();await second.create(otherRepo,'引用工具');await second.importFiles([file]);await second.flush();
   const blocker=path.join(library.directory,'migration-backup/output',path.basename(file));await mkdir(path.dirname(blocker),{recursive:true});await writeFile(blocker,'错误备份');
   await assert.rejects(()=>library.migrate(legacy),/备份/);assert.ok(await stat(file));
   await unlink(blocker);await library.migrate(legacy);await assert.rejects(()=>stat(file),{code:'ENOENT'});

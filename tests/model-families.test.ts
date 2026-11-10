@@ -171,6 +171,7 @@ test('历史渠道删除后恢复到最近明确选择的同型号渠道，优�
   assert.equal(models.defaultModel(),'model_c');assert.equal(workspace.project!.recipe.model_config_id,'model_b');
   assert.equal(workspace.project!.recipe.core_parameters.aspect_ratio,'16:9');assert.equal(models.resolve('model_b').defaults.aspect_ratio,'9:16');
   assert.deepEqual(workspace.project!.jobs[0],job);
+  await workspace.flush();
   assert.equal((await repository.load()).recipe.model_config_id,'model_b');
 });
 

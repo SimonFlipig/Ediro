@@ -20,6 +20,7 @@ app.whenReady().then(async()=>{
   const {registerWindowChrome}=await import('../dist-host/desktop/window-chrome.js');
   const {resizeReferenceImage}=await import('../dist-host/adapters/reference-image.js');
   const {blurReferenceImage}=await import('../dist-host/adapters/blur-preprocessor.js');
+  const {adaptChain}=await import('../dist-host/core/compiler.js');
   win=new BrowserWindow({width:1775,height:1050,show:false,backgroundColor:'#f6f5f1',
     ...(process.platform==='win32'?{titleBarStyle:'hidden',titleBarOverlay:{color:'#fffefb',symbolColor:'#465a4c',height:55}}:{}),
     webPreferences:{preload:path.join(root,'dist-host/desktop/preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,webSecurity:true,backgroundThrottling:false,offscreen:true}});
@@ -64,7 +65,9 @@ app.whenReady().then(async()=>{
   const ready=async id=>{await until(()=>js(`(()=>{const img=document.querySelector(${JSON.stringify(row(id)+' img')});return !!img&&img.complete&&img.naturalWidth>0;})()`),'ready '+id);return js(`document.querySelector(${JSON.stringify(row(id)+' img')}).src`);};
   const noImage=id=>js(`document.querySelector(${JSON.stringify(row(id)+' img')})===null`);
   const bytes=url=>Buffer.from(url.slice(url.indexOf(',')+1),'base64');
-  const patchModule=async(id,patch)=>{const recipe=structuredClone(controller.workspace.project.recipe);Object.assign(recipe.modules.find(m=>m.module_id===id),patch);await execute({type:'recipe:save',recipe});};
+  // Host-side fixture edits bypass the renderer command response that normally
+  // updates its state. Publish explicitly before checking dependent UI effects.
+  const patchModule=async(id,patch)=>{const recipe=structuredClone(controller.workspace.project.recipe);Object.assign(recipe.modules.find(m=>m.module_id===id),patch);await execute({type:'recipe:save',recipe});await controller.workspace.onChange();};
   const screenshots=[];
   const screenshot=async name=>{const before=paintSequence;win.webContents.startPainting();win.webContents.invalidate();await until(()=>Promise.resolve(paintSequence>before&&frame),'fresh frame');await wait(150);const file=path.join(base,name+'.png');await writeFile(file,frame);screenshots.push(file);};
 
@@ -80,7 +83,7 @@ app.whenReady().then(async()=>{
   const recipe=structuredClone(controller.workspace.project.recipe);
   for(const module of recipe.modules){
     if(['subject','composition','style'].includes(module.reference_type))module.asset_ids=[assetId];
-    if(module.reference_type==='prompt'){module.user_instruction='保留产品并参考布局与风格';module.auto_prompt=false;}
+    if(module.reference_type==='prompt'){module.user_instruction='保留产品并参考布局与风格；包装文字 A&B <SALE> "50%"';module.auto_prompt=false;}
   }
   recipe.modules.find(m=>m.module_id===composition).reference_settings={max_edge:512,preprocess:'blur',blur_strength:'strong'};
   recipe.modules.find(m=>m.module_id===style).reference_settings={max_edge:1024,preprocess:'none',blur_strength:'medium'};
@@ -111,6 +114,25 @@ app.whenReady().then(async()=>{
   assert.equal(captured.body.encoding,'simulation');
   const sent=captured.body.blocks.filter(block=>block.inlineData).map(block=>Buffer.from(block.inlineData.data,'base64'));
   assert.equal(sent.length,3);assert.deepEqual(sent[0],source);assert.deepEqual(sent[1],bytes(compositionUrl));assert.deepEqual(sent[2],bytes(styleUrl));
+  assert.equal(job.chain_snapshot.format_version,4);
+  const nativeMarkdown=captured.body.blocks.filter(block=>typeof block.text==='string').map(block=>block.text).join('');
+  assert.deepEqual([...nativeMarkdown.matchAll(/(?:^|\n)## (\d+)\. ([^\r\n]+)/g)].map(match=>[Number(match[1]),match[2]]),[[1,'subject'],[2,'composition'],[3,'style'],[4,'prompt']]);
+  assert.ok(nativeMarkdown.includes(recipe.modules.find(module=>module.reference_type==='prompt').user_instruction),'native Markdown preserves literal user text');
+  assert.doesNotMatch(nativeMarkdown,/<generation_request>|<reference_rules>|<image_ref|&amp;|&lt;SALE&gt;/);
+  let imageNumber=0;
+  for(const [index,block] of captured.body.blocks.entries())if(block.inlineData){
+    imageNumber++;
+    assert.ok(captured.body.blocks[index-1]?.text?.trim().endsWith(`image_${imageNumber}:`),'each native image follows its own plain label');
+  }
+  const flatXml=adaptChain(job.chain_snapshot,controller.workspace.models.resolve(recipe.model_config_id),'numbered_flat').prompt;
+  {
+    const parsed=await js(`(()=>{const doc=new DOMParser().parseFromString(${JSON.stringify(flatXml)},'application/xml');return {error:doc.querySelector('parsererror')?.textContent,root:doc.documentElement.tagName,modules:[...doc.querySelectorAll('module')].map(el=>el.getAttribute('type')),images:[...doc.querySelectorAll('image_ref')].map(el=>el.getAttribute('id')),mapping:doc.querySelector('image_mapping')?.textContent,prompt:doc.querySelector('generation_prompt')?.textContent.trim()};})()`);
+    assert.equal(parsed.error,undefined);assert.equal(parsed.root,'generation_request');
+    assert.deepEqual(parsed.modules,['subject','composition','style']);assert.deepEqual(parsed.images,['image_1','image_2','image_3']);
+    assert.equal(parsed.mapping,'image_N refers to the Nth attached image (1-based), in attachment order. Image numbers are independent of module numbers.');
+    assert.equal(parsed.prompt,recipe.modules.find(module=>module.reference_type==='prompt').user_instruction);
+  }
+  assert.equal(await js(`document.body.innerText.includes('<generation_request>')`),false,'XML stays out of ordinary input cards');
 
   stage='editor-save-updates-chain';
   await js(`document.querySelector('.module-card[data-module-id="${composition}"] .expand-module').click()`);
@@ -119,7 +141,7 @@ app.whenReady().then(async()=>{
   await select('.module-editor select[aria-label="当前参考图模糊强度"]','weak');
   await until(()=>js(`document.querySelector('.reference-preprocess-image img')?.naturalWidth===1024`),'draft processed');
   assert.equal(await ready(composition),compositionUrl,'unsaved editor draft must not change chain preview');
-  await clickText('.module-editor footer','保存并关闭');
+  await clickText('.module-editor footer','应用并关闭');
   await until(async()=>!await visible('.module-editor'),'editor saved');
   await until(()=>js(`document.querySelector(${JSON.stringify(row(composition)+' img')})?.naturalWidth===1024`),'saved chain updated');
   const savedUrl=await ready(composition);
@@ -174,7 +196,7 @@ app.whenReady().then(async()=>{
   }
   assert.equal(providerCalls,0);assert.equal(win.isVisible(),false);
   const report={passed:true,base,providerCalls,maxActivePreviews,previewRequests:previews.length,cancelRequests:cancellations.length,screenshots,
-    checks:['independent-concurrent-previews','same-asset-distinct-settings','none-clear-resize','original-subject-thumbnail','matches-captured-mock-request-bytes','editor-draft-does-not-change-chain','editor-save-refreshes-chain','preview-failure-no-original-fallback','retry','missing-depth-model-no-fallback','stale-response-ignored','obsolete-preview-cancelled','text-only-removes-image','same-large-preview-pixels','Escape-closes-preview','two-viewports-no-horizontal-overflow']};
+    checks:['independent-concurrent-previews','same-asset-distinct-settings','none-clear-resize','original-subject-thumbnail','matches-captured-mock-request-bytes','native-numbered-markdown-headings','native-literal-text-preserved','native-adjacent-image-labels','flat-xml-dom-parse','flat-explicit-image-mapping','xml-literal-text-roundtrip','xml-kept-out-of-input-cards','editor-draft-does-not-change-chain','editor-save-refreshes-chain','preview-failure-no-original-fallback','retry','missing-depth-model-no-fallback','stale-response-ignored','obsolete-preview-cancelled','text-only-removes-image','same-large-preview-pixels','Escape-closes-preview','two-viewports-no-horizontal-overflow']};
   await writeFile(path.join(base,'report.json'),JSON.stringify(report,null,2));
   await controller.shutdown();controller=undefined;win.destroy();console.log(JSON.stringify(report));app.exit(0);
 }).catch(async error=>{

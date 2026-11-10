@@ -2,17 +2,20 @@ import type { Asset, CompiledChain, Job, ModuleDefinition, Project, PublicModel,
 import type { PublicConnection, ModelEntry, Connection, AdapterDescription, LibraryData } from '../core/model-library.js';
 import type { ModelTestRecord } from '../core/model-tests.js';
 import type { ModelInput } from '../core/model-input.js';
+import type { PastedImage } from '../core/ports.js';
 import type { PromptConfig } from '../core/prompt-config.js';
 import type { ModuleInferenceSuggestion } from '../core/module-inference.js';
 import type { ModuleSettings, ReferenceModelStates, ReferenceSettings } from '../core/module-settings.js';
 import type { PromptRole } from '../core/prompt-roles.js';
 import type { GenerationTiming } from '../core/generation-timing.js';
 import type { PromptCustomizations } from '../core/prompt-customization.js';
+import type { InstructionPreset, PromptSettingsDocument } from '../core/prompt-settings.js';
 
 export interface ViewAsset extends Asset { preview_url: string; original_url: string; source_status?: 'available' | 'missing' | 'changed' }
 export interface ProjectRecord {id:string;title:string;updated_at:string;preview_url?:string;result_count:number;location?:string;status:'running'|'draft'|'failed'|'saved'|'empty'|'unavailable'}
 export interface WorkspaceView {
   prompt_customizations?:PromptCustomizations;
+  prompt_settings?:PromptSettingsDocument;
   generation_timings?:Record<string,GenerationTiming>;
   reference_models?:ReferenceModelStates;
   module_settings?:ModuleSettings;
@@ -38,17 +41,17 @@ export interface WorkspaceView {
   recent_workspaces?: ProjectRecord[];
 }
 export type Command =
+  | {type:'prompt-settings:save';settings:PromptSettingsDocument}
+  | {type:'prompt-presets:save';presets:InstructionPreset[]}
   | {type:'prompt-customizations:save';customizations:PromptCustomizations}
   | {type:'prompt-customizations:import'}
-  | {type:'prompt-customizations:export';customizations:PromptCustomizations}
+  | {type:'prompt-customizations:export';customizations:PromptCustomizations;settings?:PromptSettingsDocument}
   | {type:'reference:preview';request_id:string;project_id:string;asset_id:string;reference_type:'composition'|'style';module_id?:string;settings?:ReferenceSettings}
   | {type:'reference:cancel-preview';request_id:string}
   | {type:'reference-model:prepare';kind:'depth'|'segment'}
   | {type:'module-settings:save';settings:ModuleSettings}
   | {type:'job:retry';project_id:string;task_id:string}
-  | {type:'mask:save-composite';project_id:string;task_id:string;strokes:import('../core/mask.js').MaskStroke[]}
   | {type:'mask:preview';project_id:string;task_id:string;mode:import('../core/mask.js').MaskMode;feather:number;composite_strokes?:import('../core/mask.js').MaskStroke[]}
-  | {type:'mask:save-draft';project_id:string;draft:import('../core/mask.js').MaskDraft}
   | {type:'mask:start';project_id:string;draft:import('../core/mask.js').MaskDraft}
   | {type:'mask:reprocess';project_id:string;task_id:string;mode:import('../core/mask.js').MaskMode;feather:number;composite_strokes?:import('../core/mask.js').MaskStroke[]}
   | {type:'recipe:select-model';model_config_id:string}
@@ -85,6 +88,7 @@ export type Command =
   | { type: 'module:tool'; module_id: string; png_base64: string; state: Record<string,unknown>; instruction: string }
   | { type: 'assets:import'; module_id?: string }
   | { type: 'assets:drop'; paths: string[]; module_id?: string }
+  | { type: 'assets:paste'; project_id: string; module_id: string; images: PastedImage[] }
   | { type: 'asset:relink'; asset_id: string }
   | { type: 'project:package' }
   | { type: 'workspace:resume'; id: string }
@@ -93,9 +97,11 @@ export type Command =
   | { type: 'job:cancel'; task_id: string }
   | { type: 'job:restore'; task_id: string }
   | { type: 'asset:export'; asset_id: string };
-export interface ApiResponse { prompt_customizations?:PromptCustomizations; reference_preview?:string; mask_preview?:string; selected_asset_id?:string; ok: boolean; state?: WorkspaceView; error?: string; cancelled?: boolean; discovered_models?:string[]; model_input?:ModelInput|null; suggestion?:ModuleInferenceSuggestion }
+export interface ApiResponse { prompt_settings?:PromptSettingsDocument|PromptCustomizations; prompt_customizations?:PromptCustomizations; reference_preview?:string; mask_preview?:string; selected_asset_id?:string; ok: boolean; state?: WorkspaceView; error?: string; cancelled?: boolean; discovered_models?:string[]; model_input?:ModelInput|null; suggestion?:ModuleInferenceSuggestion }
+export interface ModuleInferenceProgress {request_id:string;project_id:string;module_id:string;text:string}
 export interface DesktopApi {
   updates?: import('./updates.js').UpdateApi;
+  onInferenceProgress?(listener:(event:ModuleInferenceProgress)=>void):()=>void;
   onDialog?(listener:(request:DialogRequest)=>void):()=>void;
   respondDialog?(id:string,response:number):void;
   readonly windowControlsOverlay?: boolean;

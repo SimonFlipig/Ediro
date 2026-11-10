@@ -4,7 +4,8 @@ import { seedModels } from '../protocols/model-presets.js';
 export { seedModels };
 import { newId } from './domain.js';
 import { maskEditMethod } from './mask-request.js';
-import { normalizeParameters,validateGenerationParameters } from './generation-parameters.js';
+import { contractFor,effectiveCapabilitiesFor,normalizeParameters,validateGenerationParameters } from './generation-parameters.js';
+import { modelVariantInfo,modelVariantOptions } from '../protocols/model-variants.js';
 import type { ModelTestRecord } from './model-tests.js';
 import { findPreset, familiesForAdapter } from '../protocols/model-catalog.js';
 import { migrateModelSettings, snapshotParameters } from './model-settings.js';
@@ -45,8 +46,9 @@ export class ModelLibrary {
     if (!m.enabled) throw new Error('模型配置已停用。');
     const c = this.data.connections.find(c => c.connection_id === m.connection_id);
     const a = this.adapters.find(a => a.adapter_id === m.adapter_id);
-    const valid = !!a?.installed && a.kind === m.kind && a.purposes.includes(m.purpose);
-    const capabilities=structuredClone(m.capabilities);
+    const variantInfo=modelVariantInfo(m);
+    const valid = !!a?.installed && a.kind === m.kind && a.purposes.includes(m.purpose)&&!variantInfo.invalidOverride;
+    const capabilities=effectiveCapabilitiesFor({...m,endpoint:'',executable:false,adapter_parameters:a?.parameters});
     const declaredPreset=findPreset(m.preset_id);
     // A channel's other manual settings do not opt out of newly added preset abilities.
     // Keep explicit per-operation opt-outs separate from capability provenance.
@@ -54,7 +56,6 @@ export class ModelLibrary {
     capabilities.operations=capabilities.operations.filter(op=>a?.operations.includes(op)&&!capabilities.disabled_operations?.includes(op));
     if(m.purpose==='understanding'&&a?.operations.includes('understand')&&!capabilities.operations.includes('understand'))capabilities.operations.push('understand');
 
-    for(const p of m.purpose==='understanding'?[]:a?.parameters??[]){if(p.key==='aspect_ratio'&&p.values)capabilities.aspect_ratios=capabilities.aspect_ratios.filter(v=>p.values!.includes(v));if(p.key==='quality'&&p.values)capabilities.qualities=capabilities.qualities.filter(v=>p.values!.includes(v));if(p.key==='output_format'&&p.values)capabilities.formats=capabilities.formats.filter(v=>p.values!.includes(v));if(p.key==='count'&&p.maximum)capabilities.max_count=Math.min(capabilities.max_count,p.maximum);}
     const preset=findPreset(m.preset_id);
     const generation_contract=structuredClone(preset?.config.adapter_id===m.adapter_id?preset.config.generation_contract:m.family?m.generation_contract??a?.generation_contract:a?.generation_contract??m.generation_contract);
     if(generation_contract){
@@ -64,7 +65,7 @@ export class ModelLibrary {
     }
     const validation_status=!m.validation?'untested':m.validation.model_revision===m.revision&&m.validation.connection_revision===(c?.revision??0)&&m.validation.adapter_version===a?.version?'passed':'stale';
     const defaults=normalizeParameters(!m.independent_defaults&&!m.legacy_defaults_pending&&m.preset_id?this.data.defaults_by_model?.[m.preset_id]??m.defaults:m.defaults,{...m,capabilities,generation_contract} as ModelConfig);
-    return structuredClone({ ...m,defaults,capabilities,generation_contract,validation_status,geometry_support:a?.geometry_support, endpoint:c?.endpoint??'',credential_ref:c?.credential_ref,connection_revision:c?.revision,adapter_version:a?.version,
+    return structuredClone({ ...m,defaults,capabilities,generation_contract,validation_status,geometry_support:a?.geometry_support,adapter_parameters:a?.parameters, endpoint:c?.endpoint??'',credential_ref:c?.credential_ref,connection_revision:c?.revision,adapter_version:a?.version,
       executable:valid && (m.kind!=='cloud'||!!c?.enabled&&!!c.endpoint&&(!a?.requires_credential||!!c.credential_ref)) }) as ModelConfig;
   }
   async execution(id:string) { const m=this.resolve(id); if(!m.executable)throw new Error('模型未就绪：请检查连接、凭据、用途与适配器能力。'); if(m.credential_ref && !await this.secrets.has(m.credential_ref))throw new Error('模型连接凭据缺失，请重新设置。'); return m; }
@@ -77,6 +78,7 @@ export class ModelLibrary {
       const has_credential = ref ? await this.secrets.has(ref) : false;
       const adapter=this.adapters.find(a=>a.adapter_id===entry.adapter_id),connection=this.data.connections.find(c=>c.connection_id===entry.connection_id);
       const reasons:string[]=[];
+      const variantInfo=modelVariantInfo(entry);if(variantInfo.invalidOverride)reasons.push(variantInfo.invalidOverride);
       if(!entry.enabled)reasons.push('模型已停用');
       if(!adapter?.installed)reasons.push('执行协议尚未安装');
       else {
@@ -88,7 +90,7 @@ export class ModelLibrary {
         if(!connection?.endpoint)reasons.push('接口地址未配置');
         if(adapter?.requires_credential&&!has_credential)reasons.push('连接凭据未配置或缺失');
       }
-      return { ...rest, executable:rest.executable&&(!adapter?.requires_credential||has_credential), has_credential,readiness_error:reasons.length?reasons.join('；'):undefined,declared_capabilities:structuredClone(entry.capabilities),unavailable_operations:entry.capabilities.operations.filter(op=>!adapter?.operations.includes(op)) };
+      return { ...rest,adapter_parameters:structuredClone(adapter?.parameters), executable:rest.executable&&(!adapter?.requires_credential||has_credential), has_credential,readiness_error:reasons.length?reasons.join('；'):undefined,declared_capabilities:structuredClone(entry.capabilities),unavailable_operations:entry.capabilities.operations.filter(op=>!adapter?.operations.includes(op)) };
     }));
   }
   async connections() { return Promise.all(this.data.connections.map(async ({credential_ref,...c})=>({...c,has_credential:credential_ref?await this.secrets.has(credential_ref):false}))); }
@@ -104,6 +106,7 @@ export class ModelLibrary {
   async saveModel(input: Omit<ModelEntry,'revision'>) {
     const next=this.snapshot(),old=next.models.find(m=>m.model_config_id===input.model_config_id);
     const model=modelEntrySchema.parse({...input,revision:(old?.revision??0)+1});
+    const variantInfo=modelVariantInfo(model);if(variantInfo.invalidOverride)throw new Error(variantInfo.invalidOverride);
     const configured=next.connections.some(c=>c.connection_id===model.connection_id&&!!c.credential_ref);
     model.origin=model.kind==='mock'?'builtin':!old||old.origin==='user'||configured||old.model!==model.model||old.adapter_id!==model.adapter_id||old.connection_id!==model.connection_id?'user':'builtin';
     if(old?.independent_defaults)model.independent_defaults=true;
@@ -123,13 +126,21 @@ export class ModelLibrary {
     if(model.defaults.aspect_ratio!=='auto'&&!model.capabilities.aspect_ratios.includes(model.defaults.aspect_ratio))throw new Error('默认比例超出模型声明能力。');
     const a=this.adapters.find(a=>a.adapter_id===model.adapter_id);
     if(!a||a.kind!==model.kind||!a.purposes.includes(model.purpose))throw new Error('适配器不存在或与模型用途不匹配。');
+    const resolved={...model,generation_contract:model.generation_contract??a.generation_contract,adapter_parameters:a.parameters,endpoint:'',executable:false} as ModelConfig;
+    const declaredContract=contractFor({...resolved,capabilities:{...resolved.capabilities,parameter_limits:undefined}});
+    const declaredCapabilities=effectiveCapabilitiesFor({...resolved,capabilities:{...resolved.capabilities,parameter_limits:undefined}});
+    // Restrictions belong to the channel and can outlive a selected variant.
+    // Validate their vocabulary against this family, while effective controls
+    // and request validation still intersect it with the current variant.
+    const variants=modelVariantOptions(resolved);
+    const declaredFields=[...declaredContract.fields,...variants.flatMap(v=>v.contract?.fields??[])];
+    const qualityValues=[...new Set([...declaredCapabilities.qualities,...variants.flatMap(v=>v.qualities??[])])];
     for(const [key,limit] of Object.entries(model.capabilities.parameter_limits??{})){
-      const field=(model.generation_contract??a.generation_contract)?.fields.find(f=>f.key===key);
-      if(!field)throw new Error('协议未声明此参数：'+key);
+      const fields=key==='quality'&&declaredContract.quality_control?[{key:'quality',values:qualityValues}]:declaredFields.filter(f=>f.key===key);
+      if(!fields.length)throw new Error('协议未声明此参数：'+key);
       if(limit.minimum!==undefined&&limit.maximum!==undefined&&limit.minimum>limit.maximum)throw new Error('参数最小值不能超过最大值。');
-      if(limit.values?.some(v=>!field.values?.includes(v)))throw new Error('参数允许值超出协议实现范围。');
+      if(limit.values?.some(v=>!fields.some(field=>field.values?.includes(v))))throw new Error('参数允许值超出协议实现范围。');
     }
-    const resolved={...model,generation_contract:model.generation_contract??a.generation_contract,endpoint:'',executable:false} as ModelConfig;
     model.defaults=snapshotParameters(model.defaults,resolved);
     validateGenerationParameters(model.defaults,resolved);
     if(preset&&!model.independent_defaults){

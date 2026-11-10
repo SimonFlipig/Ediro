@@ -25,7 +25,8 @@ export function MaskEditor({source:selectedSource,state,canvas,dispatch,onClose,
   const current=useRef(draft);current.current=draft;
   const [redo,setRedo]=useState<MaskStroke[][]>([]),[tool,setTool]=useState<'paint'|'erase'|'pan'|'crop'>('paint'),[size,setSize]=useState(Math.max(10,Math.round(source.width/24))),[visible,setVisible]=useState(true),[busy,setBusy]=useState(false),[saved,setSaved]=useState(''),[display,setDisplay]=useState<'mask'|'result'|'raw'>(entry.display),[viewport,setViewport]=useState(fittedViewport);
   const undoStack=useRef<MaskStroke[][]>([]);
-  const dirty=useRef(false),awaiting=useRef(false),seen=useRef<string|null>(null);
+  const [autoFillClosed,setAutoFillClosed]=useState(true);
+  const awaiting=useRef(false),seen=useRef<string|null>(null);
   const model=models.find(m=>m.model_config_id===draft.model_config_id);
   const guided=!!model&&maskEditMethod(model)==='guided';
   const cropPlan=useMemo<{crop?:MaskCrop;parameters?:ReturnType<typeof planMaskRequest>['parameters'];error?:string}>(()=>{if(!model||!draft.strokes.some(s=>s.tool==='paint'))return {};try{return planMaskRequest(draft,model);}catch(error){return {error:error instanceof Error?error.message:'无法确定送入范围'};}},[draft.strokes,draft.crop,draft.context_padding,draft.width,draft.height,draft.quality,draft.resolution,model]);
@@ -34,13 +35,10 @@ export function MaskEditor({source:selectedSource,state,canvas,dispatch,onClose,
   const jobs=project.jobs.filter(j=>j.mask_edit?.draft.source_asset_id===entry.sourceId),job=jobs.find(j=>j.task_id===chosenTask)??jobs.at(-1);
   const active=jobs.find(j=>['queued','preparing','running','post_processing'].includes(j.status));
   useEffect(()=>{if(active){setChosenTask(active.task_id);awaiting.current=true;}},[active?.task_id]);
-  const composite=useCompositeMask(project.project_id,job?.task_id,job?.mask_edit,dispatch,job?.task_id===entry.taskId?entry.strokes:undefined);
+  const composite=useCompositeMask(job?.task_id,job?.mask_edit,job?.task_id===entry.taskId?entry.strokes:undefined);
   const [resultVisible,setResultVisible]=useState(false),[liveResultStroke,setLiveResultStroke]=useState<MaskStroke|null>(null);
   useEffect(()=>{setLiveResultStroke(null);if(display!=='mask')setTool(t=>t==='crop'?'paint':t);},[job?.task_id,display,draft.mode]);
-  const update=(patch:Partial<MaskDraft>)=>{dirty.current=true;setSaved('未保存');setDraft(d=>({...d,...patch}));};
-  const flush=async()=>{if(!dirty.current)return true;const snapshot=current.current;setSaved('同步中…');const ok=await dispatch({type:'mask:save-draft',project_id:project.project_id,draft:snapshot});if(current.current===snapshot){dirty.current=!ok;setSaved(ok?'草稿已同步，工程自动保存':'保存失败，草稿仍在此窗口');}return ok;};
-  useEffect(()=>{const submit=(event:Event)=>{(event as CustomEvent<Promise<boolean>[]>).detail.push(flush(),composite.flush());};window.addEventListener('ediro:flush-editors',submit);return()=>window.removeEventListener('ediro:flush-editors',submit);});
-  useEffect(()=>{if(!dirty.current)return;const timer=setTimeout(()=>void flush(),450);return()=>clearTimeout(timer);},[draft]);
+  const update=(patch:Partial<MaskDraft>)=>{setSaved('临时编辑，尚未生成');setDraft(d=>({...d,...patch}));};
   useEffect(()=>{
     if(!job||seen.current===`${job.task_id}:${job.status}`)return;
     const recovered=seen.current===`${job.task_id}:failed`&&job.status==='succeeded';
@@ -51,20 +49,24 @@ export function MaskEditor({source:selectedSource,state,canvas,dispatch,onClose,
     }
   },[job?.task_id,job?.status]);
   const changeStrokes=(strokes:MaskStroke[])=>{undoStack.current.push(current.current.strokes);setRedo([]);update({strokes});};
-  const undo=()=>{const previous=undoStack.current.pop();if(previous){setRedo(r=>[...r,current.current.strokes]);update({strokes:previous});}else if(draft.strokes.length){setRedo(r=>[...r,current.current.strokes]);update({strokes:draft.strokes.slice(0,-1)});}};
+  const undo=()=>{const present=current.current.strokes,previous=undoStack.current.pop();if(previous){setRedo(r=>[...r,present]);update({strokes:previous});}else if(present.length){setRedo(r=>[...r,present]);update({strokes:present.slice(0,-1)});}};
   const redoStroke=()=>{const next=redo.at(-1);if(next){undoStack.current.push(current.current.strokes);setRedo(r=>r.slice(0,-1));update({strokes:next});}};
-  const run=async()=>{setBusy(true);if(!await composite.flush()){setBusy(false);return;}setChosenTask(undefined);awaiting.current=true;const ok=await dispatch({type:'mask:start',project_id:project.project_id,draft:current.current});if(!ok)awaiting.current=false;else{dirty.current=false;setSaved('草稿已保存');}setBusy(false);};
-  const close=async()=>{setBusy(true);if(await flush()&&await composite.flush())onClose();else setBusy(false);};
+  const run=async()=>{setBusy(true);setChosenTask(undefined);awaiting.current=true;const ok=await dispatch({type:'mask:start',project_id:project.project_id,draft:current.current});if(!ok)awaiting.current=false;else setSaved('生成蒙版已保存');setBusy(false);};
+  const close=()=>onClose();
   const rawId=job?.mask_edit?.raw_asset_ids[0];
   const raw=state.assets.find(a=>a.asset_id===rawId);
   const resultTools=display==='result'&&draft.mode==='strict'&&!!raw;
-  const resultStrokes=liveResultStroke?[...composite.strokes,liveResultStroke]:composite.strokes;
+  const resultStrokes=useMemo(()=>liveResultStroke?[...composite.strokes,liveResultStroke]:composite.strokes,[composite.strokes,liveResultStroke]);
   const reprocess=async()=>{
-    if(!job)return;setBusy(true);if(!await composite.flush()){setBusy(false);return;}const ok=await dispatch({type:'mask:reprocess',project_id:project.project_id,task_id:job.task_id,mode:draft.mode,feather:draft.feather,composite_strokes:composite.strokes});
-    if(ok){setDisplay('result');setViewport(fittedViewport());}setBusy(false);
+    if(!job)return;setBusy(true);const strokes=composite.strokes;const ok=await dispatch({type:'mask:reprocess',project_id:project.project_id,task_id:job.task_id,mode:draft.mode,feather:draft.feather,composite_strokes:strokes});
+    if(ok){composite.markSaved(strokes);setDisplay('result');setViewport(fittedViewport());}setBusy(false);
   };
   // Existing variants are deterministic and require no second model request.
-  const variant=job?.mask_edit?.variants.find(v=>currentMaskFeather(v)&&v.mode===draft.mode&&(draft.mode==='natural'||v.feather===draft.feather&&sameMaskStrokes(v.composite_strokes??job.mask_edit!.draft.strokes,resultStrokes)));
+  const drawingResult=!!liveResultStroke;
+  const variant=useMemo(()=>{
+    if(!job?.mask_edit||draft.mode==='strict'&&drawingResult)return;
+    return job.mask_edit.variants.find(v=>currentMaskFeather(v)&&v.mode===draft.mode&&(draft.mode==='natural'||v.feather===draft.feather&&sameMaskStrokes(v.composite_strokes??job.mask_edit!.draft.strokes,composite.strokes)));
+  },[job?.mask_edit,draft.mode,draft.feather,composite.strokes,drawingResult]);
   const processed=state.assets.find(a=>a.asset_id===variant?.asset_id&&!a.removed_result);
   const preview=useMaskPreview(api,project.project_id,job?.task_id,raw,draft.mode,draft.feather,processed,display==='result',resultStrokes,job?.mask_edit?.crop?{width:job.mask_edit.draft.width,height:job.mask_edit.draft.height}:undefined);
   const result=display==='result'?preview.asset:raw;
@@ -72,14 +74,15 @@ export function MaskEditor({source:selectedSource,state,canvas,dispatch,onClose,
   const treatment=(patch:Partial<MaskDraft>)=>{update(patch);if(rawId)setDisplay('result');};
   return <>
     {canvas&&createPortal(<div className="mask-canvas-shell"><div className="mask-view-tabs"><button className="mask-back" disabled={busy} onClick={()=>void close()}>← 返回工作台</button><button className={display==='mask'?'selected':''} onClick={()=>setDisplay('mask')}>绘制蒙版</button><button disabled={!rawId} className={display==='result'?'selected':''} onClick={()=>setDisplay('result')}>修改结果</button><button disabled={!rawId} className={display==='raw'?'selected':''} onClick={()=>setDisplay('raw')}>模型原始返回</button><span>{display==='raw'&&raw?raw.width:source.width} × {display==='raw'&&raw?raw.height:source.height}</span></div>
-      <div className="mask-preview-body">{display==='mask'?<MaskCanvas key="generation" asset={generationSource} draft={draft} crop={cropPlan.crop??draft.crop} onCrop={crop=>{update({crop});setTool('paint');}} tool={tool} size={size} visible={visible} disabled={!!active||busy} onStroke={stroke=>changeStrokes([...current.current.strokes,stroke])}/>:resultTools&&!preview.error?<MaskCanvas key={`composite-${job!.task_id}`} resultMode crop={job!.mask_edit!.crop} asset={result??frozenBase} draft={{...job!.mask_edit!.draft,strokes:composite.strokes}} tool={tool} size={size} visible={resultVisible} disabled={!!active||busy} onStroke={stroke=>composite.change([...composite.strokes,stroke])} onLiveStroke={setLiveResultStroke}/>:result?<ImagePreview key={result.asset_id} asset={result} view={viewport} onChange={setViewport}/>:<div className="small-empty">{preview.error??(preview.pending?'正在更新处理预览…':'等待修改结果')}</div>}{resultTools&&<div className="mask-result-feedback" role="status">{preview.error??(preview.pending?'正在更新合成预览…':job?.mask_edit?.crop?'框内补画采用模型内容 · 减选恢复原图':'画笔采用模型内容 · 减选恢复原图')}</div>}</div>
+      <div className="mask-preview-body">{display==='mask'?<MaskCanvas key="generation" asset={generationSource} draft={draft} crop={cropPlan.crop??draft.crop} onCrop={crop=>{update({crop});setTool('paint');}} tool={tool} size={size} visible={visible} disabled={!!active||busy} autoFillClosed={autoFillClosed} onStroke={stroke=>changeStrokes([...current.current.strokes,stroke])}/>:resultTools&&!preview.error?<MaskCanvas key={`composite-${job!.task_id}`} resultMode crop={job!.mask_edit!.crop} asset={result??frozenBase} draft={{...job!.mask_edit!.draft,strokes:composite.strokes}} tool={tool} size={size} visible={resultVisible} disabled={!!active||busy} autoFillClosed={autoFillClosed} onStroke={stroke=>composite.change([...composite.strokes,stroke])} onLiveStroke={setLiveResultStroke}/>:result?<ImagePreview key={result.asset_id} asset={result} view={viewport} onChange={setViewport}/>:<div className="small-empty">{preview.error??(preview.pending?'正在更新处理预览…':'等待修改结果')}</div>}{resultTools&&<div className="mask-result-feedback" role="status">{preview.error??(preview.pending?'正在更新合成预览…':job?.mask_edit?.crop?'框内补画采用模型内容 · 减选恢复原图':'画笔采用模型内容 · 减选恢复原图')}</div>}</div>
     </div>,canvas)}
     <section className="mask-editor" aria-label="局部编辑面板">
       <header><div><span className="eyebrow">LOCAL EDIT</span><h2>局部编辑</h2></div><button onClick={()=>void close()} disabled={busy} aria-label="退出局部编辑">×</button></header>
-      <div className="mask-source"><img src={source.preview_url} alt="编辑源图"/><div><b>当前底图</b><span title={source.name}>{source.name}</span><small>{saved||'独立编辑 · 保留原图'}</small></div></div>
+      <div className="mask-source"><img src={source.preview_url} alt="编辑源图"/><div><b>当前底图</b><span title={source.name}>{source.name}</span><small>{saved||'蒙版随生成保存'}</small></div></div>
       <div className="mask-settings">
         <fieldset disabled={busy||!!active||display==='raw'||display==='result'&&draft.mode==='natural'}><legend className="mask-tools-heading"><span>{resultTools?'结果合成蒙版':'蒙版工具'}</span><label className="mask-check"><input type="checkbox" disabled={busy||!!active||display==='raw'||display==='result'&&draft.mode==='natural'} checked={resultTools?resultVisible:visible} onChange={e=>resultTools?setResultVisible(e.target.checked):setVisible(e.target.checked)}/>显示蒙版</label></legend><div className="mask-tool-row">{([['paint','画笔'],['erase','减选'],['pan','抓手']] as const).map(([value,title])=><button key={value} aria-pressed={tool===value} className={tool===value?'selected':''} onClick={()=>setTool(value)}>{title}</button>)}</div>
           <label>画笔大小 <span>{size} px</span><input aria-label="蒙版画笔大小" type="range" min="1" max={Math.min(1000,Math.max(source.width,source.height)/2)} value={size} onChange={e=>setSize(Number(e.target.value))}/></label>
+          <label className="mask-check" title="一笔画圈并回到起点附近，松手后填满；减选会清除圈内，未闭合时按普通涂抹。"><input type="checkbox" checked={autoFillClosed} onChange={e=>setAutoFillClosed(e.target.checked)}/>闭合自动填充</label>
           <div className="mask-tool-row"><button onClick={resultTools?composite.undo:undo} disabled={resultTools?!composite.canUndo:!draft.strokes.length&&!undoStack.current.length}>撤销</button><button onClick={resultTools?composite.redo:redoStroke} disabled={resultTools?!composite.canRedo:!redo.length}>重做</button><button onClick={()=>resultTools?composite.change([]):changeStrokes([])} disabled={!(resultTools?composite.strokes:draft.strokes).length}>清空</button></div>
           {resultTools&&<><button className="mask-reprocess" onClick={()=>composite.change(structuredClone(job!.mask_edit!.draft.strokes))}>恢复生成时的选区</button><p className="mask-hint">{composite.status}</p></>}
         </fieldset>
@@ -100,8 +103,8 @@ export function MaskEditor({source:selectedSource,state,canvas,dispatch,onClose,
         {job&&<div className="mask-job"><b>{active?'正在生成局部修改':job.status==='succeeded'?(job.output_asset_ids.length?'结果版本已保存':'等待预览确认'):job.status==='cancelled'?'已取消':job.status==='failed'?'局部修改未完成':'编辑任务'}</b>{(job.error||job.status!=='succeeded')&&<p>{job.error??job.stage}</p>}{active&&<button onClick={()=>void dispatch({type:'job:cancel',task_id:active.task_id})}>取消任务</button>}{job.recoverable_result&&job.status==='failed'&&<button onClick={()=>void dispatch({type:'job:recover-result',task_id:job.task_id})}>恢复本地结果</button>}</div>}
       </div>
       <footer>{display==='result'&&rawId?<><p className="mask-hint">本地合成 · 不再次调用模型</p><button className="primary mask-generate" disabled={busy||!!active||(!!processed&&!job?.error)||preview.pending||!!preview.error||!!liveResultStroke} onClick={()=>void reprocess()}>{processed&&!job?.error?'此处理版本已保存':preview.pending?'正在更新预览…':'确认保存此版本'}</button><button className="mask-continue" disabled={busy||!!active} onClick={()=>setDisplay('mask')}>返回绘制蒙版与生成</button></>:<><label htmlFor="mask-instruction">局部编辑指令</label><textarea id="mask-instruction" aria-label="局部编辑指令" value={draft.instruction} maxLength={32000} disabled={busy||!!active} onChange={e=>update({instruction:e.target.value})} placeholder="描述选中区域需要如何修改…"/>
-        <button className="primary mask-generate" onClick={()=>void run()} disabled={busy||!!active||!model?.executable||!!geometryIssue||!draft.strokes.length||!draft.instruction.trim()}>{active?'正在生成…':model?.kind==='mock'?'模拟局部修改':'生成局部修改'}</button></>}
-        {display==='result'&&processed&&<button className="mask-continue" disabled={busy||!!active||!!liveResultStroke} onClick={async()=>{if(await flush()&&await composite.flush())onContinue(processed.asset_id);}}>基于此版本继续编辑 →</button>}
+        <p className="mask-hint">生成时保存蒙版；退出不保留未生成的修改。</p><button className="primary mask-generate" onClick={()=>void run()} disabled={busy||!!active||!model?.executable||!!geometryIssue||!draft.strokes.length||!draft.instruction.trim()}>{active?'正在生成…':model?.kind==='mock'?'模拟局部修改':'生成局部修改'}</button></>}
+        {display==='result'&&processed&&<button className="mask-continue" disabled={busy||!!active||!!liveResultStroke} onClick={()=>onContinue(processed.asset_id)}>基于此版本继续编辑 →</button>}
       </footer>
     </section>
   </>;

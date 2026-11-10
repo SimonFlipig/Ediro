@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, writeFile, readdir, rename } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
@@ -9,6 +10,7 @@ import { ProjectRepository, projectFilename } from '../src/adapters/project-repo
 import { MockGenerator } from '../src/adapters/mock-generator.js';
 import type { CloudExecutionPort } from '../src/core/ports.js';
 import { compileRecipe } from '../src/core/compiler.js';
+import { getAutoPromptState } from '../src/core/auto-prompt.js';
 
 async function fixture(delay=10,executor?:CloudExecutionPort){
   const base=path.join(process.cwd(),'.local','test-projects');await mkdir(base,{recursive:true});const directory=await mkdtemp(path.join(base,'case-'));
@@ -21,6 +23,35 @@ async function settle(workspace:Workspace){
   for(let i=0;i<200;i++){if(await workspace.serial(async()=>workspace.project!.jobs.every(j=>['succeeded','failed','cancelled'].includes(j.status))))return;await new Promise(resolve=>setTimeout(resolve,20));}
   throw new Error('任务等待超时');
 }
+
+test('旧规则自动提示词保持正文和历史标识，重开或换位不会误标为已按新规则推理',async()=>{
+  for(const scenario of ['reorder','changed','stale'] as const){
+    const {workspace:w,directory}=await fixture();
+    const recipe=w.project!.recipe,target=recipe.modules.find(m=>m.reference_type==='prompt')!;
+    target.auto_prompt=true;
+    // Reproduce the previously persisted v1 format in its original module order.
+    const modules=recipe.modules.map(m=>({module_id:m.module_id,reference_type:m.reference_type,model_name:m.model_name,
+      base_instruction:m.base_instruction,numbered_instruction:m.numbered_instruction,
+      ...(m===target?{}:{user_instruction:m.user_instruction}),
+      ...(['composition','style'].includes(m.reference_type)?{reference_mode:'image_text'}:{}),images:[]}));
+    const canonical=JSON.stringify({target_module_id:target.module_id,modules},(_key,value:unknown)=>value&&typeof value==='object'&&!Array.isArray(value)?Object.fromEntries(Object.entries(value).sort(([a],[b])=>a<b?-1:a>b?1:0)):value);
+    const legacy='auto-v1:'+createHash('sha256').update(canonical).digest('hex');target.auto_prompt_input_key=legacy;
+    const state=()=>getAutoPromptState(w.project!.recipe,w.registry,w.moduleSettings,w.project!.assets)!;
+    assert.equal(state().needs_inference,true);
+    if(scenario==='stale')recipe.modules[0].user_instruction='已经改变的条件';
+    await w.persist();await w.open(new ProjectRepository(directory));
+    const next=structuredClone(w.project!.recipe);next.modules.reverse();
+    if(scenario==='changed')next.modules.find(m=>m.reference_type==='subject')!.user_instruction='蓝色柜子';
+    await w.saveRecipe(next);
+    assert.deepEqual(w.project!.recipe.modules.map(m=>m.module_id),next.modules.map(m=>m.module_id));
+    assert.equal(state().needs_inference,true);
+    const saved=w.project!.recipe.modules.find(m=>m.module_id===target.module_id)!;
+    assert.equal(saved.user_instruction,target.user_instruction);
+    assert.equal(saved.auto_prompt_input_key,legacy);
+    await w.open(new ProjectRepository(directory));assert.equal(state().needs_inference,true);
+    await w.shutdown();
+  }
+});
 
 test('失败重试保留冻结输入与历史，不覆盖当前编辑；切换工程和模型变更时拒绝重试',async()=>{
   let calls=0;const mock=new MockGenerator(1);
@@ -76,10 +107,11 @@ test('重开后按结果切换参数和模块，继续生成使用所选版本�
   await w.saveRecipe(second);await w.enqueue(false);await settle(w);
   await w.open(new ProjectRepository(directory));
   const history=structuredClone(w.project!.jobs),projectId=w.project!.project_id;
+  const stored=structuredClone((await w.repository!.load()).recipe);
   for(const job of [history[0],history[1],history[0]]){
     await w.restoreResult(projectId,job.output_asset_ids[0]);
     assert.deepEqual(w.project!.recipe,w.registry.resolveRecipe(job.recipe_snapshot));
-    assert.deepEqual((await w.repository!.load()).recipe,w.project!.recipe);
+    assert.deepEqual((await w.repository!.load()).recipe,stored);
     assert.deepEqual(w.project!.jobs,history);
   }
   const selected=structuredClone(w.project!.recipe);
@@ -88,8 +120,13 @@ test('重开后按结果切换参数和模块，继续生成使用所选版本�
   assert.deepEqual(w.project!.recipe,selected);
   const save=w.repository!.save;
   w.repository!.save=async()=>{throw new Error('disk failure');};
-  try{await assert.rejects(()=>w.restoreResult(projectId,history[1].output_asset_ids[0]),/disk failure/);}
+  try{
+    await w.restoreResult(projectId,history[1].output_asset_ids[0]);
+    await assert.rejects(()=>w.flush(),/disk failure/);
+    assert.deepEqual(w.project!.recipe,w.registry.resolveRecipe(history[1].recipe_snapshot));
+  }
   finally{w.repository!.save=save;}
+  await w.restoreResult(projectId,history[0].output_asset_ids[0]);
   assert.deepEqual(w.project!.recipe,selected);
   await w.enqueue(false);await settle(w);
   assert.deepEqual(w.project!.jobs[2].recipe_snapshot,history[0].recipe_snapshot);
@@ -112,11 +149,16 @@ test('无产图失败任务重开后可恢复完整配方，拒绝串工程且�
   assert.deepEqual(w.project!.recipe,before);
   const save=w.repository!.save;
   w.repository!.save=async()=>{throw new Error('disk failure');};
-  try{await assert.rejects(()=>w.restoreTaskRecipe(projectId,task.task_id),/disk failure/);}
+  try{
+    await w.restoreTaskRecipe(projectId,task.task_id);
+    await assert.rejects(()=>w.flush(),/disk failure/);
+    assert.deepEqual(w.project!.recipe,w.registry.resolveRecipe(task.recipe_snapshot));
+  }
   finally{w.repository!.save=save;}
-  assert.deepEqual(w.project!.recipe,before);
+  assert.deepEqual((await w.repository!.load()).recipe,before);
   await w.restoreTaskRecipe(projectId,task.task_id);
   assert.deepEqual(w.project!.recipe,w.registry.resolveRecipe(task.recipe_snapshot));
+  await w.flush();
   assert.deepEqual((await w.repository!.load()).recipe,w.project!.recipe);
   assert.deepEqual(w.project!.jobs,history);assert.equal(calls,1);await w.shutdown();
 });
@@ -155,6 +197,7 @@ test('移除备选素材只隐藏入口，模块引用、历史身份及源文�
   const id=workspace.project!.assets[0].asset_id;await workspace.hideMaterial(id);
   assert.deepEqual(module.asset_ids,[]); // save/import replace the Recipe rather than mutate old views.
   assert.deepEqual(workspace.project!.recipe.modules[0].asset_ids,[id]);
+  await workspace.flush();
   assert.equal((await new ProjectRepository(directory).load()).assets[0].hidden_from_materials,true);
   assert.deepEqual(await readFile(source),bytes);await workspace.importFiles([source]);
   assert.equal(workspace.project!.assets[0].hidden_from_materials,false);
@@ -256,7 +299,13 @@ test('结果图可按引用进行二轮生成，排序预览与新任务一致�
   await workspace.enqueue(false);await settle(workspace);
   const newJob=workspace.project!.jobs[1];
   assert.deepEqual(newJob.chain_snapshot,preview);
-  assert.deepEqual(newJob.adapted_input.blocks,preview.blocks);
+  assert.equal(newJob.chain_snapshot.format_version,4);
+  assert.deepEqual(newJob.adapted_input.blocks!.filter(b=>b.type==='image'),preview.blocks.filter(b=>b.type==='image'));
+  const requestText=newJob.adapted_input.blocks!.filter(b=>b.type==='text').map(b=>b.text).join('');
+  assert.ok(requestText.startsWith('## 1. prompt\n\n'));
+  assert.match(requestText,/\n\n## 2\. subject\n\n/);
+  assert.doesNotMatch(requestText,/<generation_request>|<generation_prompt>/);
+  assert.ok(requestText.includes(prompt.user_instruction));
   assert.deepEqual(workspace.project!.jobs[0],oldJob);
   assert.deepEqual(await readFile(filename),original);
   assert.notEqual(newJob.output_asset_ids[0],output.asset_id);
@@ -265,6 +314,7 @@ test('项目往返保存四模块，复制新 ID；只读基础语义不能被 A
   const {workspace,directory}=await fixture();const first=workspace.project!.recipe.modules[0];await workspace.copyModule(first.module_id);
   const copy=workspace.project!.recipe.modules[1];assert.notEqual(copy.reference_id,first.reference_id);
   const changed=structuredClone(workspace.project!.recipe);changed.modules[0].base_instruction='恶意覆盖';await assert.rejects(()=>workspace.saveRecipe(changed),/不可由界面修改/);
+  await workspace.flush();
   const reopened=await new ProjectRepository(directory).load();assert.equal(reopened.recipe.modules.length,5);
 });
 test('非空目录不被覆盖，也不额外创建 assets 目录',async()=>{
@@ -277,6 +327,7 @@ test('多图导入保留顺序，持久化后素材仍然可读',async()=>{
   await sharp({create:{width:40,height:30,channels:3,background:'#c08070'}}).png().toFile(first);
   await sharp({create:{width:60,height:50,channels:3,background:'#609080'}}).png().toFile(second);
   await workspace.importFiles([first,second],workspace.project!.recipe.modules[0].module_id);
+  await workspace.flush();
   const p=await new ProjectRepository(directory).load();const m=p.recipe.modules[0];assert.equal(p.assets.find(a=>a.asset_id===m.asset_ids[0])!.name,'z.png');assert.equal(p.assets.find(a=>a.asset_id===m.asset_ids[1])!.name,'a.png');
   assert.ok((await new ProjectRepository(directory).readAsset(p.assets[0])).length>0);
 });
@@ -319,26 +370,30 @@ test('从模块库拖入指定位置，新模块顺序由配方数组决定',asy
   await assert.rejects(()=>workspace.addModule('subject','module_missing'),/插入位置/);
 });
 
-test('保存失败不会留下假复制、假入队或半批次导入',async()=>{
+test('编辑保留内存，检查点保存失败不入队，半批次导入不改变当前内容',async()=>{
   const {workspace,directory}=await fixture();const before=structuredClone(workspace.project!);
   const repository=workspace.repository!;const save=repository.save.bind(repository);
   repository.save=async()=>{throw new Error('测试磁盘写入失败');};
-  await assert.rejects(()=>workspace.copyModule(before.recipe.modules[0].module_id),/写入失败/);
-  await assert.rejects(()=>workspace.addModule('subject'),/写入失败/);
+  await workspace.copyModule(before.recipe.modules[0].module_id);
+  await workspace.addModule('subject');
+  const edited=structuredClone(workspace.project!.recipe);
+  assert.equal(edited.modules.length,before.recipe.modules.length+2);
+  await assert.rejects(()=>workspace.flush(),/写入失败/);
   await assert.rejects(()=>workspace.enqueue(false),/写入失败/);
-  assert.deepEqual(workspace.project!.recipe,before.recipe);assert.equal(workspace.project!.jobs.length,0);
+  assert.deepEqual(workspace.project!.recipe,edited);assert.equal(workspace.project!.jobs.length,0);
   const file=path.join(directory,'test.png');await sharp({create:{width:20,height:20,channels:3,background:'#80a080'}}).png().toFile(file);
   repository.save=save;
   await assert.rejects(()=>workspace.importFiles([file,path.join(directory,'missing.png')],before.recipe.modules[0].module_id));
-  assert.deepEqual(workspace.project!.assets,before.assets);assert.deepEqual(workspace.project!.recipe,before.recipe);
+  assert.deepEqual(workspace.project!.assets,before.assets);assert.deepEqual(workspace.project!.recipe,edited);
+  await workspace.flush();assert.deepEqual((await repository.load()).recipe,edited);
 });
 
 test('任务存储故障会停队列，不无限自动重试',async()=>{
   const {workspace}=await fixture();const repository=workspace.repository!,save=repository.save.bind(repository);let failures=0;
-  repository.save=async p=>{if(p.jobs.some(j=>j.status==='preparing'||j.status==='failed')){failures++;throw new Error('磁盘不可写');}await save(p);};
+  repository.save=async p=>{if(p.jobs.some(j=>j.status==='succeeded'||j.status==='failed')){failures++;throw new Error('磁盘不可写');}await save(p);};
   await workspace.serial(()=>workspace.enqueue(false));await settle(workspace);
   await new Promise(resolve=>setTimeout(resolve,60));
-  assert.equal(workspace.project!.jobs[0].status,'failed');assert.ok(failures<=3);assert.equal(workspace.project!.assets.length,0);
+  assert.equal(workspace.project!.jobs[0].status,'failed');assert.ok(failures<=3);assert.equal(workspace.project!.jobs[0].recoverable_result,true);
 });
 
 test('执行接口可按图文链读取全部参考图，不能读取任务外素材',async()=>{
@@ -373,11 +428,40 @@ test('默认导入仅链接源图并缓存缩略图，不复制原图',async()=>
   await workspace.importFiles([file],workspace.project!.recipe.modules[0].module_id);
   const asset=workspace.project!.assets[0];assert.equal(asset.location.type,'external');
   assert.deepEqual(await readdir(path.join(directory,'assets')),[`${asset.asset_id}_thumb.webp`]);
+  await workspace.flush();
   const loaded=await new ProjectRepository(directory).load();assert.equal(loaded.schema_version,3);assert.equal(loaded.assets[0].location.type,'external');
+});
+test('旧工程收好剪贴板图片，并在目标无效、引用超限或批量解码失败时保留原状态',async()=>{
+  const {workspace,directory} = await fixture();
+  await workspace.addModule('viewpoint');
+  const {modules} = workspace.project!.recipe;
+  const subject = modules.find(m => m.reference_type === 'subject')!.module_id;
+  const pixels = await sharp({create:{width:28,height:22,channels:3,background:'#cbd'}}).webp().toBuffer();
+  const image = {name:'网页参考.png',bytes:pixels};
+  await workspace.importPastedImages([image], subject);
+  await workspace.flush();
+  const repository = new ProjectRepository(directory), project = await repository.load();
+  assert.equal(project.assets[0].name,'网页参考.webp');
+  assert.equal(project.assets[0].location.type,'managed');
+  assert.deepEqual(await repository.readAsset(project.assets[0]), pixels);
+  const assetsDirectory = path.join(directory, 'assets');
+  const storedFiles = await readdir(assetsDirectory);
+
+  for (const type of ['viewpoint','prompt']) {
+    const moduleId = modules.find(m => m.reference_type === type)!.module_id;
+    await assert.rejects(() => workspace.importPastedImages([image], moduleId), /功能参考工具|不接受图片/);
+  }
+  await assert.rejects(() => workspace.importPastedImages([image], 'mod_missing'), /模块不存在/);
+  await assert.rejects(() => workspace.importPastedImages(Array(64).fill(image), subject), /64/);
+  await assert.rejects(() => workspace.importPastedImages([image,{name:'损坏.png',bytes:Buffer.from('bad')}], subject));
+  assert.deepEqual(await readdir(assetsDirectory), storedFiles);
+  assert.deepEqual(workspace.project!.assets, project.assets);
+  assert.deepEqual(workspace.project!.recipe.modules.find(m => m.module_id === subject)!.asset_ids, [project.assets[0].asset_id]);
 });
 test('非首源图缺失不阻断打开记录，但阻止执行而不静默忽略',async()=>{
   const {workspace,directory}=await fixture();const files=[path.join(directory,'first.png'),path.join(directory,'second.png')];
   await makeImage(files[0]);await makeImage(files[1],'#80a0c0');await workspace.importFiles(files,workspace.project!.recipe.modules[0].module_id);
+  await workspace.flush();
   await rename(files[1],path.join(directory,'moved.png'));
   const repository=new ProjectRepository(directory),loaded=await repository.load();assert.equal(await repository.sourceStatus(loaded.assets[1]),'missing');
   await workspace.serial(()=>workspace.enqueue(false));await settle(workspace);
@@ -443,6 +527,10 @@ test('功能参考保存工具状态与 PNG，生成新素材但保留模块身�
   const saved=workspace.project!.recipe.modules.at(-1)!;assert.equal(saved.reference_id,module.reference_id);assert.equal(saved.tool_state!.yaw,45);assert.equal(saved.asset_ids.length,1);assert.equal(workspace.project!.assets.at(-1)!.kind,'generated');
   await assert.rejects(()=>workspace.importFiles(['arbitrary.png'],module.module_id),/功能参考工具/);
   assert.equal(saved.tool_state!.projection,'perspective');
+  const count=workspace.project!.assets.length;
+  await workspace.saveToolReference(module.module_id,bytes,{yaw:45,pitch:-20,roll:0,projection:'perspective'},'保持商品比例');
+  assert.equal(workspace.project!.assets.length,count,'unchanged tool reference does not create another asset');
+  await workspace.flush();
   const reloaded=await workspace.repository!.load();
   assert.equal(reloaded.recipe.modules.find(m=>m.module_id===module.module_id)!.tool_state!.projection,'perspective');
 });

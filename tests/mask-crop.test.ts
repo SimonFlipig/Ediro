@@ -79,9 +79,16 @@ test('4K 完整任务只发送 1024 裁片，严格/自然/补画贴回原图，
     assert.deepEqual(at(edit.crop!.x+20,edit.crop!.y+20),mode==='strict'?[18,52,86,255]:[254,220,186,255]);
   }
   const added=[...d.strokes,{tool:'paint' as const,size:50,points:[[(edit.crop!.x+20)/4096,(edit.crop!.y+20)/4096] as [number,number],[0,0] as [number,number]]}];
-  const preview=await w.previewMask(p.project_id,job.task_id,'strict',4,added),data=await rgba(Buffer.from(preview.split(',')[1],'base64'));
-  assert.deepEqual([...data.subarray(0,4)],[18,52,86,255]);const index=((edit.crop!.y+20)*4096+edit.crop!.x+20)*4;assert.deepEqual([...data.subarray(index,index+4)],[254,220,186,255]);
-  await w.saveCompositeMask(p.project_id,job.task_id,added);await w.open(repo);assert.deepEqual(w.project!.jobs[0].mask_edit!.crop,edit.crop);assert.deepEqual(w.project!.jobs[0].mask_edit!.composite_strokes,added);assert.equal(calls,1);
+  const preview=await w.previewMask(p.project_id,job.task_id,'strict',4,added),previewBytes=Buffer.from(preview.split(',')[1],'base64'),data=await rgba(previewBytes),previewSize=await sharp(previewBytes).metadata();
+  assert.equal(previewSize.width,1536);assert.equal(previewSize.height,1536);
+  assert.deepEqual([...data.subarray(0,4)],[18,52,86,255]);const index=(Math.round((edit.crop!.y+20)*1536/4096)*1536+Math.round((edit.crop!.x+20)*1536/4096))*4;assert.deepEqual([...data.subarray(index,index+4)],[254,220,186,255]);
+  assert.deepEqual(edit.composite_strokes,d.strokes); // Preview keeps the last confirmed mask unchanged.
+  const confirmed=await w.reprocessMask(p.project_id,job.task_id,'strict',4,added);
+  const confirmedBytes=await repo.readAsset(p.assets.find(a=>a.asset_id===confirmed)!);
+  assert.equal((await sharp(confirmedBytes).metadata()).width,4096);
+  const confirmedPixels=await rgba(confirmedBytes),confirmedIndex=((edit.crop!.y+20)*4096+edit.crop!.x+20)*4;
+  assert.deepEqual([...confirmedPixels.subarray(confirmedIndex,confirmedIndex+4)],[254,220,186,255]);
+  await w.open(repo);assert.deepEqual(w.project!.jobs[0].mask_edit!.crop,edit.crop);assert.deepEqual(w.project!.jobs[0].mask_edit!.composite_strokes,added);assert.equal(calls,1);
   const output=p.assets.find(a=>a.asset_id===ids[0])!;if(output.location.type!=='external')throw new Error('expected output');
   const restored=await new ProjectRepository(path.join(dir,'recovered')).recoverOutput(output.location.path);assert.deepEqual(restored.jobs[0].mask_edit!.crop,edit.crop);assert.ok(restored.assets.some(a=>a.asset_id===edit.request_source_id));
 });

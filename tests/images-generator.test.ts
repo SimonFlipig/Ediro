@@ -78,3 +78,76 @@ test('等待超时与用户取消分别报告，不自动重试',async()=>{
     assert.equal(calls,1);
   }
 });
+
+test('Images 生图拒绝独立系统指令，不读取图片、不捕获、不请求或静默并入提示词',async()=>{
+  let calls=0,reads=0,credentials=0,captures=0;
+  for(const value of ['固定规则',null,{},['规则'],'字'.repeat(32001)]){
+    const c=context(['asset_one']);(c.job.adapted_input as unknown as {system_instruction:unknown}).system_instruction=value;
+    c.readImage=async()=>{reads++;return png;};c.resolveCredential=async()=>{credentials++;return 'key';};c.recordModelInput=async()=>{captures++;};
+    const before=c.job.adapted_input.prompt;
+    await assert.rejects(new ImagesGenerator(async()=>{calls++;return Response.json({});}).execute(c,new AbortController().signal,async()=>{}),/系统指令.*未发送请求/);
+    assert.equal(c.job.adapted_input.prompt,before);
+  }
+  assert.deepEqual({calls,reads,credentials,captures},{calls:0,reads:0,credentials:0,captures:0});
+});
+
+test('Images 忽略空白系统字段，保持原有生图正文',async()=>{
+  for(const value of ['', ' \n\t ']){
+    const c=context();c.job.adapted_input.system_instruction=value;
+    await new ImagesGenerator(async(_url,init)=>{
+      assert.deepEqual(JSON.parse(String(init?.body)),{model:'gpt-image-2.5-sunburst',prompt:c.job.adapted_input.prompt,size:'1024x1024',quality:'high',format:'png',n:1,response_format:'b64_json'});
+      return Response.json({data:[{b64_json:png.toString('base64')}]});
+    }).execute(c,new AbortController().signal,async()=>{});
+  }
+});
+
+test('Images 响应体超时保留本地诊断，不重试且不把正文或诊断写入任务',async()=>{
+  const c=context();c.diagnostics={stage:'preparing'};const before=JSON.stringify(c.job);
+  const controller=new AbortController(),chunk=new TextEncoder().encode('{"secret":"test-key","image":"private pixels');let calls=0;
+  const adapter=new ImagesGenerator(async(_url,init)=>{
+    calls++;let sent=false;
+    return new Response(new ReadableStream({pull(stream){
+      if(!sent){sent=true;stream.enqueue(chunk);return;}
+      controller.abort(new DOMException('test-key response body timeout','TimeoutError'));
+      stream.error(init!.signal!.reason);
+    }}),{headers:{'x-request-id':'req-timeout-123'}});
+  });
+  await assert.rejects(()=>adapter.execute(c,controller.signal,async()=>{}),error=>error instanceof Error&&/超过 10 分钟/.test(error.message)&&!error.message.includes('test-key'));
+  assert.equal(calls,1);assert.equal(JSON.stringify(c.job),before);
+  assert.deepEqual(c.diagnostics,{stage:'response_body',timeout_ms:600_000,http_status:200,received_bytes:chunk.length,upstream_request_id:'req-timeout-123',reason:'timeout',error_name:'TimeoutError'});
+  assert.ok(!JSON.stringify(c.diagnostics).includes('test-key'));assert.ok(!JSON.stringify(c.diagnostics).includes('private pixels'));
+});
+
+test('Images 无效 JSON 与 HTTP 错误保留安全诊断和响应头 ID',async()=>{
+  for(const status of [200,502]){
+    const c=context();c.diagnostics={stage:'preparing'};let calls=0;
+    const body='test-key private prompt and image body';
+    const adapter=new ImagesGenerator(async()=>{calls++;return new Response(body,{status,headers:{'request-id':'req-failed-456'}});});
+    await assert.rejects(()=>adapter.execute(c,new AbortController().signal,async()=>{}),error=>error instanceof Error&&!error.message.includes('test-key'));
+    assert.equal(calls,1);assert.equal(c.diagnostics.http_status,status);assert.equal(c.diagnostics.upstream_request_id,'req-failed-456');
+    assert.equal(c.diagnostics.reason,status===200?'invalid_json':'http_error');assert.ok(!JSON.stringify(c.diagnostics).includes(body));
+    if(status===200){assert.equal(c.diagnostics.stage,'response_parse');assert.equal(c.diagnostics.error_name,'SyntaxError');assert.equal(c.diagnostics.received_bytes,Buffer.byteLength(body));}
+  }
+});
+
+test('Images 正文 ID 在结构或图片解码失败时仍留在瞬时诊断中',async()=>{
+  for(const data of [null,[{b64_json:Buffer.from('not an image').toString('base64')}]] ){
+    const c=context();c.diagnostics={stage:'preparing'};const before=JSON.stringify(c.job);let calls=0;
+    const adapter=new ImagesGenerator(async()=>{calls++;return Response.json({id:'body-response-789',data},{headers:{'x-request-id':'header-request-789'}});});
+    await assert.rejects(()=>adapter.execute(c,new AbortController().signal,async()=>{}));
+    assert.equal(calls,1);assert.equal(c.diagnostics.upstream_request_id,'body-response-789');assert.equal(c.diagnostics.stage,data===null?'response_validation':'image_decode');assert.equal(JSON.stringify(c.job),before);
+  }
+});
+
+test('Images 模型列表探测的外部超时不误报生图的十分钟时限',async()=>{
+  for(const bodyTimeout of [false,true]){
+    const controller=new AbortController();let calls=0;
+    const adapter=new ImagesGenerator(async()=>{
+      calls++;
+      if(!bodyTimeout){controller.abort(new DOMException('30-second probe deadline','TimeoutError'));throw controller.signal.reason;}
+      return new Response(new ReadableStream({pull(stream){controller.abort(new DOMException('30-second probe deadline','TimeoutError'));stream.error(controller.signal.reason);}}));
+    });
+    await assert.rejects(()=>adapter.probe('https://images.example','test-key',controller.signal),error=>error instanceof Error&&error.message.includes('超时')&&!/10 分钟|30-second|test-key/.test(error.message));
+    assert.equal(calls,1);
+  }
+});

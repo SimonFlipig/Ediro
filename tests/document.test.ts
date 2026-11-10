@@ -21,11 +21,11 @@ import {optionalRemovedResults} from '../src/core/project-asset-references.js';
 import type {ModelInput} from '../src/core/model-input.js';
 
 const pause=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
-function workspace(delay=0,executor:CloudExecutionPort=new MockGenerator(1)){return new Workspace(new ModelLibrary(seedModels(),async()=>{},{has:async()=>false,set:async()=>{}}),executor,new ModuleRegistry(),new MaskPixels(),delay);}
-async function fixture(delay=0){
+function workspace(executor:CloudExecutionPort=new MockGenerator(1)){return new Workspace(new ModelLibrary(seedModels(),async()=>{},{has:async()=>false,set:async()=>{}}),executor,new ModuleRegistry(),new MaskPixels());}
+async function fixture(){
   const root=path.join(process.cwd(),'.local','test-documents');await mkdir(root,{recursive:true});const base=await mkdtemp(path.join(root,'case-'));
   const filename=path.join(base,'工程.ediro'),cache=path.join(base,'cache');
-  const repo=await DocumentRepository.prepare(filename,cache),w=workspace(delay);await w.create(repo,'单文件测试');
+  const repo=await DocumentRepository.prepare(filename,cache),w=workspace();await w.create(repo,'单文件测试');
   return {base,filename,cache,repo,w};
 }
 async function image(base:string){const filename=path.join(base,'source.png');const bytes=await sharp({create:{width:24,height:20,channels:3,background:'#cd7788'}}).png().toBuffer();await writeFile(filename,bytes);return {filename,bytes};}
@@ -75,7 +75,7 @@ test('单张大图编码超过 8 MB 时保存与另存为不耗尽调用栈，�
   const {base,filename,cache,repo,w}=await fixture();
   const bytes=await sharp(randomBytes(1536*1536*3),{raw:{width:1536,height:1536,channels:3}}).png().toBuffer(),encoded=bytes.toString('base64');
   assert.ok(encoded.length>8*1024*1024);
-  const source=path.join(base,'large.png');await writeFile(source,bytes);await w.importFiles([source]);
+  const source=path.join(base,'large.png');await writeFile(source,bytes);await w.importFiles([source]);await w.flush();
   const records:ModelInput[]=[
     capture({encoding:'json',json:JSON.stringify({contents:[{parts:[{text:'大图前后保持原文'},{inlineData:{mimeType:'image/png',data:encoded}},{inlineData:{mimeType:'image/png',data:encoded}}]}]})}),
     capture({encoding:'multipart',fields:[{name:'image[]',value:{filename:'large.png',mime_type:'image/png',data_base64:encoded}}]}),
@@ -93,7 +93,7 @@ test('单张大图编码超过 8 MB 时保存与另存为不耗尽调用栈，�
 test('同一原图跨素材身份与十次实际请求只存一份字节，重开请求逐字节一致',async()=>{
   const {base,filename,cache,repo,w}=await fixture();
   const bytes=await sharp(randomBytes(256*256*3),{raw:{width:256,height:256,channels:3}}).png().toBuffer(),source=path.join(base,'noise.png');await writeFile(source,bytes);
-  await w.importFiles([source]);const duplicate=await repo.saveInternalImage(bytes,'另一素材身份');w.project!.assets.push(duplicate);await w.persist();
+  await w.importFiles([source]);await w.flush();const duplicate=await repo.saveInternalImage(bytes,'另一素材身份');w.project!.assets.push(duplicate);await w.persist();
   const before=(await stat(filename)).size,encoded=bytes.toString('base64'),records=new Map<string,Buffer>();
   for(let i=0;i<10;i++){
     const id='repeat_'+i,input=capture({encoding:'json',json:'{ "contents": [{"parts": [{"text":"场景 '+i+' 🌿"},{"inlineData":{"mimeType":"image/png","data":"'+encoded+'"}},{"inlineData":{"mimeType":"image/png","data":"'+encoded+'"}}]}], "value":1.00 }'});
@@ -124,7 +124,7 @@ test('multipart 同名字段、蒙版、模拟请求与非标准编码完整往�
 });
 
 test('请求独有图片按最后一个引用释放，仍被素材引用的图片保留',async()=>{
-  const {base,filename,repo,w}=await fixture();const {bytes,filename:source}=await image(base);await w.importFiles([source]);
+  const {base,filename,repo,w}=await fixture();const {bytes,filename:source}=await image(base);await w.importFiles([source]);await w.flush();
   const requestOnly=await sharp({create:{width:28,height:26,channels:3,background:'#55aa33'}}).png().toBuffer();
   const record=(image:Buffer)=>capture({encoding:'simulation',blocks:[{inlineData:{mimeType:'image/png',data:image.toString('base64')}}]});
   await repo.saveModelInput('first',record(requestOnly));await repo.saveModelInput('second',record(requestOnly));await repo.saveModelInput('first',record(bytes));
@@ -134,7 +134,7 @@ test('请求独有图片按最后一个引用释放，仍被素材引用的图�
 });
 
 test('v1 原位编辑保留旧格式，另存为去重副本且源文件不变',async()=>{
-  const {base,repo,w}=await fixture();const {bytes,filename:source}=await image(base);await w.importFiles([source]);
+  const {base,repo,w}=await fixture();const {bytes,filename:source}=await image(base);await w.importFiles([source]);await w.flush();
   const input=capture({encoding:'simulation',blocks:[{inlineData:{mimeType:'image/png',data:bytes.toString('base64')}}]});await repo.saveModelInput('old_task',input);
   const oldFile=path.join(base,'old.ediro'),db=new DatabaseSync(oldFile);
   db.exec('PRAGMA application_id=0x45444952; PRAGMA user_version=1; CREATE TABLE document(id INTEGER PRIMARY KEY,identity TEXT,revision INTEGER); CREATE TABLE entries(name TEXT PRIMARY KEY,hash TEXT,bytes BLOB)');db.prepare('INSERT INTO document VALUES(1,?,1)').run(randomUUID());
@@ -162,7 +162,7 @@ test('分段写入中途失败时整笔回滚，不留下半条请求或孤立�
 
 test('单文件收齐外部图片，移动工程、删除原图与缓存后仍可读取并原位保存',async()=>{
   const {base,filename,cache,repo,w}=await fixture();const source=await image(base);
-  await w.importFiles([source.filename],w.project!.recipe.modules[0].module_id);
+  await w.importFiles([source.filename],w.project!.recipe.modules[0].module_id);await w.flush();
   const originalId=w.project!.project_id;await repo.close();await unlink(source.filename);
   // A clean warm cache is optional; carrying just the document must still work.
   assert.equal((await readdir(cache)).filter(name=>name.startsWith('cached-')).length,1);
@@ -176,7 +176,7 @@ test('单文件收齐外部图片，移动工程、删除原图与缓存后仍�
 });
 
 test('只修改参数不重写图片条目；另存为新身份并保留源工程',async()=>{
-  const {base,filename,cache,repo,w}=await fixture();const source=await image(base);await w.importFiles([source.filename]);
+  const {base,filename,cache,repo,w}=await fixture();const source=await image(base);await w.importFiles([source.filename]);await w.flush();
   const db=new DatabaseSync(filename);db.exec('CREATE TABLE image_updates(n INTEGER); INSERT INTO image_updates VALUES(0); CREATE TRIGGER count_images AFTER UPDATE ON entries WHEN NEW.name LIKE \'assets/%\' BEGIN UPDATE image_updates SET n=n+1; END;');db.close();
   const p=w.project!;p.recipe.modules[0].user_instruction='参数变化';await w.persist();
   const check=new DatabaseSync(filename,{readOnly:true});assert.equal(check.prepare('SELECT n FROM image_updates').get()!.n,0);check.close();
@@ -189,7 +189,7 @@ test('只修改参数不重写图片条目；另存为新身份并保留源工�
 test('确认覆盖另存为：替换已存在工程，保留来源，刷新同路径缓存并能继续原位保存',async t=>{
   const {base,repo,w}=await fixture(),library=new DocumentLibrary(path.join(base,'runtime'));await library.initialize();
   t.after(()=>library.releaseExcept(undefined));t.after(()=>repo.close());
-  const source=await image(base);await w.importFiles([source.filename]);
+  const source=await image(base);await w.importFiles([source.filename]);await w.flush();
   const target=await DocumentRepository.saveAs(repo,w.project!,path.join(base,'target.ediro'),library.cacheRoot);
   const old=await target.load();old.name='要被覆盖的工程';await target.save(old);const record=await library.register(target,old.name,old);
   const original=await readFile(repo.filename),project=structuredClone(w.project!);project.name='覆盖后的工程';
@@ -213,7 +213,7 @@ test('另存为当前文件等同普通保存，保留工程身份、仓库和�
 });
 
 test('另存为准备失败保留目标原文，未确认的已有目标仍然拒绝覆盖',async t=>{
-  const {base,repo,w,cache}=await fixture();t.after(()=>repo.close());const source=await image(base);await w.importFiles([source.filename]);
+  const {base,repo,w,cache}=await fixture();t.after(()=>repo.close());const source=await image(base);await w.importFiles([source.filename]);await w.flush();
   const filename=path.join(base,'existing.ediro'),original=Buffer.from('existing bytes');await writeFile(filename,original);
   await assert.rejects(()=>DocumentRepository.saveAs(repo,w.project!,filename,cache),/已存在/);
   const overwrite=await inspectDocumentTarget(filename);await unlink(await repo.resolveAssetPath(w.project!.assets[0],false));
@@ -248,7 +248,7 @@ test('Windows 目标被 SQLite 占用导致替换失败时，保留完整旧工�
 });
 
 test('再次打开复用已验证缓存；缓存损坏或缺失从工程重建',async()=>{
-  const {base,filename,cache,repo,w}=await fixture();const source=await image(base);await w.importFiles([source.filename]);
+  const {base,filename,cache,repo,w}=await fixture();const source=await image(base);await w.importFiles([source.filename]);await w.flush();
   const asset=w.project!.assets[0],before=await stat(await repo.resolveAssetPath(asset,false));await repo.close();
   const warm=await DocumentRepository.open(filename,cache),after=await stat(await warm.resolveAssetPath(asset,false));
   assert.equal(after.mtimeMs,before.mtimeMs);assert.equal(after.ino,before.ino);assert.deepEqual(await warm.readAsset(asset),source.bytes);await warm.close();
@@ -261,7 +261,7 @@ test('再次打开复用已验证缓存；缓存损坏或缺失从工程重建',
 });
 
 test('旧缓存不掩盖原文件变化或损坏，同时打开的工程使用独立目录',async()=>{
-  const {base,filename,cache,repo,w}=await fixture();const source=await image(base);await w.importFiles([source.filename]);
+  const {base,filename,cache,repo,w}=await fixture();const source=await image(base);await w.importFiles([source.filename]);await w.flush();
   const second=await DocumentRepository.open(filename,cache);assert.notEqual(second.directory,repo.directory);
   const project=await second.load();project.name='另一处的最新内容';await second.save(project);
   await repo.close();await second.close(); // The first cache is stale; never treat it as authoritative.
@@ -271,7 +271,7 @@ test('旧缓存不掩盖原文件变化或损坏，同时打开的工程使用�
 });
 
 test('未修改时保存与关闭不写工程，未保存修改仍补存并阻止失败关闭',async()=>{
-  const {repo,w}=await fixture(2000);let writes=0;const save=repo.save.bind(repo);repo.save=async p=>{writes++;await save(p);};
+  const {repo,w}=await fixture();let writes=0;const save=repo.save.bind(repo);repo.save=async p=>{writes++;await save(p);};
   await w.flush();await w.shutdown();assert.equal(writes,0);
   const recipe=structuredClone(w.project!.recipe);recipe.modules[0].user_instruction='待补存';await w.saveRecipe(recipe);
   await w.flush();await w.shutdown();assert.equal(writes,1);assert.equal((await repo.load()).recipe.modules[0].user_instruction,'待补存');
@@ -291,7 +291,7 @@ test('同一个文件的第二个写入者不能覆盖更新；失败缓存保�
 });
 
 test('生成结果和实际请求在工程内，导出之外不产生散落成品；结果移除保留历史像素',async()=>{
-  const {base,filename,cache,repo,w}=await fixture(50);const recipe=structuredClone(w.project!.recipe);recipe.modules[3].user_instruction='mock product';await w.saveRecipe(recipe);
+  const {base,filename,cache,repo,w}=await fixture();const recipe=structuredClone(w.project!.recipe);recipe.modules[3].user_instruction='mock product';await w.saveRecipe(recipe);
   await w.enqueue(false);await settle(w);assert.equal(w.project!.jobs[0].status,'succeeded');
   const output=w.project!.assets.find(a=>a.kind==='output')!;assert.ok(output);assert.equal(output.location.type,'managed');assert.ok(await repo.loadModelInput(w.project!.jobs[0].task_id));
   await assert.rejects(()=>readdir(path.join(base,'output')),/ENOENT/);
@@ -301,7 +301,7 @@ test('生成结果和实际请求在工程内，导出之外不产生散落成�
 });
 
 test('旧目录工程转存失败不改变旧工程；成功收齐原图',async()=>{
-  const {base,cache,repo,w}=await fixture();const source=await image(base);const legacy=new ProjectRepository(path.join(base,'legacy')),old=workspace();await old.create(legacy,'旧工程');await old.importFiles([source.filename]);
+  const {base,cache,repo,w}=await fixture();const source=await image(base);const legacy=new ProjectRepository(path.join(base,'legacy')),old=workspace();await old.create(legacy,'旧工程');await old.importFiles([source.filename]);await old.flush();
   const original=await readFile(path.join(legacy.directory,projectFilename));await rename(source.filename,source.filename+'.moved');
   await assert.rejects(()=>DocumentRepository.saveAs(legacy,old.project!,path.join(base,'bad.ediro'),cache),/移动或删除/);
   assert.deepEqual(await readFile(path.join(legacy.directory,projectFilename)),original);
@@ -320,28 +320,58 @@ test('非法条目、未来版本、损坏内容都不能作为工程打开',asy
 });
 
 test('缓存原图缺失时拒绝提交，已经保存的工程保持完整',async()=>{
-  const {filename,cache,base,repo,w}=await fixture();const source=await image(base);await w.importFiles([source.filename]);
+  const {filename,cache,base,repo,w}=await fixture();const source=await image(base);await w.importFiles([source.filename]);await w.flush();
   await unlink(await repo.resolveAssetPath(w.project!.assets[0],false));w.project!.name='不能损坏原工程';
   await assert.rejects(()=>w.persist(),/工程素材缺失/);const intact=await DocumentRepository.open(filename,cache);
   assert.equal((await intact.load()).name,'单文件测试');assert.deepEqual(await intact.readAsset((await intact.load()).assets[0]),source.bytes);await intact.close();await repo.close();
 });
 
-test('连续编辑合并保存；切换和正常关闭立即补存',async()=>{
-  const {repo,w,base}=await fixture(80);let writes=0;const save=repo.save.bind(repo);repo.save=async p=>{writes++;await save(p);};
+test('连续编辑和停止输入均不写工程；手动保存、切换和正常关闭才补存',async()=>{
+  const {repo,w,base,filename}=await fixture();let writes=0;const save=repo.save.bind(repo);repo.save=async p=>{writes++;await save(p);};
+  const before=await readFile(filename);
   for(let i=0;i<5;i++){const r=structuredClone(w.project!.recipe);r.modules[0].user_instruction='编辑'+i;await w.saveRecipe(r);}
-  assert.equal(writes,0);assert.equal(w.saveState,'pending');await pause(180);await w.serial(async()=>{});assert.equal(writes,1);assert.equal(w.saveState,'saved');
+  assert.equal(writes,0);assert.equal(w.saveState,'pending');await pause(2200);await w.serial(async()=>{});
+  assert.equal(writes,0);assert.equal(w.saveState,'pending');assert.deepEqual(await readFile(filename),before);
+  assert.notEqual((await repo.load()).recipe.modules[0].user_instruction,'编辑4');
+  await w.flush();assert.equal(writes,1);assert.equal((await repo.load()).recipe.modules[0].user_instruction,'编辑4');
+  await w.saveRecipe(structuredClone(w.project!.recipe));await w.flush();assert.equal(writes,1);assert.equal(w.saveState,'saved');
   const r=structuredClone(w.project!.recipe);r.modules[0].user_instruction='关闭前';await w.saveRecipe(r);await w.shutdown();assert.equal((await repo.load()).recipe.modules[0].user_instruction,'关闭前');
   r.modules[0].user_instruction='切换前';await w.saveRecipe(r);await w.create(new ProjectRepository(path.join(base,'other')),'其他');assert.equal((await repo.load()).recipe.modules[0].user_instruction,'切换前');await repo.close();
 });
 
-test('请求前保存失败绝不调用执行器；自动保存失败显式保留修改',async()=>{
-  const {repo,base}=await fixture();let calls=0;const w=workspace(40,{execute:async()=>{calls++;throw Error('不应请求');}});await w.open(repo);
+test('检查点保存失败保留内存修改，并阻止新请求、切换与关闭',async()=>{
+  const {repo,base}=await fixture();let calls=0;const w=workspace({execute:async()=>{calls++;throw Error('不应请求');}});await w.open(repo);
   const real=repo.save.bind(repo);repo.save=async()=>{throw Error('磁盘故障');};
   const r=structuredClone(w.project!.recipe);r.modules[3].user_instruction='必须保留';await w.saveRecipe(r);await pause(100);await w.serial(async()=>{});
-  assert.equal(w.saveState,'error');assert.equal(w.project!.recipe.modules[3].user_instruction,'必须保留');
+  assert.equal(w.saveState,'pending');assert.equal(w.project!.recipe.modules[3].user_instruction,'必须保留');
   await assert.rejects(()=>w.enqueue(false),/磁盘故障/);await pause(30);assert.equal(calls,0);
+  assert.equal(w.saveState,'error');assert.equal(w.project!.recipe.modules[3].user_instruction,'必须保留');assert.equal(w.project!.jobs.length,0);
   await assert.rejects(()=>w.create(new ProjectRepository(path.join(base,'blocked')),'不得切换'),/磁盘故障/);
+  await assert.rejects(()=>w.shutdown(),/磁盘故障/);assert.equal(w.project!.recipe.modules[3].user_instruction,'必须保留');
   repo.save=real;await w.persist();assert.equal(w.saveState,'saved');await repo.close();
+});
+
+test('生成前和完成时保存任务；进度与历史浏览不写工程',async()=>{
+  const {repo,base,filename}=await fixture(),source=await image(base);
+  let entered!:()=>void,finish!:()=>void,calls=0,writes=0;
+  const started=new Promise<void>(resolve=>{entered=resolve;}),completion=new Promise<void>(resolve=>{finish=resolve;});
+  const w=workspace({execute:async(context,_signal,progress)=>{
+    calls++;
+    const persisted=await repo.load();assert.equal(persisted.jobs.at(-1)!.task_id,context.job.task_id);
+    assert.equal(persisted.recipe.modules[3].user_instruction,'检查点输入');
+    await progress('已发送',35);await progress('等待返回',65);entered();await completion;
+    return {images:[{bytes:source.bytes,format:'png',width:24,height:20}]};
+  }});
+  await w.open(repo);const save=repo.save.bind(repo);repo.save=async p=>{writes++;await save(p);};
+  const recipe=structuredClone(w.project!.recipe);recipe.modules[3].user_instruction='检查点输入';await w.saveRecipe(recipe);assert.equal(writes,0);
+  await w.serial(()=>w.enqueue(false));await started;assert.equal(calls,1);assert.equal(writes,1);
+  const running=await readFile(filename);await pause(100);assert.deepEqual(await readFile(filename),running);
+  finish();await settle(w);assert.equal(writes,2);assert.equal((await repo.load()).jobs[0].status,'succeeded');
+  const output=w.project!.jobs[0].output_asset_ids[0],saved=await readFile(filename);
+  recipe.modules[3].user_instruction='尚未生成的修改';await w.saveRecipe(recipe);
+  await w.restoreResult(w.project!.project_id,output);await w.restoreResult(w.project!.project_id,output);await w.restoreTaskRecipe(w.project!.project_id,w.project!.jobs[0].task_id);
+  assert.equal(w.project!.recipe.modules[3].user_instruction,'检查点输入');assert.equal(writes,2);assert.deepEqual(await readFile(filename),saved);
+  await repo.close();
 });
 
 test('最近工程按路径识别：重复打开同文件同记录，复制文件为另一个入口',async()=>{
@@ -377,28 +407,49 @@ test('事务中断后回滚到完整旧工程；失败草稿可被下次启动�
 test('中断后已暂存的模型返回可恢复，不会自动重新请求',async()=>{
   const {filename,cache,repo,w,base}=await fixture();const source=await image(base);
   const r=structuredClone(w.project!.recipe);r.modules[3].user_instruction='准备任务';await w.saveRecipe(r);
+  const summary={adapter_version:1,capabilities:structuredClone(seedModels()[0].capabilities),text:'已返回的模型说明',request_id:'staged-response-id',usage:{images:1},fee:'unknown' as const,actual_formats:['png']};
   // Hold the queue so no executor runs; retain a queued task exactly as on disk.
   await w.serial(async()=>{
     await w.enqueue(false);const job=w.project!.jobs[0];
+    job.execution_summary=structuredClone(summary);
     await repo.stageResult(job,{images:[{bytes:source.bytes,format:'png',width:24,height:20}]});
+    assert.equal((await repo.load()).jobs[0].execution_summary,undefined,'返回信息仅暂存，未额外保存工程状态');
     job.status='cancelled';
   });
   await repo.close();const opened=await DocumentRepository.open(filename,cache);
-  let calls=0;const fresh=workspace(0,{execute:async()=>{calls++;throw Error('不能重新调用');}});await fresh.open(opened);
+  let calls=0;const fresh=workspace({execute:async()=>{calls++;throw Error('不能重新调用');}});await fresh.open(opened);
   const job=fresh.project!.jobs[0];assert.equal(job.status,'failed');assert.equal(job.recoverable_result,true);
-  await fresh.recoverResult(job.task_id);assert.equal(job.status,'succeeded');assert.equal(calls,0);await opened.close();
+  await fresh.recoverResult(job.task_id);assert.equal(job.status,'succeeded');assert.equal(calls,0);assert.deepEqual(job.execution_summary,summary);assert.deepEqual((await opened.load()).jobs[0].execution_summary,summary);await opened.close();
 });
 
-test('蒙版草稿、模型原始返回、严格合成和补画版本在单文件中重开可编辑',async()=>{
-  const {filename,cache,repo,w,base}=await fixture(40);const source=await image(base);await w.importFiles([source.filename]);
-  const draft:MaskDraft={source_asset_id:w.project!.assets[0].asset_id,width:24,height:20,strokes:[{tool:'paint',size:8,points:[[.5,.5]]}],instruction:'改变选区颜色',model_config_id:'model_mock_native',quality:'standard',mode:'strict',feather:0};
+test('用于生成的最终蒙版、模型原始返回、确认合成和补画版本重开可编辑',async()=>{
+  const {filename,cache,repo,w,base}=await fixture();const source=await image(base);await w.importFiles([source.filename]);await w.flush();
+  const legacyStroke:MaskDraft['strokes'][number]={tool:'paint',size:1,points:[[.05,.05],[.2,.05],[.2,.2],[.05,.2],[.05,.05]]};
+  const draft:MaskDraft={source_asset_id:w.project!.assets[0].asset_id,width:24,height:20,strokes:[
+    legacyStroke,
+    {tool:'paint',size:1,closed:true,points:[[.3,.1],[.9,.1],[.9,.9],[.3,.9],[.3,.1]]},
+    {tool:'erase',size:1,closed:true,points:[[.5,.35],[.75,.35],[.75,.65],[.5,.65],[.5,.35]]},
+  ],instruction:'改变选区颜色',model_config_id:'model_mock_native',quality:'standard',mode:'strict',feather:0};
   await w.serial(()=>w.enqueueMask(w.project!.project_id,draft));await settle(w);const job=w.project!.jobs[0];assert.equal(job.status,'succeeded',job.error);
   const first=await w.reprocessMask(w.project!.project_id,job.task_id,'strict',0);
-  const strokes:MaskDraft['strokes']=[{tool:'paint',size:4,points:[[.7,.5]]}];await w.saveCompositeMask(w.project!.project_id,job.task_id,strokes);
+  assert.equal((await repo.load()).mask_drafts,undefined);assert.deepEqual((await repo.load()).jobs[0].mask_edit!.draft,draft);
+  const strokes:MaskDraft['strokes']=[...draft.strokes,{tool:'erase',size:1,closed:true,points:[[.3,.25],[.45,.25],[.45,.75],[.3,.75],[.3,.25]]}];
   const second=await w.reprocessMask(w.project!.project_id,job.task_id,'strict',0,strokes);assert.notEqual(first,second);
   const before=await repo.readAsset(w.project!.assets.find(a=>a.asset_id===second)!);await repo.close();await unlink(source.filename);
   const reopened=await DocumentRepository.open(filename,cache),next=workspace();await next.open(reopened);
-  assert.deepEqual(next.project!.jobs[0].mask_edit!.composite_strokes,strokes);
+  const edit=next.project!.jobs[0].mask_edit!;
+  assert.deepEqual(edit.draft,draft);assert.deepEqual(edit.composite_strokes,strokes);
+  assert.deepEqual(edit.draft.strokes[0],legacyStroke);assert.equal(Object.hasOwn(edit.draft.strokes[0],'closed'),false,'旧闭环笔迹不自动改成填充');
+  assert.deepEqual(edit.variants.find(v=>v.asset_id===second)!.composite_strokes,strokes);
+  const mask=await sharp(await reopened.readAsset(next.project!.assets.find(a=>a.asset_id===edit.mask_asset_id)!)).extractChannel('alpha').raw().toBuffer();
+  assert.equal(mask[2*24+3],255,'旧格式闭环仍只保留原有笔迹');
+  assert.equal(mask[10*24+10],0,'闭合加选填满内部');
+  assert.equal(mask[10*24+15],255,'闭合减选保留内部孔洞');
+  const composed=await sharp(before).ensureAlpha().raw().toBuffer(),original=await sharp(source.bytes).ensureAlpha().raw().toBuffer();
+  const pixel=(data:Buffer,x:number,y:number)=>data.subarray((y*24+x)*4,(y*24+x+1)*4);
+  assert.deepEqual(pixel(composed,15,10),pixel(original,15,10),'生成蒙版减选孔洞保持原图');
+  assert.deepEqual(pixel(composed,9,10),pixel(original,9,10),'补画的闭合减选孔洞保持原图');
+  assert.notDeepEqual(pixel(composed,20,10),pixel(original,20,10),'闭合加选区域采用模型返回');
   assert.deepEqual(await reopened.readAsset(next.project!.assets.find(a=>a.asset_id===second)!),before);
   assert.ok((await next.previewMask(next.project!.project_id,job.task_id,'natural',0)).startsWith('data:image/'));await reopened.close();
 });
@@ -419,7 +470,7 @@ test('旧工程已删除且无输入引用的结果可保留删除记录转存�
 });
 
 test('已删除结果只要仍是当前、停用模块、历史请求或蒙版输入，就不能跳过',async()=>{
-  const {base,cache,repo,w}=await fixture();const source=await image(base);await w.importFiles([source.filename]);
+  const {base,cache,repo,w}=await fixture();const source=await image(base);await w.importFiles([source.filename]);await w.flush();
   const asset=w.project!.assets[0];asset.kind='output';asset.removed_result=true;const id=asset.asset_id;
   const clean=structuredClone(w.project!);assert.ok(optionalRemovedResults(clean).has(id));
   for(const enabled of [true,false]){const p=structuredClone(clean);p.recipe.modules[0].asset_ids=[id];p.recipe.modules[0].enabled=enabled;assert.ok(!optionalRemovedResults(p).has(id));}

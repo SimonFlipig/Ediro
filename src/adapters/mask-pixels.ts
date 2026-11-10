@@ -1,8 +1,11 @@
 import sharp from 'sharp';
+import {composeMaskPixels} from './mask-composite-pixels.js';
+import {createMaskPreview} from './mask-preview.js';
 import { maskSelectionSvg, type MaskCrop,type MaskMode,type MaskDraft, type MaskStroke, type MaskPixelsPort } from '../core/mask.js';
 
 const decode = (bytes:Buffer) => sharp(bytes,{limitInputPixels:40_000_000}).rotate().toColourspace('srgb').ensureAlpha().raw().toBuffer({resolveWithObject:true});
 export class MaskPixels implements MaskPixelsPort {
+  createPreview=createMaskPreview;
   async guidance(mask:Buffer){
     const {data,info}=await sharp(mask,{limitInputPixels:40_000_000}).ensureAlpha().extractChannel('alpha').raw().toBuffer({resolveWithObject:true});
     const rgb=Buffer.alloc(info.width*info.height*3);
@@ -47,34 +50,7 @@ export class MaskPixels implements MaskPixelsPort {
     const {width,height}=base.info;
     if(region.info.width!==width||region.info.height!==height)throw new Error('合成蒙版尺寸与底图不同。');
     if(result.info.width!==(crop?.width??width)||result.info.height!==(crop?.height??height))throw new Error(crop?'模型返回尺寸与送入范围不同，无法按原坐标贴回；原始返回图已保留。':'模型返回尺寸与底图不同，无法严格合成；原始返回图已保留，可选择自然融合。');
-    if(mode==='natural')feather=0;
-    if(crop)for(let y=0;y<height;y++)for(let x=0;x<width;x++){
-      const inside=x>=crop.x&&x<crop.x+crop.width&&y>=crop.y&&y<crop.y+crop.height;
-      if(!inside||mode==='natural')region.data[(y*width+x)*4+3]=inside?0:255;
-    }
-    const count=width*height, distance=new Uint16Array(count);
-    if(feather){
-      // Feather only towards protected pixels inside the image. Missing neighbours
-      // beyond the canvas are not protected pixels; crop boundaries still are.
-      const limit=feather+1;
-      for(let y=0;y<height;y++)for(let x=0;x<width;x++){
-        const i=y*width+x;
-        distance[i]=region.data[i*4+3]===255?0:Math.min(x?distance[i-1]+1:limit,y?distance[i-width]+1:limit,limit);
-      }
-      for(let y=height-1;y>=0;y--)for(let x=width-1;x>=0;x--){
-        const i=y*width+x;if(distance[i])distance[i]=Math.min(distance[i],x+1<width?distance[i+1]+1:limit,y+1<height?distance[i+width]+1:limit);
-      }
-    }
-    const out=Buffer.from(base.data);
-    for(let i=0;i<count;i++){
-      const coverage=(255-region.data[i*4+3])/255;
-      if(!coverage)continue; // Exact copy, including RGB in fully transparent pixels.
-      const weight=coverage*(feather?Math.min(1,distance[i]/(feather+1)):1);
-      const ri=crop?((Math.floor(i/width)-crop.y)*crop.width+i%width-crop.x):i;
-      const ba=base.data[i*4+3]/255,ra=result.data[ri*4+3]/255,a=ba*(1-weight)+ra*weight;
-      for(let c=0;c<3;c++)out[i*4+c]=a?Math.round((base.data[i*4+c]*ba*(1-weight)+result.data[ri*4+c]*ra*weight)/a):0;
-      out[i*4+3]=Math.round(a*255);
-    }
+    const out=composeMaskPixels(base.data,region.data,result.data,width,height,feather,crop,mode);
     return sharp(out,{raw:{width,height,channels:4}}).png().toBuffer();
   }
 }

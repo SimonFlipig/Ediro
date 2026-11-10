@@ -1,30 +1,59 @@
-import { parametersSchema,type ModelConfig,type Parameters } from './domain.js';
+import { parametersSchema,type Capabilities,type ModelConfig,type Parameters } from './domain.js';
 import { generationContractSchema,validSize,type GenerationContract,type ParameterField } from './generation-contract.js';
+import { modelVariantContract,modelVariantInfo,modelVariantOptions } from '../protocols/model-variants.js';
+import { chatProfile } from '../protocols/chat-profile.js';
+
+export function effectiveCapabilitiesFor(model:ModelConfig):Capabilities {
+  const capabilities=structuredClone(model.capabilities),info=modelVariantInfo(model);
+  if(info.variant?.qualities){
+    // Complete known lists came from a model template; a narrower custom list
+    // remains a channel restriction when the selected model changes.
+    const isTemplate=modelVariantOptions(model).some(v=>v.qualities&&v.qualities.length===capabilities.qualities.length&&v.qualities.every(q=>capabilities.qualities.includes(q)));
+    capabilities.qualities=isTemplate?[...info.variant.qualities]:capabilities.qualities.filter(q=>info.variant!.qualities!.includes(q));
+  }
+  const qualityLimit=capabilities.parameter_limits?.quality?.values;
+  if(qualityLimit)capabilities.qualities=capabilities.qualities.filter(q=>qualityLimit.includes(q));
+  for(const p of model.purpose==='understanding'?[]:model.adapter_parameters??[]){
+    if(p.key==='aspect_ratio'&&p.values)capabilities.aspect_ratios=capabilities.aspect_ratios.filter(v=>p.values!.includes(v));
+    if(p.key==='quality'&&p.values)capabilities.qualities=capabilities.qualities.filter(v=>p.values!.includes(v));
+    if(p.key==='output_format'&&p.values)capabilities.formats=capabilities.formats.filter(v=>p.values!.includes(v));
+    if(p.key==='count'&&p.maximum!==undefined)capabilities.max_count=Math.min(capabilities.max_count,p.maximum);
+  }
+  const contract=modelVariantContract(model);
+  if(contract?.max_images!==undefined)capabilities.max_images=Math.min(capabilities.max_images,contract.max_images);
+  return capabilities;
+}
 
 export function contractFor(model:ModelConfig):GenerationContract {
-  if(model.generation_contract){
-    const c=generationContractSchema.parse(model.generation_contract);
-    if(model.capabilities.input_forms)c.input_forms=c.input_forms.filter(f=>model.capabilities.input_forms!.includes(f));
-    const limits=model.capabilities.parameter_limits??{};
-    c.fields=c.fields.filter(f=>limits[f.key]?.enabled!==false).map(f=>{
-      const l=limits[f.key];if(!l)return f;
-      return {...f,values:l.values&&f.values?f.values.filter(v=>l.values!.includes(v)):f.values,minimum:l.minimum===undefined?f.minimum:Math.max(f.minimum??-Infinity,l.minimum),maximum:l.maximum===undefined?f.maximum:Math.min(f.maximum??Infinity,l.maximum)};
-    });
-    if(c.size_limits&&model.capabilities.size_limits){
-      const a=c.size_limits,b=model.capabilities.size_limits;
-      const gcd=(x:number,y:number):number=>y?gcd(y,x%y):x;
-      c.size_limits={step:a.step*b.step/gcd(a.step,b.step),max_edge:Math.min(a.max_edge,b.max_edge),max_ratio:Math.min(a.max_ratio,b.max_ratio),min_pixels:Math.max(a.min_pixels,b.min_pixels),max_pixels:Math.min(a.max_pixels,b.max_pixels),default_pixels:b.default_pixels};
-    }
-    c.features=c.features.filter(f=>(model.capabilities.features??[]).includes(f));
-    if(c.legacy_resolution_quality)c.tiers=c.tiers.filter(v=>model.capabilities.qualities.includes(v));
-    return c;
+  const c=modelVariantContract(model)??generationContractSchema.parse({version:1,input_forms:model.capabilities.interleaving==='native'?['interleaved','numbered_flat']:['numbered_flat'],resolution_modes:['default']});
+  // Older saved Chat contracts predate role separation. Expose the optional
+  // compatibility choice without rewriting their defaults or channel limits.
+  if(model.purpose==='understanding'&&model.adapter_id==='openai-chat-completions'&&!c.fields.some(f=>f.key==='instruction_role')){
+    const field=chatProfile.fields.find(f=>f.key==='instruction_role');
+    if(field)c.fields.push(structuredClone(field));
   }
-  // Old/local declarations have no advanced controls. Never infer from names.
-  return generationContractSchema.parse({version:1,input_forms:model.capabilities.interleaving==='native'?['interleaved','numbered_flat']:['numbered_flat'],resolution_modes:['default']});
+  if(model.capabilities.input_forms)c.input_forms=c.input_forms.filter(f=>model.capabilities.input_forms!.includes(f));
+  const limits=model.capabilities.parameter_limits??{};
+  c.fields=c.fields.filter(f=>limits[f.key]?.enabled!==false).map(f=>{
+    const l=limits[f.key];if(!l)return f;
+    return {...f,values:l.values&&f.values?f.values.filter(v=>l.values!.includes(v)):f.values,minimum:l.minimum===undefined?f.minimum:Math.max(f.minimum??-Infinity,l.minimum),maximum:l.maximum===undefined?f.maximum:Math.min(f.maximum??Infinity,l.maximum)};
+  });
+  if(c.size_limits&&model.capabilities.size_limits){
+    const a=c.size_limits,b=model.capabilities.size_limits;
+    const gcd=(x:number,y:number):number=>y?gcd(y,x%y):x;
+    c.size_limits={step:a.step*b.step/gcd(a.step,b.step),max_edge:Math.min(a.max_edge,b.max_edge),max_ratio:Math.min(a.max_ratio,b.max_ratio),min_pixels:Math.max(a.min_pixels,b.min_pixels),max_pixels:Math.min(a.max_pixels,b.max_pixels),default_pixels:b.default_pixels};
+  }
+  c.features=c.features.filter(f=>(model.capabilities.features??[]).includes(f));
+  if(c.legacy_resolution_quality)c.tiers=c.tiers.filter(v=>model.capabilities.qualities.includes(v));
+  return c;
 }
 export function parameterFields(model:ModelConfig){
   const contract=contractFor(model);
-  return contract.fields.filter(f=>!f.feature||contract.features.includes(f.feature));
+  return contract.fields.filter(f=>!f.feature||contract.features.includes(f.feature)).map(field=>
+    // This is an application inheritance choice, not a provider precision.
+    field.key==='reference_overrides'&&field.kind==='references'&&field.values?.length
+      ? {...field,values:[...field.values.filter(value=>value!=='inherit'),'inherit'],value_labels:{...field.value_labels,inherit:'跟随全局精度'}}
+      : field);
 }
 export function normalizeParameters(input:Parameters,model:ModelConfig):Parameters {
   const p=parametersSchema.parse(input),contract=contractFor(model);
@@ -49,7 +78,9 @@ export function fieldError(field:ParameterField,value:unknown,format:string):str
   else if(typeof value!=='string'||!field.values?.includes(value))return `${field.title}不支持该选项。`;
 }
 export function validateGenerationParameters(parameters:Parameters,model:ModelConfig){
+  const info=modelVariantInfo(model);if(info.invalidOverride)throw new Error(info.invalidOverride);
   const p=normalizeParameters(parameters,model),c=contractFor(model),fields=parameterFields(model);
+  const capabilities=effectiveCapabilitiesFor(model);
   for(const [namespace,values] of Object.entries(p.extensions??{})){
     if(namespace!==model.adapter_id&&Object.keys(values).length)throw new Error('参数属于其他执行协议，请重新选择参数。');
     for(const [key,value] of Object.entries(values)){
@@ -69,8 +100,8 @@ export function validateGenerationParameters(parameters:Parameters,model:ModelCo
   if(r.mode==='tier'&&!c.tiers.includes(r.value))throw new Error('输出分辨率超出所选模型声明的档位。');
   if(r.mode==='pixel_budget'&&!c.pixel_budgets.includes(r.pixels))throw new Error('输出像素档位超出模型声明范围。');
   if(r.mode==='exact'&&c.size_limits&&!validSize(r.width,r.height,c.size_limits))throw new Error('输出尺寸超出模型边长、像素或步长限制。');
-  if(c.quality_control&&!model.capabilities.qualities.includes(p.quality))throw new Error('质量与所选模型不兼容，超出模型声明的档位。');
-  if(!model.capabilities.formats.includes(p.output_format)||!Number.isInteger(p.count)||p.count<1||p.count>model.capabilities.max_count)throw new Error('格式或输出数量与所选模型不兼容。');
+  if(c.quality_control&&!capabilities.qualities.includes(p.quality))throw new Error('质量与所选模型不兼容，超出模型声明的档位。');
+  if(!capabilities.formats.includes(p.output_format)||!Number.isInteger(p.count)||p.count<1||p.count>capabilities.max_count)throw new Error('格式或输出数量与所选模型不兼容。');
 }
 
 // Shared by UI and host edits: hidden inapplicable fields cannot still be sent.
@@ -81,11 +112,12 @@ export function updateParameters(current:Parameters,patch:Partial<Parameters>,mo
   return next;
 }
 export function switchModelParameters(current:Parameters,model:ModelConfig,previousModel?:ModelConfig){
+  const capabilities=effectiveCapabilitiesFor(model);
   const next=normalizeParameters(model.defaults,model);
   next.aspect_ratio=current.aspect_ratio;
-  if(model.capabilities.formats.includes(current.output_format))next.output_format=current.output_format;
-  next.count=Math.min(current.count,model.capabilities.max_count);
-  if(contractFor(model).quality_control&&model.capabilities.qualities.includes(current.quality))next.quality=current.quality;
+  if(capabilities.formats.includes(current.output_format))next.output_format=current.output_format;
+  next.count=Math.min(current.count,capabilities.max_count);
+  if(contractFor(model).quality_control&&capabilities.qualities.includes(current.quality))next.quality=current.quality;
   const previous=previousModel?normalizeParameters(current,previousModel):current.version===2?current:undefined;
   if(previous){
     const candidate={...next,resolution:previous.resolution};

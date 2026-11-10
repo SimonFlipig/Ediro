@@ -11,7 +11,7 @@ export function synchronizeInputPreview(state: WorkspaceView): WorkspaceView {
   if (!state.project) return {...state,chain:null,adaptation:null,adaptation_error:undefined,auto_prompt:undefined};
   let chain: WorkspaceView['chain']=null;
   try {
-    const registry=new ModuleRegistry(state.module_definitions,state.prompt_config,state.prompt_customizations?.roles);
+    const registry=new ModuleRegistry(state.module_definitions,state.prompt_config,state.prompt_customizations?.roles,state.prompt_settings?.inference_instructions);
     state={...state,project:{...state.project,recipe:registry.resolveRecipe(state.project.recipe)}};
     state={...state,auto_prompt:getAutoPromptState(state.project!.recipe,registry,state.module_settings??defaultModuleSettings,state.project!.assets)};
     chain=compileRecipe(state.project!.recipe,registry);

@@ -8,11 +8,14 @@ import {prepareModuleInference,executeModuleInference,applyAutomaticPromptSugges
 import {GeminiGenerator} from '../src/adapters/gemini-generator.js';
 import {compileRecipe} from '../src/core/compiler.js';
 import {commandSchema} from '../src/shared/commands.js';
-import {automaticPromptTask,compositionDescriptionTask,styleDescriptionTask,inferenceInputError} from '../src/core/module-inference-tasks.js';
+import {automaticPromptTask,compositionDescriptionTask,styleDescriptionTask,sharedPromptTaskRules,inferenceInputError} from '../src/core/module-inference-tasks.js';
 import {defaultModuleSettings} from '../src/core/module-settings.js';
 import {getAutoPromptState} from '../src/core/auto-prompt.js';
 import {modelFromPreset} from '../src/protocols/model-catalog.js';
 import {promptRoles} from '../src/core/prompt-roles.js';
+import type {CloudExecutionContext} from '../src/core/ports.js';
+import {contractFor} from '../src/core/generation-parameters.js';
+import {defaultModuleInferenceInstructions,type ModuleInferenceInstructions} from '../src/core/module-inference-instructions.js';
 
 function fixture(){
   const registry=new ModuleRegistry(),subject=registry.create('subject'),neutral=registry.create('image_text'),prompt=registry.create('prompt'),disabled=registry.create('style');
@@ -21,6 +24,46 @@ function fixture(){
   const model={...seedModels()[2],purpose:'understanding' as const,enabled:true,executable:true,model:'gemini-understanding',capabilities:{...seedModels()[2].capabilities,operations:['understand']}};
   return {registry,subject,neutral,prompt,recipe,model};
 }
+
+test('自动提示词增量只作预览，最终建议应用前正文和复用标记不变，结束后丢弃迟到片段',async()=>{
+  const f=fixture();f.prompt.auto_prompt=true;f.prompt.auto_prompt_input_key='auto-v1:old';
+  const before=structuredClone(f.recipe),prepared=prepareModuleInference(f.recipe,f.prompt.module_id,f.prompt.user_instruction,f.model,f.registry,false,defaultModuleSettings,{automatic:true});
+  const parts:string[]=[];let late:CloudExecutionContext['onTextDelta'],release!:()=>void;
+  const gate=new Promise<void>(resolve=>{release=resolve;});
+  const operation=executeModuleInference({execute:async context=>{
+    late=context.onTextDelta;context.onTextDelta?.('新的');await gate;context.onTextDelta?.('完整正文');return {images:[],text:'新的完整正文'};
+  }},{job:prepared.job,model:f.model,readImage:async()=>Buffer.alloc(0),resolveCredential:async()=>'',onTextDelta:delta=>parts.push(delta)},prepared,new AbortController().signal);
+  assert.deepEqual(parts,['新的']);assert.deepEqual(f.recipe,before);
+  release();const suggestion=await operation;
+  assert.deepEqual(parts,['新的','完整正文']);assert.deepEqual(f.recipe,before);
+  late?.('迟到片段');assert.equal(parts.join(''),'新的完整正文');
+  const updated=applyAutomaticPromptSuggestion(f.recipe,f.prompt.module_id,'旧稿','auto-v1:new',suggestion.text);
+  assert.equal(updated.modules.find(module=>module.module_id===f.prompt.module_id)!.user_instruction,'新的完整正文');
+  assert.equal(updated.modules.find(module=>module.module_id===f.prompt.module_id)!.auto_prompt_input_key,'auto-v1:new');
+});
+
+test('增量之后取消或失败保留旧正文，未配合取消的执行器也不能发送更多预览',async()=>{
+  for(const mode of ['cancel','failure'] as const){
+    const f=fixture(),controller=new AbortController();f.prompt.auto_prompt=true;f.prompt.auto_prompt_input_key='auto-v1:old';
+    const before=structuredClone(f.recipe),prepared=prepareModuleInference(f.recipe,f.prompt.module_id,f.prompt.user_instruction,f.model,f.registry,false,defaultModuleSettings,{automatic:true});
+    const parts:string[]=[];let late:CloudExecutionContext['onTextDelta'];
+    await assert.rejects(executeModuleInference({execute:async context=>{
+      late=context.onTextDelta;context.onTextDelta?.('临时正文');
+      if(mode==='failure')throw Error('模拟断流');
+      controller.abort();context.onTextDelta?.('取消后正文');return {images:[],text:'不应采用的结果'};
+    }},{job:prepared.job,model:f.model,readImage:async()=>Buffer.alloc(0),resolveCredential:async()=>'',onTextDelta:delta=>parts.push(delta)},prepared,controller.signal),/取消|断流/);
+    late?.('结束后正文');assert.deepEqual(parts,['临时正文']);assert.deepEqual(f.recipe,before);
+  }
+});
+
+test('增量预览超过字符上限时停止，不展示超限片段且不更改配方',async()=>{
+  const f=fixture(),before=structuredClone(f.recipe),parts:string[]=[];
+  const prepared=prepareModuleInference(f.recipe,f.prompt.module_id,f.prompt.user_instruction,f.model,f.registry);
+  await assert.rejects(executeModuleInference({execute:async context=>{
+    context.onTextDelta?.('x'.repeat(32000));context.onTextDelta?.('y');return {images:[],text:'不应到达'};
+  }},{job:prepared.job,model:f.model,readImage:async()=>Buffer.alloc(0),resolveCredential:async()=>'',onTextDelta:delta=>parts.push(delta)},prepared,new AbortController().signal),/32000/);
+  assert.equal(parts.join('').length,32000);assert.deepEqual(f.recipe,before);
+});
 
 test('带生图预设的配方可用不同预设或无预设的理解模型，任务快照不污染原配方',()=>{
   for(const preset of ['gemini-3-1-pro',undefined]){
@@ -46,6 +89,54 @@ test('优化冻结未保存草稿和启用约束，图片按全局编号排列�
   f.recipe.modules[0].user_instruction='后续修改';assert.ok(!JSON.stringify(p.job).includes('后续修改'));
   const unsupported=f.registry.create('viewpoint');f.recipe.modules.push(unsupported);
   assert.throws(()=>prepareModuleInference(f.recipe,unsupported.module_id,'text',f.model,f.registry),/尚未配置推理任务/);
+});
+
+test('自动和手动推理排除空约束，保留目标、有效视角和仅用于理解的参考图片',()=>{
+  for(const automatic of [false,true]){
+    const f=fixture(),emptyViewpoint=f.registry.create('viewpoint'),emptySubject=f.registry.create('subject'),emptyPrompt=f.registry.create('prompt');
+    const textOnlyStyle=f.registry.create('style'),textViewpoint=f.registry.create('viewpoint'),imageViewpoint=f.registry.create('viewpoint');
+    emptyViewpoint.user_instruction=' \n\t ';emptySubject.user_instruction='\n';
+    textOnlyStyle.reference_mode='text_only';textOnlyStyle.asset_ids=['asset_style'];
+    textViewpoint.user_instruction='采用俯视';textViewpoint.tool_state={yaw:45,pitch:30,roll:0};
+    imageViewpoint.asset_ids=['asset_viewpoint'];
+    f.prompt.auto_prompt=true;
+    f.recipe.modules=[emptyViewpoint,f.subject,textOnlyStyle,emptySubject,f.prompt,textViewpoint,imageViewpoint,emptyPrompt];
+    const before=structuredClone(f.recipe),prepared=prepareModuleInference(f.recipe,f.prompt.module_id,'当前草稿',f.model,f.registry,false,undefined,{automatic});
+    const first=prepared.job.chain_snapshot.blocks[0];assert.equal(first.type,'text');if(first.type!=='text')return;
+    const context=JSON.parse(first.text);
+    assert.deepEqual(context.references.map((reference:any)=>reference.use),['主体参考','风格参考','视角参考','视角参考']);
+    assert.equal(context.draft,automatic?undefined:'当前草稿');
+    assert.deepEqual(context.references[1].images,['image_2']);assert.equal(context.references[1].image_use,'仅用于提取文字要求，不作为生图参考。');
+    assert.equal(context.references[1].guidance,undefined);
+    assert.match(context.references[2].view,/水平角 45°，俯仰角 30°，倾斜角 0°，正交投影/);assert.equal(context.references[2].images,undefined);
+    assert.deepEqual(context.references[3].images,['image_3']);
+    assert.deepEqual(prepared.job.chain_snapshot.blocks.filter(block=>block.type==='image').map(block=>[block.asset_id,block.image_name]),[
+      ['asset_a','image_1'],['asset_style','image_2'],['asset_viewpoint','image_3'],
+    ]);
+    assert.equal(prepared.images_sent,3);assert.deepEqual(f.recipe,before);
+  }
+});
+
+test('独立推理按自己的模型选择图文形式，生图输入模式不限制自动或手动推理',()=>{
+  for(const form of ['interleaved','numbered_flat'] as const)for(const automatic of [false,true]){
+    const f=fixture();f.prompt.auto_prompt=true;
+    f.recipe.input_strategy=form==='interleaved'?'numbered_flat':'interleaved';
+    const model={...f.model,generation_contract:{...contractFor(f.model),input_forms:[form]}},before=structuredClone(f.recipe);
+    const prepared=prepareModuleInference(f.recipe,f.prompt.module_id,'当前草稿',model,f.registry,false,undefined,{automatic});
+    assert.equal(prepared.job.recipe_snapshot.input_strategy,'auto');
+    assert.equal(prepared.job.execution_plan?.requested_strategy,'auto');
+    assert.equal(prepared.job.execution_plan?.actual_strategy,form);
+    assert.equal(prepared.job.adapted_input.kind,form==='interleaved'?'native_blocks':'separated_inputs');
+    const images=prepared.job.adapted_input.kind==='native_blocks'
+      ?prepared.job.adapted_input.blocks!.filter(block=>block.type==='image').map(block=>block.asset_id)
+      :prepared.job.adapted_input.image_asset_ids;
+    assert.deepEqual(images,['asset_a','asset_b','asset_a']);assert.deepEqual(f.recipe,before);
+    if(!automatic){
+      const subject=prepareModuleInference(f.recipe,f.subject.module_id,'',model,f.registry);
+      assert.equal(subject.job.execution_plan?.actual_strategy,form);assert.equal(subject.images_sent,1);
+      assert.deepEqual(f.recipe,before);
+    }
+  }
 });
 
 test('主体分析允许空文字，只发送当前主体图文并保留多图顺序，不混入其它模块',()=>{
@@ -149,6 +240,86 @@ test('自动推理只接受启用的自动提示词目标，允许空白正文�
   assert.throws(()=>prepareModuleInference(f.recipe,f.subject.module_id,'',f.model,f.registry,false,undefined,{automatic:true}),/启用/);
 });
 
+test('自动提示词首次与重新推理均排除旧目标正文，只读取当前模块条件并保留覆盖保护',()=>{
+  for(const previousKey of [undefined,'auto-v1:old']){
+    const f=fixture();f.prompt.auto_prompt=true;f.prompt.auto_prompt_input_key=previousKey;
+    f.prompt.user_instruction='红色柜子放在客厅中央。';f.subject.user_instruction='蓝色柜子，保持现有结构。';
+    const otherPrompt=f.registry.create('prompt');otherPrompt.user_instruction='不要添加文字';f.recipe.modules.push(otherPrompt);
+    const before=structuredClone(f.recipe),prepared=prepareModuleInference(f.recipe,f.prompt.module_id,f.prompt.user_instruction,f.model,f.registry,false,undefined,{automatic:true});
+    const first=prepared.job.chain_snapshot.blocks[0];assert.equal(first.type,'text');if(first.type!=='text')return;
+    const context=JSON.parse(first.text);
+    assert.equal(Object.hasOwn(context,'draft'),false);
+    assert.deepEqual(context.references.find((reference:any)=>reference.use==='画面要求'),{use:'画面要求',requirements:'不要添加文字'});
+    assert.match(first.text,/蓝色柜子，保持现有结构。/);assert.match(first.text,/不要添加文字/);assert.match(first.text,/白色背景/);
+    assert.doesNotMatch(JSON.stringify(prepared.job.chain_snapshot),/红色柜子/);
+    assert.doesNotMatch(JSON.stringify(prepared.job.adapted_input),/红色柜子/);
+    assert.equal(prepared.job.recipe_snapshot.modules.find(module=>module.module_id===f.prompt.module_id)!.user_instruction,'');
+    assert.equal(prepared.original_text,'红色柜子放在客厅中央。');assert.deepEqual(f.recipe,before);
+    f.prompt.user_instruction='推理期间用户修改';
+    assert.throws(()=>applyAutomaticPromptSuggestion(f.recipe,f.prompt.module_id,prepared.original_text,'auto-v1:new','蓝色柜子放在白色背景前。'),/未覆盖/);
+  }
+});
+
+test('启用自动提示词后手动优化仍读取目标正文与当前模块条件',()=>{
+  const f=fixture();f.prompt.auto_prompt=true;f.prompt.user_instruction='红色柜子放在客厅中央。';f.subject.user_instruction='蓝色柜子，保持现有结构。';
+  const prepared=prepareModuleInference(f.recipe,f.prompt.module_id,f.prompt.user_instruction,f.model,f.registry);
+  const first=prepared.job.chain_snapshot.blocks[0];assert.equal(first.type,'text');if(first.type!=='text')return;
+  const context=JSON.parse(first.text);
+  assert.equal(context.draft,f.prompt.user_instruction);
+  assert.match(first.text,/红色柜子放在客厅中央。/);assert.match(first.text,/蓝色柜子，保持现有结构。/);
+  assert.equal(prepared.original_text,f.prompt.user_instruction);
+});
+
+test('自动与手动提示词使用完全相同的系统规则，user 仅有目标正文不同',()=>{
+  for(const role of promptRoles)for(const strategy of ['interleaved','numbered_flat'] as const){
+    const f=fixture();f.prompt.auto_prompt=true;f.prompt.prompt_role=role.id;f.recipe.input_strategy=strategy;
+    f.model.generation_contract={...contractFor(f.model),input_forms:[strategy]};
+    const draft='商品保持蓝色，右侧放一盏矮灯。';
+    const automatic=prepareModuleInference(f.recipe,f.prompt.module_id,draft,f.model,f.registry,false,undefined,{automatic:true});
+    const manual=prepareModuleInference(f.recipe,f.prompt.module_id,draft,f.model,f.registry);
+    assert.equal(manual.job.chain_snapshot.system_instruction,automatic.job.chain_snapshot.system_instruction);
+    assert.equal(manual.job.adapted_input.system_instruction,automatic.job.adapted_input.system_instruction);
+    const automaticFirst=automatic.job.chain_snapshot.blocks[0],manualFirst=manual.job.chain_snapshot.blocks[0];
+    assert.equal(automaticFirst.type,'text');assert.equal(manualFirst.type,'text');
+    if(automaticFirst.type!=='text'||manualFirst.type!=='text')return;
+    const automaticContext=JSON.parse(automaticFirst.text),manualContext=JSON.parse(manualFirst.text);
+    assert.equal(manualFirst.text,JSON.stringify(manualContext,null,2));assert.equal(automaticFirst.text,JSON.stringify(automaticContext,null,2));
+    assert.equal(manualContext.draft,draft);
+    assert.equal(Object.hasOwn(automaticContext,'draft'),false);
+    const withoutDraft=structuredClone(manualContext);delete withoutDraft.draft;
+    assert.deepEqual(withoutDraft,automaticContext);
+    assert.deepEqual(manual.job.chain_snapshot.blocks.slice(1),automatic.job.chain_snapshot.blocks.slice(1));
+    assert.deepEqual(automatic.job.chain_snapshot.blocks.filter(block=>block.type==='image').map(block=>block.asset_id),['asset_a','asset_b','asset_a']);
+    assert.ok(manual.job.chain_snapshot.system_instruction!.includes(sharedPromptTaskRules.instruction));
+    assert.ok(manual.job.chain_snapshot.system_instruction!.includes(sharedPromptTaskRules.output_instruction));
+    assert.doesNotMatch(manual.job.chain_snapshot.system_instruction!,/自动模式|手动模式|如果有正文|如果无正文/);
+    if(strategy==='numbered_flat'){
+      assert.equal(manual.job.adapted_input.prompt!.replace(manualFirst.text,automaticFirst.text),automatic.job.adapted_input.prompt);
+      assert.deepEqual(manual.job.adapted_input.image_asset_ids,automatic.job.adapted_input.image_asset_ids);
+    }else assert.deepEqual(manual.job.adapted_input.blocks!.slice(1),automatic.job.adapted_input.blocks!.slice(1));
+  }
+});
+
+test('自定义和空白角色仍使用共同系统任务，角色原文不改写，纯文字条件不加入 user 说明',()=>{
+  const f=fixture();f.prompt.auto_prompt=true;
+  for(const module of f.recipe.modules)module.asset_ids=[];
+  for(const roleText of ['  自定义角色原文\n\t','', ' \n\t ']){
+    const registry=new ModuleRegistry(undefined,undefined,{general:roleText});
+    const automatic=prepareModuleInference(f.recipe,f.prompt.module_id,'当前正文',f.model,registry,false,undefined,{automatic:true});
+    const manual=prepareModuleInference(f.recipe,f.prompt.module_id,'当前正文',f.model,registry);
+    assert.ok(automatic.job.chain_snapshot.system_instruction!.includes(sharedPromptTaskRules.instruction));
+    assert.ok(automatic.job.chain_snapshot.system_instruction!.includes(sharedPromptTaskRules.output_instruction));
+    assert.ok(automatic.job.chain_snapshot.system_instruction!.includes(defaultModuleInferenceInstructions.subject));
+    assert.equal(automatic.job.chain_snapshot.system_instruction,manual.job.chain_snapshot.system_instruction);
+    if(roleText.trim())assert.ok(automatic.job.chain_snapshot.system_instruction!.startsWith('# 角色\n'+roleText+'\n\n'));
+    else assert.ok(automatic.job.chain_snapshot.system_instruction!.startsWith('# 任务\n'));
+    const first=manual.job.chain_snapshot.blocks[0];assert.equal(first.type,'text');if(first.type!=='text')return;
+    const context=JSON.parse(first.text);assert.ok(context.references.every((reference:any)=>reference.images===undefined));
+    assert.equal(manual.job.chain_snapshot.blocks.length,1);assert.doesNotMatch(first.text,/本次没有提供图片|以下 JSON|只返回/);
+    assert.match(manual.job.chain_snapshot.system_instruction!,/不声称看过未提供的图片/);
+  }
+});
+
 test('自动全局上下文保留文字参考的清晰源图，构图与风格分别按提取语义限定',()=>{
   const f=fixture();f.prompt.auto_prompt=true;f.prompt.user_instruction='不要添加文字';
   const composition=f.registry.create('composition'),style=f.registry.create('style');
@@ -158,16 +329,19 @@ test('自动全局上下文保留文字参考的清晰源图，构图与风格�
   const viewpoint=f.registry.create('viewpoint');viewpoint.tool_state={yaw:45,pitch:20,roll:0,projection:'perspective'};viewpoint.user_instruction='俯视';f.recipe.modules.push(viewpoint);
   const p=prepareModuleInference(f.recipe,f.prompt.module_id,f.prompt.user_instruction,f.model,f.registry,false,undefined,{automatic:true});
   const blocks=p.job.chain_snapshot.blocks,first=blocks[0];assert.equal(first.type,'text');if(first.type!=='text')return;
-  const context=JSON.parse(first.text.split('以下 JSON 是待处理内容：\n')[1]);
+  const context=JSON.parse(first.text);
   assert.deepEqual(blocks.filter(block=>block.type==='image').map(block=>block.asset_id),['asset_a','asset_b','asset_a','asset_composition','asset_style']);
-  const compositionContext=context.find((module:any)=>module.reference_type==='composition');
-  const styleContext=context.find((module:any)=>module.reference_type==='style');
-  assert.equal(compositionContext.reference_mode,'text_only');assert.equal(compositionContext.base_instruction,compositionDescriptionTask.instruction);
-  assert.equal(styleContext.reference_mode,'text_only');assert.equal(styleContext.base_instruction,styleDescriptionTask.instruction);
-  assert.equal(compositionContext.numbered_instruction,undefined);assert.equal(styleContext.numbered_instruction,undefined);
-  assert.equal(compositionContext.reference_scope,compositionDescriptionTask.instruction);assert.equal(styleContext.reference_scope,styleDescriptionTask.instruction);
-  assert.deepEqual(context.find((module:any)=>module.reference_type==='viewpoint').tool_state,viewpoint.tool_state);
-  assert.ok(!JSON.stringify(context).includes('不应发送'));assert.match(first.text,/not extraction instructions/);assert.match(first.text,/Do not use image_N references/);
+  const compositionContext=context.references.find((reference:any)=>reference.use==='构图参考');
+  const styleContext=context.references.find((reference:any)=>reference.use==='风格参考');
+  assert.equal(compositionContext.image_use,'仅用于提取文字要求，不作为生图参考。');assert.equal(compositionContext.guidance,undefined);
+  assert.equal(styleContext.image_use,'仅用于提取文字要求，不作为生图参考。');assert.equal(styleContext.guidance,undefined);
+  assert.equal(compositionContext.requirements,'主体占画面三分之一');assert.equal(styleContext.requirements,'保持自然光');
+  assert.doesNotMatch(first.text,/reference_scope|reference_mode|reference_type|base_instruction|numbered_instruction|tool_state|module_id/);
+  assert.match(context.references.find((reference:any)=>reference.use==='视角参考').view,/水平角 45°，俯仰角 20°，倾斜角 0°，透视投影/);
+  assert.ok(!JSON.stringify(context).includes('不应发送'));
+  assert.ok(p.job.chain_snapshot.system_instruction!.includes(defaultModuleInferenceInstructions.composition));
+  assert.ok(p.job.chain_snapshot.system_instruction!.includes(defaultModuleInferenceInstructions.style));
+  assert.match(p.job.chain_snapshot.system_instruction!,/不把这些引用带入最终提示词/);
   assert.deepEqual(compileRecipe(f.recipe,f.registry).blocks.filter(block=>block.type==='image').map(block=>block.asset_id),['asset_a','asset_b','asset_a']);
 });
 
@@ -187,7 +361,9 @@ test('构图与风格单独提取仅发送当前模块，文字参考模式也�
     assert.equal(p.job.stage,task.action_label);assert.equal(p.images_sent,1);
     assert.deepEqual(p.job.chain_snapshot.blocks.filter(block=>block.type==='image').map(block=>block.asset_id),['asset_reference']);
     const first=p.job.chain_snapshot.blocks[0];assert.equal(first.type,'text');if(first.type==='text'){
-      assert.ok(first.text.includes(task.instruction));const context=JSON.parse(first.text.split('以下 JSON 是待处理内容：\n')[1]);assert.equal(context.length,1);assert.equal(context[0].role,'target');
+      assert.ok(first.text.includes(task.instruction));const context=JSON.parse(first.text.split('以下 JSON 是待处理内容：\n')[1]);
+      assert.equal(context.references.length,1);assert.equal(context.references[0].use,type==='composition'?'构图参考':'风格参考');
+      assert.deepEqual(context.references[0].images,['image_4']);assert.equal(context.references[0].requirements,undefined);assert.equal(context.draft,undefined);
     }
     assert.deepEqual(f.recipe,before);
     module.asset_ids=[];assert.throws(()=>prepareModuleInference(f.recipe,module.module_id,'已有文字',f.model,f.registry),/添加参考图片/);
@@ -235,17 +411,31 @@ test('自动推理执行只返回文字建议，执行器失败或取消保留�
   assert.equal(calls,2);assert.deepEqual(f.recipe,before);
 });
 
-test('提示词的通用与陈列师角色同时用于自动和手动推理，不进入生图链',()=>{
-  for(const role of promptRoles)for(const automatic of [false,true]){
+test('提示词的通用与陈列师角色独立进入两种组合方式的自动和手动推理，不进入 user 或生图链',()=>{
+  for(const role of promptRoles)for(const automatic of [false,true])for(const strategy of ['interleaved','numbered_flat'] as const){
     const f=fixture();f.prompt.auto_prompt=true;f.prompt.prompt_role=role.id;
+    f.recipe.input_strategy=strategy;
+    f.model.generation_contract={...contractFor(f.model),input_forms:[strategy]};
     const before=structuredClone(f.recipe);
     const prepared=prepareModuleInference(f.recipe,f.prompt.module_id,'商品居中，右侧留白',f.model,f.registry,false,undefined,{automatic});
     const first=prepared.job.chain_snapshot.blocks[0];assert.equal(first.type,'text');if(first.type!=='text')return;
-    assert.ok(first.text.includes(role.instruction));
+    assert.ok(prepared.job.chain_snapshot.system_instruction!.startsWith('# 角色\n'+role.instruction+'\n\n'));
+    assert.equal(prepared.job.adapted_input.system_instruction,prepared.job.chain_snapshot.system_instruction);
+    assert.ok(!first.text.includes(role.instruction));
     for(const other of promptRoles.filter(candidate=>candidate.id!==role.id))assert.ok(!first.text.includes(other.instruction));
+    const withoutRole=prepareModuleInference(f.recipe,f.prompt.module_id,'商品居中，右侧留白',f.model,new ModuleRegistry(undefined,undefined,{[role.id]:''}),false,undefined,{automatic});
+    assert.deepEqual(prepared.job.chain_snapshot.blocks,withoutRole.job.chain_snapshot.blocks);
+    const {system_instruction,...userInput}=prepared.job.adapted_input;
+    const {system_instruction:emptyRoleSystem,...emptyRoleInput}=withoutRole.job.adapted_input;
+    assert.deepEqual(userInput,emptyRoleInput);
+    assert.equal(emptyRoleSystem,system_instruction!.replace('# 角色\n'+role.instruction+'\n\n',''));
+    assert.deepEqual(prepared.job.chain_snapshot.blocks.filter(block=>block.type==='image').map(block=>block.asset_id),['asset_a','asset_b','asset_a']);
+    assert.ok(Array.isArray(JSON.parse(first.text).references));assert.doesNotMatch(first.text,/reference_scope|只返回可直接|以下 JSON/);
     assert.equal(prepared.job.recipe_snapshot.modules.find(module=>module.module_id===f.prompt.module_id)!.prompt_role,role.id);
     assert.deepEqual(f.recipe,before);
-    assert.ok(!compileRecipe(f.recipe,f.registry).blocks.some(block=>block.type==='text'&&block.text.includes(role.instruction)));
+    const generation=compileRecipe(f.recipe,f.registry);
+    assert.equal(Object.hasOwn(generation,'system_instruction'),false);
+    assert.ok(!generation.blocks.some(block=>block.type==='text'&&block.text.includes(role.instruction)));
   }
 });
 
@@ -253,10 +443,12 @@ test('手动推理采用未保存的角色草稿且仅返回建议，旧工程�
   const f=fixture();delete f.prompt.prompt_role;
   const before=structuredClone(f.recipe),general=promptRoles.find(role=>role.id==='general')!,merchandiser=promptRoles.find(role=>role.id==='merchandiser')!;
   const legacy=prepareModuleInference(f.recipe,f.prompt.module_id,'已有草稿',f.model,f.registry);
-  const first=legacy.job.chain_snapshot.blocks[0];assert.equal(first.type,'text');if(first.type==='text')assert.ok(first.text.includes(general.instruction));
+  assert.ok(legacy.job.chain_snapshot.system_instruction!.startsWith('# 角色\n'+general.instruction+'\n\n'));
   const prepared=prepareModuleInference(f.recipe,f.prompt.module_id,'商品居中，右侧留白',f.model,f.registry,false,undefined,{promptRole:'merchandiser'});
   const blocks=prepared.job.chain_snapshot.blocks;
-  assert.ok(blocks.some(block=>block.type==='text'&&block.text.includes(merchandiser.instruction)));
+  assert.equal(prepared.job.chain_snapshot.system_instruction,legacy.job.chain_snapshot.system_instruction!.replace(general.instruction,merchandiser.instruction));
+  assert.equal(prepared.job.adapted_input.system_instruction,prepared.job.chain_snapshot.system_instruction);
+  assert.ok(!blocks.some(block=>block.type==='text'&&block.text.includes(merchandiser.instruction)));
   assert.equal(prepared.job.recipe_snapshot.modules.find(module=>module.module_id===f.prompt.module_id)!.prompt_role,'merchandiser');
   const suggestion=await executeModuleInference({execute:async()=>({images:[],text:'商品居中，左侧用低矮台座衬托，右侧留白。'})},
     {model:f.model,job:prepared.job,readImage:async()=>Buffer.alloc(0),resolveCredential:async()=>''},prepared,new AbortController().signal);
@@ -268,9 +460,13 @@ test('角色只接受内置值，非提示词任务不注入角色且自动任�
   const command={type:'module:infer',request_id:'request_role',project_id:'project_test',module_id:f.prompt.module_id,model_config_id:f.model.model_config_id,text:'草稿',allow_text_only:false,prompt_role:'merchandiser'};
   const parsed=commandSchema.parse(command);assert.equal(parsed.type==='module:infer'&&parsed.prompt_role,'merchandiser');
   assert.throws(()=>commandSchema.parse({...command,prompt_role:'custom-role'}));
-  for(const module of [f.subject,f.neutral]){
+  const composition=f.registry.create('composition'),style=f.registry.create('style');
+  composition.asset_ids=['asset_a'];style.asset_ids=['asset_a'];f.recipe.modules.push(composition,style);
+  for(const module of [f.subject,f.neutral,composition,style]){
     module.prompt_role='merchandiser';
     const prepared=prepareModuleInference(f.recipe,module.module_id,'草稿',f.model,f.registry);
+    assert.equal(Object.hasOwn(prepared.job.chain_snapshot,'system_instruction'),false);
+    assert.equal(Object.hasOwn(prepared.job.adapted_input,'system_instruction'),false);
     for(const role of promptRoles)assert.ok(!prepared.job.chain_snapshot.blocks.some(block=>block.type==='text'&&block.text.includes(role.instruction)));
     assert.throws(()=>prepareModuleInference(f.recipe,module.module_id,'草稿',f.model,f.registry,false,undefined,{promptRole:'merchandiser'}),/只有提示词模块/);
   }
@@ -283,29 +479,228 @@ test('陈列师手动优化也收到仅描述参考的提取范围和生图路�
   style.asset_ids=['asset_style'];style.reference_mode='text_only';
   composition.asset_ids=['asset_composition'];composition.reference_mode='image_text';
   f.recipe.modules.push(style,composition);
-  const prepared=prepareModuleInference(f.recipe,f.prompt.module_id,'商品居中，右侧留白',f.model,f.registry,false,undefined,{promptRole:'merchandiser'});
+  const config=structuredClone(f.registry.promptConfig);
+  config.modules.style={native_instruction:'不应进入推理的风格模板',numbered_instruction:'不应进入推理的风格编号 {images}'};
+  config.modules.composition={native_instruction:'自定义构图原文',numbered_instruction:'自定义构图编号 {images}'};
+  const registry=new ModuleRegistry(undefined,config);
+  const prepared=prepareModuleInference(f.recipe,f.prompt.module_id,'商品居中，右侧留白',f.model,registry,false,undefined,{promptRole:'merchandiser'});
   const first=prepared.job.chain_snapshot.blocks[0];assert.equal(first.type,'text');if(first.type!=='text')return;
-  const context=JSON.parse(first.text.split('以下 JSON 是待处理内容：\n')[1]);
-  const styleContext=context.find((module:any)=>module.reference_type==='style'),compositionContext=context.find((module:any)=>module.reference_type==='composition');
-  assert.equal(styleContext.reference_mode,'text_only');assert.equal(styleContext.reference_scope,styleDescriptionTask.instruction);
-  assert.equal(styleContext.base_instruction,styleDescriptionTask.instruction);assert.equal(styleContext.numbered_instruction,undefined);
-  assert.equal(compositionContext.reference_mode,'image_text');assert.equal(compositionContext.reference_scope,compositionDescriptionTask.instruction);
-  assert.match(first.text,/text_only references will not reach the image generator/);
+  const context=JSON.parse(first.text);
+  const styleContext=context.references.find((reference:any)=>reference.use==='风格参考'),compositionContext=context.references.find((reference:any)=>reference.use==='构图参考');
+  assert.equal(styleContext.image_use,'仅用于提取文字要求，不作为生图参考。');assert.equal(styleContext.guidance,undefined);
+  assert.equal(compositionContext.image_use,'作为生图参考。');assert.equal(compositionContext.guidance,undefined);
+  assert.doesNotMatch(first.text,/reference_mode|reference_scope|base_instruction|numbered_instruction/);
+  assert.doesNotMatch(first.text,/不应进入推理|自定义构图/);assert.doesNotMatch(prepared.job.chain_snapshot.system_instruction!,/自定义构图|不应进入推理/);
+  assert.ok(prepared.job.chain_snapshot.system_instruction!.includes(defaultModuleInferenceInstructions.style));
+  assert.ok(prepared.job.chain_snapshot.system_instruction!.includes(defaultModuleInferenceInstructions.composition));
   assert.ok(prepared.job.chain_snapshot.blocks.some(block=>block.type==='image'&&block.asset_id==='asset_style'));
   assert.ok(!compileRecipe(f.recipe,f.registry).blocks.some(block=>block.type==='image'&&block.asset_id==='asset_style'));
 });
 
-test('仅描述上下文的手动提示词避免推理图片编号，保留画面文字且不改变其它任务规则',async()=>{
+test('提示词统一转换技术图片引用并保留画面文字，不改变其它任务规则',async()=>{
   const f=fixture(),style=f.registry.create('style');style.asset_ids=['asset_style'];style.reference_mode='text_only';f.recipe.modules.push(style);
   const draft='产品上显示 image_1 字样，不要添加其它文字。';
   const prepare=(moduleId:string)=>prepareModuleInference(f.recipe,moduleId,draft,f.model,f.registry);
   const instructions=(prepared:ReturnType<typeof prepare>)=>{const block=prepared.job.chain_snapshot.blocks[0];assert.equal(block.type,'text');return block.type==='text'?block.text.split('以下 JSON 是待处理内容：\n')[0]:'';};
-  const prepared=prepare(f.prompt.module_id),text=instructions(prepared);
-  assert.match(text,/不用推理输入的 image_N 标签作图片指代/);assert.match(text,/用户要求画面显示的 image_N 字样仍应保留/);
+  const prepared=prepare(f.prompt.module_id),text=prepared.job.chain_snapshot.system_instruction!;
+  assert.match(text,/image_N.*转换为具体画面要求/);assert.match(text,/用户明确要求在画面中展示的字面文字必须保留/);
   assert.ok(!text.includes('手写 subject/image_N 引用'));
   const result=await executeModuleInference({execute:async()=>({images:[],text:draft})},{model:f.model,job:prepared.job,readImage:async()=>Buffer.alloc(0),resolveCredential:async()=>''},prepared,new AbortController().signal);
   assert.equal(result.text,draft);
   assert.match(instructions(prepare(f.neutral.module_id)),/手写 subject\/image_N 引用/);
-  style.reference_mode='image_text';assert.match(instructions(prepare(f.prompt.module_id)),/手写 subject\/image_N 引用/);
-  style.reference_mode='text_only';style.enabled=false;assert.match(instructions(prepare(f.prompt.module_id)),/手写 subject\/image_N 引用/);
+  style.reference_mode='image_text';const imageTextPrepared=prepare(f.prompt.module_id),imageTextSystem=imageTextPrepared.job.chain_snapshot.system_instruction!;
+  assert.equal(imageTextSystem,text);assert.ok(imageTextSystem.includes(sharedPromptTaskRules.output_instruction));
+  const imageTextBlock=imageTextPrepared.job.chain_snapshot.blocks[0];assert.equal(imageTextBlock.type,'text');
+  if(imageTextBlock.type==='text')assert.equal(JSON.parse(imageTextBlock.text).references.find((reference:any)=>reference.use==='风格参考').image_use,'作为生图参考。');
+  assert.ok(imageTextSystem.includes(defaultModuleInferenceInstructions.style));
+  assert.doesNotMatch(imageTextSystem,/参考图仅供当前理解/);
+  style.reference_mode='text_only';style.enabled=false;const withoutStyle=prepare(f.prompt.module_id).job.chain_snapshot.system_instruction!;
+  assert.ok(withoutStyle.includes(sharedPromptTaskRules.output_instruction));
+  assert.ok(!withoutStyle.includes(defaultModuleInferenceInstructions.style));assert.ok(!withoutStyle.includes(style.module_id));
+});
+
+test('四模块推理正文进入可信规则段并与生图指令隔离，不写入模块定义或配方',()=>{
+  const f=fixture(),rules:ModuleInferenceInstructions={subject:'SUBJECT_RULE 只说明品类与必要改动。',composition:'COMPOSITION_RULE 提取信息层级和分区。',style:'STYLE_RULE 提取字体、图标与色彩系统 {自由文字}。',viewpoint:'VIEWPOINT_RULE 仅确定观察方向。'};
+  const config=structuredClone(f.registry.promptConfig);
+  const modules=[f.subject,...(['composition','style','viewpoint'] as const).map(type=>f.registry.create(type))];
+  for(const module of modules){
+    module.asset_ids=['asset_'+module.reference_type];module.user_instruction='显式文字要求 '+module.reference_type;
+    config.modules[module.reference_type]={...config.modules[module.reference_type],native_instruction:'GENERATION_ONLY_'+module.reference_type,numbered_instruction:'NUMBERED_ONLY_'+module.reference_type+' {images}'};
+  }
+  modules[1].reference_mode='text_only';modules[3].tool_state={yaw:-45,pitch:-30,roll:0,projection:'perspective'};
+  f.recipe.modules=[...modules,f.prompt];f.prompt.auto_prompt=true;
+  const registry=new ModuleRegistry(undefined,config,{},rules),before=structuredClone(f.recipe);
+  for(const automatic of [false,true]){
+    const prepared=prepareModuleInference(f.recipe,f.prompt.module_id,'画面需要出现的文字',f.model,registry,false,undefined,{automatic});
+    const system=prepared.job.chain_snapshot.system_instruction!,first=prepared.job.chain_snapshot.blocks[0];
+    assert.equal(first.type,'text');if(first.type!=='text')throw Error('missing context');
+    for(const rule of Object.values(rules)){
+      assert.equal(system.split(rule).length,2,'each effective rule appears once in trusted system text');
+      assert.ok(!first.text.includes(rule));assert.ok(!JSON.stringify(prepared.job.recipe_snapshot).includes(rule));
+      assert.ok(!JSON.stringify(registry.list()).includes(rule));assert.ok(!JSON.stringify(compileRecipe(f.recipe,registry)).includes(rule));
+    }
+    const context=JSON.parse(first.text);
+    for(const module of modules){
+      const entry=context.references.find((item:any)=>item.requirements===module.user_instruction);
+      assert.ok(entry);assert.equal(entry.guidance,undefined);
+      assert.ok(!system.includes(module.module_id));assert.ok(!first.text.includes(module.module_id));
+    }
+    assert.doesNotMatch(system+'\n'+first.text,/GENERATION_ONLY_|NUMBERED_ONLY_/);
+    assert.match(context.references[3].view,/Front-right three-quarter view, High-angle view/);
+    assert.match(context.references[3].view,/水平角 -45°，俯仰角 -30°，倾斜角 0°，透视投影/);
+    assert.equal(context.references[1].image_use,'仅用于提取文字要求，不作为生图参考。');
+    assert.equal(context.references[2].image_use,'作为生图参考。');
+    assert.doesNotMatch(system,/mod_|水平角|参考图仅供当前理解/);
+    assert.equal(prepared.job.adapted_input.system_instruction,system);
+  }
+  assert.deepEqual(f.recipe,before);
+});
+
+test('构图风格单项提取和综合推理使用同一有效正文，清空不复活默认规则',()=>{
+  for(const type of ['composition','style'] as const)for(const rule of ['自定义提取：只整理界面文字层级、图标与留白。','']){
+    const f=fixture(),module=f.registry.create(type);module.asset_ids=['asset_extract'];module.reference_mode='text_only';f.recipe.modules.push(module);
+    const registry=new ModuleRegistry(undefined,undefined,{}, {[type]:rule});
+    const single=prepareModuleInference(f.recipe,module.module_id,'保留标题“新品”',f.model,registry);
+    const combined=prepareModuleInference(f.recipe,f.prompt.module_id,'完整画面要求',f.model,registry);
+    const block=single.job.chain_snapshot.blocks[0];assert.equal(block.type,'text');if(block.type!=='text')throw Error('missing extraction task');
+    const [task,raw]=block.text.split('以下 JSON 是待处理内容：\n');
+    const context=JSON.parse(raw);assert.equal(context.references[0].requirements,'保留标题“新品”');
+    assert.equal(context.references[0].guidance,undefined);assert.equal(context.references.length,1);
+    if(rule){assert.ok(task.includes(rule));assert.ok(combined.job.chain_snapshot.system_instruction!.includes(rule));assert.ok(!raw.includes(rule));}
+    assert.ok(!task.includes(defaultModuleInferenceInstructions[type]));
+    assert.ok(!combined.job.chain_snapshot.system_instruction!.includes(defaultModuleInferenceInstructions[type]));
+    assert.deepEqual(single.job.chain_snapshot.blocks.filter(item=>item.type==='image').map(item=>item.asset_id),['asset_extract']);
+    assert.ok(!compileRecipe(f.recipe,registry).blocks.some(item=>item.type==='image'&&item.asset_id==='asset_extract'));
+  }
+});
+
+test('只为实际参与的模块注入推理规则，禁用或无实际输入的指令不影响请求与复用',()=>{
+  const f=fixture(),composition=f.registry.create('composition'),style=f.registry.create('style'),viewpoint=f.registry.create('viewpoint');
+  f.subject.enabled=false;composition.user_instruction=' \n ';style.asset_ids=['asset_style'];viewpoint.user_instruction='';
+  f.prompt.auto_prompt=true;f.recipe.modules=[f.subject,composition,style,viewpoint,f.prompt];
+  const rules={subject:'INACTIVE_SUBJECT',composition:'EMPTY_COMPOSITION',style:'ACTIVE_STYLE',viewpoint:'EMPTY_VIEWPOINT'};
+  const registry=new ModuleRegistry(undefined,undefined,{},rules);
+  const prepared=prepareModuleInference(f.recipe,f.prompt.module_id,'现有草稿',f.model,registry),system=prepared.job.chain_snapshot.system_instruction!;
+  assert.match(system,/ACTIVE_STYLE/);assert.doesNotMatch(system,/INACTIVE_SUBJECT|EMPTY_COMPOSITION|EMPTY_VIEWPOINT/);
+  for(const module of [f.subject,composition,viewpoint])assert.ok(!system.includes(module.module_id));
+  const key=getAutoPromptState(f.recipe,registry,defaultModuleSettings)!.input_key;
+  const inactiveChanges=new ModuleRegistry(undefined,undefined,{}, {...rules,subject:'新主体规则',composition:'新构图规则',viewpoint:'新视角规则'});
+  assert.equal(getAutoPromptState(f.recipe,inactiveChanges,defaultModuleSettings)!.input_key,key);
+  const activeChange=new ModuleRegistry(undefined,undefined,{}, {...rules,style:'新的参与风格规则'});
+  assert.notEqual(getAutoPromptState(f.recipe,activeChange,defaultModuleSettings)!.input_key,key);
+  const textModel={...f.model,capabilities:{...f.model.capabilities,max_images:0}};
+  const textOnly=prepareModuleInference(f.recipe,f.prompt.module_id,'只整理这段文字',textModel,registry,true);
+  assert.doesNotMatch(textOnly.job.chain_snapshot.system_instruction!,/ACTIVE_STYLE|INACTIVE_SUBJECT|EMPTY_COMPOSITION|EMPTY_VIEWPOINT/);
+  assert.equal(textOnly.images_sent,0);
+  const first=textOnly.job.chain_snapshot.blocks[0];assert.equal(first.type,'text');if(first.type==='text')assert.deepEqual(JSON.parse(first.text),{draft:'只整理这段文字'});
+});
+
+test('主体详细分析保留独立任务，综合规则不增加视角分析按钮',()=>{
+  const f=fixture(),registry=new ModuleRegistry(undefined,undefined,{}, {subject:'BRIEF_SUBJECT_REFERENCE',viewpoint:'DIRECTION_REFERENCE'});
+  const detailed=prepareModuleInference(f.recipe,f.subject.module_id,'保留标识',f.model,registry);
+  const block=detailed.job.chain_snapshot.blocks[0];assert.equal(block.type,'text');if(block.type!=='text')throw Error('missing subject task');
+  assert.match(block.text,/不推断不可见结构/);assert.match(block.text,/部件数量与连接关系/);
+  assert.doesNotMatch(block.text,/BRIEF_SUBJECT_REFERENCE|DIRECTION_REFERENCE/);
+  assert.equal(registry.get('viewpoint').inference_task,undefined);
+});
+
+test('四项32000字推理指令和32000字角色在40模块内不截断且每类正文只发送一次',()=>{
+  const f=fixture(),rules={subject:'S'.repeat(32000),composition:'C'.repeat(32000),style:'Y'.repeat(32000),viewpoint:'V'.repeat(32000)},role='R'.repeat(32000);
+  const registry=new ModuleRegistry(undefined,undefined,{general:role},rules);
+  const types=['subject','composition','style','viewpoint'] as const;
+  f.recipe.modules=Array.from({length:39},(_,index)=>{
+    const module=registry.create(types[index%types.length]);module.user_instruction='该模块的明确要求';return module;
+  });
+  f.prompt.auto_prompt=true;f.recipe.modules.push(f.prompt);
+  for(const strategy of ['interleaved','numbered_flat'] as const){
+    const model={...f.model,generation_contract:{...contractFor(f.model),input_forms:[strategy]}};
+    const prepared=prepareModuleInference(f.recipe,f.prompt.module_id,'既有正文',model,registry,false,undefined,{automatic:true});
+    const system=prepared.job.adapted_input.system_instruction!;
+    assert.ok(system.length>160000);assert.ok(system.length<192000);
+    for(const text of [role,...Object.values(rules)])assert.equal(system.split(text).length,2,'one complete copy per editable instruction');
+    for(const use of ['主体参考','构图参考','风格参考','视角参考'])assert.equal(system.split('## '+use+'\n').length,2);
+    assert.equal(prepared.job.chain_snapshot.system_instruction,system);assert.equal(prepared.job.recipe_snapshot.modules.length,40);
+    for(const text of Object.values(rules))assert.ok(!JSON.stringify(prepared.job.recipe_snapshot).includes(text));
+  }
+});
+
+test('真实适配请求省去程序元字段，同类参考保留各自图片、要求和模式，视角精确值不丢失',async()=>{
+  const bytes=await sharp({create:{width:4,height:4,channels:3,background:'white'}}).png().toBuffer();
+  for(const form of ['interleaved','numbered_flat'] as const){
+    const f=fixture(),firstStyle=f.registry.create('style'),secondStyle=f.registry.create('style'),viewpoint=f.registry.create('viewpoint');
+    firstStyle.asset_ids=['asset_shared','asset_first'];firstStyle.reference_mode='text_only';
+    firstStyle.user_instruction='  这组图片只取暖色。\n保留画面文字“module_id”。  ';
+    secondStyle.asset_ids=['asset_shared'];secondStyle.reference_mode='image_text';secondStyle.user_instruction='这张图只取冷色，不采用红色。';
+    viewpoint.asset_ids=['asset_view'];viewpoint.tool_state={yaw:-1.125,pitch:-15.25,roll:0.5,projection:'perspective'};
+    f.prompt.auto_prompt=true;f.recipe.modules=[firstStyle,f.prompt,secondStyle,viewpoint];
+    const rule='  STYLE_REFERENCE_RULE\n只提取指定范围，保留空白。  ',registry=new ModuleRegistry(undefined,undefined,{}, {style:rule});
+    const model={...f.model,generation_contract:{...contractFor(f.model),input_forms:[form]}};
+    const prepared=prepareModuleInference(f.recipe,f.prompt.module_id,'不要再次发送的旧稿',model,registry,false,undefined,{automatic:true});
+    let calls=0;
+    const adapter=new GeminiGenerator(async(_url,init)=>{
+      calls++;const body=JSON.parse(init!.body as string),parts=body.contents[0].parts;
+      const userText=parts.filter((part:any)=>typeof part.text==='string').map((part:any)=>part.text).join('\n');
+      const system=body.systemInstruction.parts.map((part:any)=>part.text).join('\n');
+      // Native sends the JSON as its first text part; flat input appends the image labels.
+      const firstBlock=prepared.job.chain_snapshot.blocks[0];assert.equal(firstBlock.type,'text');
+      if(firstBlock.type!=='text')throw Error('missing request');
+      assert.ok(userText.includes(firstBlock.text));
+      const context=JSON.parse(firstBlock.text);
+      assert.equal(context.draft,undefined);assert.equal(context.references.length,3);
+      assert.deepEqual(context.references[0],{use:'风格参考',images:['image_1','image_2'],requirements:firstStyle.user_instruction,image_use:'仅用于提取文字要求，不作为生图参考。'});
+      assert.deepEqual(context.references[1],{use:'风格参考',images:['image_3'],requirements:secondStyle.user_instruction,image_use:'作为生图参考。'});
+      assert.deepEqual(context.references[2].images,['image_4']);
+      assert.match(context.references[2].view,/水平角 -1\.125°，俯仰角 -15\.25°，倾斜角 0\.5°，透视投影/);
+      assert.equal(system.split(rule).length,2);assert.ok(!userText.includes(rule));
+      for(const module of f.recipe.modules)assert.ok(!(system+userText).includes(module.module_id));
+      assert.doesNotMatch(userText, /"(?:role|module|module_id|reference_type|reference_mode|tool_state|base_instruction|numbered_instruction)"\s*:/);
+      assert.doesNotMatch(system+userText,/role=target|不要再次发送的旧稿/);
+      assert.equal(parts.filter((part:any)=>part.inlineData).length,4);
+      return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:'保留画面文字 module_id，按指定范围综合色彩。'}]}}]});
+    });
+    const reads:string[]=[];
+    const suggestion=await executeModuleInference(adapter,{model,job:prepared.job,readImage:async id=>{reads.push(id);return bytes;},resolveCredential:async()=>'test-key'},prepared,new AbortController().signal);
+    assert.equal(calls,1);assert.equal(suggestion.text,'保留画面文字 module_id，按指定范围综合色彩。');
+    assert.deepEqual(prepared.job.chain_snapshot.blocks.filter(block=>block.type==='image').map(block=>block.asset_id),['asset_shared','asset_first','asset_shared','asset_view']);
+    assert.ok(reads.includes('asset_shared')&&reads.includes('asset_first')&&reads.includes('asset_view'));
+  }
+});
+
+test('简化条件保留非四类自定义说明及名称，原文去重后仍与各参考项绑定',()=>{
+  const f=fixture(),config=structuredClone(f.registry.promptConfig),otherPrompt=f.registry.create('prompt');
+  config.modules.prompt={model_name:'final_scene',native_instruction:'  目标说明原文\n',numbered_instruction:'目标编号说明 {images}'};
+  config.modules.image_text={model_name:'moodboard',native_instruction:'  图文说明 {images}\n',numbered_instruction:'  图文说明 {images}\n'};
+  config.modules.subject={model_name:'product',native_instruction:'不应进入综合推理的生图指令',numbered_instruction:'同样不应进入'};
+  const registry=new ModuleRegistry(undefined,config);
+  registry.register({type:'detail',model_name:'material_sample',title:'细节',description:'局部细节',base_instruction:'原生材质说明',numbered_instruction:'编号材质说明 {images}',editor_kind:'image_collection',accepts_images:true});
+  const detail=registry.create('detail');detail.asset_ids=['asset_detail'];detail.user_instruction='只取这张图片的纹理';
+  otherPrompt.user_instruction='画面需要出现文字“新品”';f.recipe.modules.push(otherPrompt,detail);
+  const prepared=prepareModuleInference(f.recipe,f.prompt.module_id,'  需要优化的原文\n',f.model,registry);
+  const first=prepared.job.chain_snapshot.blocks[0];assert.equal(first.type,'text');if(first.type!=='text')return;
+  const context=JSON.parse(first.text);
+  assert.equal(context.name,'final_scene');assert.equal(context.draft,'  需要优化的原文\n');
+  assert.deepEqual(context.guidance,['  目标说明原文\n','目标编号说明 {images}']);
+  const subject=context.references.find((reference:any)=>reference.use==='主体参考');assert.equal(subject.name,'product');assert.equal(subject.guidance,undefined);
+  const neutral=context.references.find((reference:any)=>reference.use==='图文参考');
+  assert.equal(neutral.name,'moodboard');assert.deepEqual(neutral.guidance,['  图文说明 {images}\n']);assert.deepEqual(neutral.images,['image_2','image_3']);
+  const other=context.references.find((reference:any)=>reference.use==='画面要求');
+  assert.equal(other.name,'final_scene');assert.equal(other.requirements,otherPrompt.user_instruction);assert.deepEqual(other.guidance,context.guidance);
+  const custom=context.references.find((reference:any)=>reference.use==='参考信息');
+  assert.equal(custom.name,'material_sample');assert.deepEqual(custom.guidance,['原生材质说明','编号材质说明 {images}']);assert.equal(custom.requirements,detail.user_instruction);assert.deepEqual(custom.images,['image_4']);
+  assert.doesNotMatch(first.text,/不应进入/);
+});
+
+test('自定义参考名称与内置用途同名时仍保留自己的说明，不绑定其它类型规则',()=>{
+  const f=fixture(),style=f.registry.create('style');style.asset_ids=['asset_style'];style.user_instruction='这张图提取风格';
+  f.registry.register({type:'detail',model_name:'风格参考',title:'细节',description:'局部细节',base_instruction:'只提取商品接缝形状。',editor_kind:'image_collection',accepts_images:true});
+  const detail=f.registry.create('detail');detail.asset_ids=['asset_detail'];detail.user_instruction='这张图只看接缝';
+  f.recipe.modules=[style,detail,f.prompt];
+  const prepared=prepareModuleInference(f.recipe,f.prompt.module_id,'整理描述',f.model,f.registry);
+  const first=prepared.job.chain_snapshot.blocks[0];assert.equal(first.type,'text');if(first.type!=='text')return;
+  const context=JSON.parse(first.text),styleReference=context.references[0],detailReference=context.references[1];
+  assert.equal(styleReference.use,'风格参考');assert.deepEqual(styleReference.images,['image_1']);
+  assert.equal(detailReference.use,'参考信息');assert.equal(detailReference.name,'风格参考');assert.deepEqual(detailReference.images,['image_2']);
+  assert.deepEqual(detailReference.guidance,['只提取商品接缝形状。']);assert.equal(detailReference.requirements,'这张图只看接缝');
+  assert.equal(detailReference.image_use,undefined);
+  assert.equal(prepared.job.chain_snapshot.system_instruction!.split(defaultModuleInferenceInstructions.style).length,2);
 });
