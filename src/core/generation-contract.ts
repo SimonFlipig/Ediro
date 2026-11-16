@@ -32,6 +32,7 @@ export const generationContractSchema=z.object({
   fields:z.array(parameterFieldSchema).default([]),features:z.array(z.string()).default([]),
   legacy_resolution_quality:z.boolean().default(false),legacy_extension_key:z.string().optional(),
   quality_control:z.boolean().default(true),
+  output_format_control:z.boolean().default(true),
   compatibility_editor:z.boolean().optional(),max_images:z.number().int().nonnegative().optional(),
 });
 export type GenerationContract=z.infer<typeof generationContractSchema>;

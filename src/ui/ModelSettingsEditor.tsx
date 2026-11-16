@@ -21,7 +21,7 @@ function defaultsForChangedIdentity(model:ModelConfig):{defaults?:Parameters;tit
   if(model.purpose!=='understanding'){
     if(next.aspect_ratio!=='auto'&&!capabilities.aspect_ratios.includes(next.aspect_ratio)){next.aspect_ratio='auto';titles.push('画面比例');}
     if(contract.quality_control&&!capabilities.qualities.includes(next.quality)&&capabilities.qualities.length){next.quality=capabilities.qualities.includes('auto')?'auto':capabilities.qualities[0];titles.push('质量');}
-    if(!capabilities.formats.includes(next.output_format)&&capabilities.formats.length){next.output_format=capabilities.formats[0] as Parameters['output_format'];titles.push('输出格式');}
+    if(contract.output_format_control&&!capabilities.formats.includes(next.output_format)&&capabilities.formats.length){next.output_format=capabilities.formats[0] as Parameters['output_format'];titles.push('输出格式');}
     if(next.count>capabilities.max_count){next.count=Math.max(1,Math.floor(capabilities.max_count));titles.push('输出数量');}
     const r=next.resolution??{mode:'default'};
     const valid=contract.resolution_modes.includes(r.mode)&&(r.mode!=='tier'||contract.tiers.includes(r.value))&&(r.mode!=='pixel_budget'||contract.pixel_budgets.includes(r.pixels))&&(r.mode!=='exact'||!contract.size_limits||validSize(r.width,r.height,contract.size_limits));

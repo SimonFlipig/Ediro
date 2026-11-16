@@ -7,6 +7,7 @@ import { ModelLibrary,seedModels } from '../src/core/models.js';
 import { migrateModels,mockDescription,librarySchema } from '../src/core/model-library.js';
 import { GeminiGenerator } from '../src/adapters/gemini-generator.js';
 import { openModelLibrary } from '../src/adapters/model-library-repository.js';
+import { contractFor } from '../src/core/generation-parameters.js';
 
 function fixture(){const values=new Map<string,string>();const library=new ModelLibrary(migrateModels(seedModels()),async()=>{}, {has:async ref=>values.has(ref),set:async(ref,key)=>{values.set(ref,key);},resolve:async ref=>values.get(ref)!},[mockDescription,new GeminiGenerator().description]);return {values,library};}
 test('默认编辑模型独立保存，必须具备编辑能力，内置模拟引擎保留',async()=>{
@@ -41,7 +42,7 @@ test('同连接多协议可配置，协议缺失不允许执行；能力不超�
   assert.equal(library.resolve('model_image_2').executable,false);
   await library.saveConnection(data.connections[0],'key');
   await library.saveModel({...data.models[2],capabilities:{...data.models[2].capabilities,qualities:['2K','unsupported'],formats:['png','webp'],max_count:10}});
-  const resolved=library.resolve('model_nano_pro');assert.deepEqual(resolved.capabilities.qualities,['2K']);assert.deepEqual(resolved.capabilities.formats,['png']);assert.equal(resolved.capabilities.max_count,1);
+  const resolved=library.resolve('model_nano_pro');assert.deepEqual(resolved.capabilities.qualities,['2K']);assert.deepEqual(resolved.capabilities.formats,['png','webp']);assert.equal(contractFor(resolved).output_format_control,false);assert.equal(resolved.capabilities.max_count,1);
   await assert.rejects(()=>library.saveModel({...data.models[2],capability_source:'tested'}),/不能手动/);
 });
 test('迁移保持模型 ID 和凭据引用，备份原文件；重复启动不重复迁移',async()=>{

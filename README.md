@@ -6,7 +6,7 @@
 
 Ediro 独立运行，不依赖 Codex 或其他工作台。真实生成需要自行配置模型连接与 API Key；模拟引擎可以免费检查工作流程，不代表真实模型效果。
 
-[下载最新版](https://github.com/SimonFlipig/Ediro/releases/latest) · [v0.1.4 发布说明](docs/RELEASE_NOTES_v0.1.4.md) · [反馈问题](https://github.com/SimonFlipig/Ediro/issues)
+[下载最新版](https://github.com/SimonFlipig/Ediro/releases/latest) · [v0.1.5 发布说明](docs/RELEASE_NOTES_v0.1.5.md) · [反馈问题](https://github.com/SimonFlipig/Ediro/issues)
 
 ![Ediro 工作台：素材、参考模块、预览、结果版本和生成参数](docs/screenshots/workspace.png)
 
@@ -14,7 +14,7 @@ Ediro 独立运行，不依赖 Codex 或其他工作台。真实生成需要自�
 
 ## 获取与启动
 
-目标平台为 **Windows x64**。在 [GitHub Releases](https://github.com/SimonFlipig/Ediro/releases) 获取发布版本，本次变更见 [v0.1.4 发布说明](docs/RELEASE_NOTES_v0.1.4.md)：
+目标平台为 **Windows x64**。在 [GitHub Releases](https://github.com/SimonFlipig/Ediro/releases) 获取发布版本，本次变更见 [v0.1.5 发布说明](docs/RELEASE_NOTES_v0.1.5.md)：
 
 - **安装版**：下载 `Ediro-<版本>-windows-x64-setup.exe`，安装后从桌面或开始菜单启动。一般保留当前用户的默认安装目录；如需安装到 `Program Files`，请选择为所有用户安装并允许管理员权限请求。
 - **便携版**：下载 `Ediro-<版本>-windows-x64-portable.zip`，完整解压到可写文件夹，运行其中的 `Ediro.exe`，不要直接在压缩包内运行。

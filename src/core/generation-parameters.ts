@@ -26,6 +26,9 @@ export function effectiveCapabilitiesFor(model:ModelConfig):Capabilities {
 
 export function contractFor(model:ModelConfig):GenerationContract {
   const c=modelVariantContract(model)??generationContractSchema.parse({version:1,input_forms:model.capabilities.interleaving==='native'?['interleaved','numbered_flat']:['numbered_flat'],resolution_modes:['default']});
+  // GenerateContent does not send an output format parameter. Older stored
+  // contracts may gain the schema default, but cannot enable that control.
+  if(model.adapter_id==='gemini-generate-content')c.output_format_control=false;
   // Older saved Chat contracts predate role separation. Expose the optional
   // compatibility choice without rewriting their defaults or channel limits.
   if(model.purpose==='understanding'&&model.adapter_id==='openai-chat-completions'&&!c.fields.some(f=>f.key==='instruction_role')){
@@ -101,7 +104,7 @@ export function validateGenerationParameters(parameters:Parameters,model:ModelCo
   if(r.mode==='pixel_budget'&&!c.pixel_budgets.includes(r.pixels))throw new Error('输出像素档位超出模型声明范围。');
   if(r.mode==='exact'&&c.size_limits&&!validSize(r.width,r.height,c.size_limits))throw new Error('输出尺寸超出模型边长、像素或步长限制。');
   if(c.quality_control&&!capabilities.qualities.includes(p.quality))throw new Error('质量与所选模型不兼容，超出模型声明的档位。');
-  if(!capabilities.formats.includes(p.output_format)||!Number.isInteger(p.count)||p.count<1||p.count>capabilities.max_count)throw new Error('格式或输出数量与所选模型不兼容。');
+  if(c.output_format_control&&!capabilities.formats.includes(p.output_format)||!Number.isInteger(p.count)||p.count<1||p.count>capabilities.max_count)throw new Error('格式或输出数量与所选模型不兼容。');
 }
 
 // Shared by UI and host edits: hidden inapplicable fields cannot still be sent.

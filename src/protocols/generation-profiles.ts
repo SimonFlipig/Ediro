@@ -13,6 +13,7 @@ export const imagesProfile=generationContractSchema.parse({
 });
 export const geminiProfile=generationContractSchema.parse({
   quality_control:false,
+  output_format_control:false,
   version:1,input_forms:['interleaved','numbered_flat'],resolution_modes:['default','tier'],tiers:['1K','2K','4K'],legacy_resolution_quality:true,legacy_extension_key:'gemini_options',
   features:['reference_overrides','google_search'],
   fields:[

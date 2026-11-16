@@ -140,7 +140,7 @@ export function validateParameters(recipe: Recipe, model: ModelConfig) {
   validateGenerationParameters(recipe.core_parameters,model);
   if(model.purpose==='understanding')return;
   const p = recipe.core_parameters, c = model.capabilities;
-  if ((p.aspect_ratio!=='auto'&&!c.aspect_ratios.includes(p.aspect_ratio)&&!parseRatio(p.aspect_ratio)) || !c.formats.includes(p.output_format) || p.count > c.max_count) {
+  if ((p.aspect_ratio!=='auto'&&!c.aspect_ratios.includes(p.aspect_ratio)&&!parseRatio(p.aspect_ratio)) || (contractFor(model).output_format_control&&!c.formats.includes(p.output_format)) || p.count > c.max_count) {
     throw new Error('当前参数与所选模型不兼容；请使用该模型支持的选项。');
   }
 }

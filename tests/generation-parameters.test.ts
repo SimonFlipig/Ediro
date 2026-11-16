@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import sharp from 'sharp';
 import { seedModels } from '../src/core/models.js';
-import { parametersSchema,type Job,type Recipe } from '../src/core/domain.js';
+import { modelConfigSchema,parametersSchema,type Job,type Recipe } from '../src/core/domain.js';
 import { ModuleRegistry } from '../src/core/modules.js';
 import { resolveOutputGeometry } from '../src/core/output-geometry.js';
-import { validateGenerationParameters } from '../src/core/generation-parameters.js';
+import { contractFor,normalizeParameters,validateGenerationParameters } from '../src/core/generation-parameters.js';
+import { validateParameters } from '../src/core/compiler.js';
 import { ImagesGenerator } from '../src/adapters/images-generator.js';
 import { GeminiGenerator } from '../src/adapters/gemini-generator.js';
 import { modelFromPreset } from '../src/protocols/model-catalog.js';
@@ -53,4 +54,38 @@ test('不支持的参数和格式组合在发送前明确拒绝',()=>{
   assert.throws(()=>validateGenerationParameters({...legacyImages.defaults,quality:'max'},legacyImages),/质量/);
   assert.throws(()=>validateGenerationParameters({...google.defaults,output_resolution:'4MP'},google),/分辨率/);
   assert.throws(()=>validateGenerationParameters({...images.defaults,gemini_options:{reference_precision:'high'}},images),/Google/);
+});
+
+test('Nano Banana 各型号与未知渠道保留旧格式参数，格式控制缺失不阻挡执行',()=>{
+  for(const remoteId of ['gemini-3-pro-image','gemini-3.1-flash-image','gemini-nano-banana-2.1','custom-nano-channel'])for(const storedContract of ['current','legacy','missing'] as const){
+    const input=modelFromPreset('nano-banana-pro','model_format','connection_format',remoteId);
+    if(storedContract==='legacy')delete (input.generation_contract as Partial<NonNullable<typeof input.generation_contract>>).output_format_control;
+    if(storedContract==='missing')delete input.generation_contract;
+    const model=modelConfigSchema.parse(input),before=structuredClone(model);
+    if(storedContract==='legacy')assert.equal(model.generation_contract?.output_format_control,true);
+    assert.equal(contractFor(model).output_format_control,false);
+    assert.deepEqual(model.capabilities.formats,['png']);
+    for(const output_format of ['png','jpeg','webp'] as const){
+      const parameters={...model.defaults,output_format},recipe:Recipe={recipe_id:'recipe_format',schema_version:1,model_config_id:model.model_config_id,modules:[],core_parameters:parameters};
+      assert.doesNotThrow(()=>validateGenerationParameters(parameters,model));
+      assert.doesNotThrow(()=>validateParameters(recipe,model));
+      assert.equal(normalizeParameters(parameters,model).output_format,output_format);
+      assert.throws(()=>validateGenerationParameters({...parameters,count:2},model),/数量/);
+    }
+    assert.deepEqual(model,before);
+  }
+});
+
+test('Images 继续按声明能力验证可控输出格式，未声明控制标志保持原有行为',()=>{
+  const input=modelFromPreset('gpt-image-2','model_format','connection_format','gpt-image-2');
+  delete (input.generation_contract as Partial<NonNullable<typeof input.generation_contract>>).output_format_control;
+  input.capabilities.formats=['png'];
+  const model=modelConfigSchema.parse(input);
+  assert.equal(contractFor(model).output_format_control,true);
+  assert.doesNotThrow(()=>validateGenerationParameters(model.defaults,model));
+  for(const output_format of ['jpeg','webp'] as const){
+    const parameters={...model.defaults,output_format},recipe:Recipe={recipe_id:'recipe_format',schema_version:1,model_config_id:model.model_config_id,modules:[],core_parameters:parameters};
+    assert.throws(()=>validateGenerationParameters(parameters,model),/格式/);
+    assert.throws(()=>validateParameters(recipe,model),/格式/);
+  }
 });

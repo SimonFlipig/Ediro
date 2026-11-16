@@ -18,6 +18,66 @@ test('Google 请求保留图文顺序与参数；JPEG 响应如实保存，忽�
   assert.equal(url,'https://api.aipix.one/v1beta/models/gemini-3-pro-image:generateContent');assert.deepEqual(requestBody.contents[0].parts.map((p:any)=>p.text??'image'),['first','image','last']);assert.deepEqual(requestBody.generationConfig.imageConfig,{aspectRatio:'1:1',imageSize:'2K'});assert.equal(requestBody.systemInstruction,undefined);
   assert.equal(result.images.length,1);assert.equal(result.images[0].format,'jpeg');assert.equal(result.images[0].width,20);assert.equal(result.text,'done');assert.equal(result.usage!.totalTokenCount,42);
 });
+test('Google 图片以实际编码和尺寸接收，兼容错误或非标准 MIME 并保留原始字节',async()=>{
+  const input=await sharp({create:{width:23,height:17,channels:3,background:'#8ac'}}).png().toBuffer();
+  for(const format of ['png','jpeg','webp'] as const){
+    const output=await sharp(input).toFormat(format).toBuffer();
+    const wrongMime=format==='png'?'image/jpeg':'image/png';
+    for(const mimeType of [wrongMime,'application/octet-stream','image/jpg','']){
+      let calls=0;
+      const adapter=new GeminiGenerator(async()=>{
+        calls++;
+        return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{inlineData:{mimeType,data:output.toString('base64')}}]}}]});
+      });
+      const result=await adapter.execute(context(input),new AbortController().signal,async()=>{});
+      assert.equal(calls,1);
+      assert.equal(result.images.length,1);
+      assert.deepEqual(result.images[0],{bytes:output,format,width:23,height:17});
+    }
+  }
+});
+test('Google 未声明格式控制，旧格式参数不限制生成且请求不发送格式字段',async()=>{
+  for(const output_format of ['png','jpeg','webp'] as const){
+    const c=context(awaitBuffer);
+    assert.deepEqual(c.model.capabilities.formats,['png']);
+    c.job.recipe_snapshot.core_parameters.output_format=output_format;
+    const adapter=new GeminiGenerator(async(_url,init)=>{
+      const body=JSON.parse(String(init?.body));
+      assert.deepEqual(Object.keys(body).sort(),['contents','generationConfig']);
+      assert.deepEqual(body.generationConfig,{responseModalities:['TEXT','IMAGE'],imageConfig:{aspectRatio:'1:1',imageSize:'2K'}});
+      return Response.json({candidates:[{content:{parts:[{inlineData:{mimeType:'image/png',data:awaitBuffer.toString('base64')}}]}}]});
+    });
+    assert.equal(adapter.description.parameters.some(parameter=>parameter.key==='output_format'),false);
+    assert.equal((await adapter.execute(c,new AbortController().signal,async()=>{})).images[0].format,'png');
+  }
+});
+test('Google MIME 容错仍拒绝无效 Base64、损坏图片和不支持的实际格式',async()=>{
+  const gif=await sharp(awaitBuffer).gif().toBuffer();
+  const truncated=awaitBuffer.subarray(0,awaitBuffer.length-30);
+  assert.equal((await sharp(truncated).metadata()).width,10,'损坏图片仍可读取元数据，必须经过完整解码检查');
+  const cases:[string,RegExp][]=[
+    ['',/模型返回无效图片/],
+    ['A',/模型返回无效图片/],
+    ['invalid-base64!',/模型返回无效图片/],
+    [Buffer.from('not an image').toString('base64'),/模型图片无法完整解码/],
+    [truncated.toString('base64'),/模型图片无法完整解码/],
+    [gif.toString('base64'),/模型返回图片的格式或尺寸无效/],
+  ];
+  for(const [data,error] of cases){
+    let calls=0;
+    const adapter=new GeminiGenerator(async()=>{
+      calls++;
+      return Response.json({candidates:[{content:{parts:[{inlineData:{mimeType:'image/png',data}}]}}]});
+    });
+    await assert.rejects(adapter.execute(context(awaitBuffer),new AbortController().signal,async()=>{}),error);
+    assert.equal(calls,1);
+  }
+});
+test('Google 返回图片仍受四千万像素解码上限保护',async()=>{
+  const data=Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="8000" height="5001"><rect width="8000" height="5001" fill="white"/></svg>').toString('base64');
+  const adapter=new GeminiGenerator(async()=>Response.json({candidates:[{content:{parts:[{inlineData:{mimeType:'image/png',data}}]}}]}));
+  await assert.rejects(adapter.execute(context(awaitBuffer),new AbortController().signal,async()=>{}),/模型图片无法完整解码/);
+});
 test('原生路径规范化；未知协议不自动回退',async()=>{assert.equal(geminiRoot('https://api.aipix.one/v1beta'),'https://api.aipix.one/v1beta');assert.equal(geminiRoot('https://api.aipix.one/gemini'),'https://api.aipix.one/gemini/v1beta');assert.throws(()=>geminiRoot('https://api.aipix.one/v1'),/原生连接/);
   const c=context(Buffer.alloc(0));c.model.adapter_id='unknown';assert.throws(()=>new ExecutionRegistry().execute(c,new AbortController().signal,async()=>{}),/未安装/);});
 test('完整 Gemini 模型资源名只在请求路径去除一次 models 前缀，保留配置原值',async()=>{

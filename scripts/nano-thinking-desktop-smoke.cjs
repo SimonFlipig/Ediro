@@ -62,7 +62,13 @@ app.whenReady().then(async()=>{
   const library=()=>controller.workspace.models.snapshot(),model=id=>library().models.find(item=>item.model_config_id===id),thinkingValue=id=>model(id).defaults.extensions?.[adapter]?.thinking_level;
   const savedLibrary=async()=>JSON.parse(await readFile(path.join(runtime,'model-library.v3.json'),'utf8'));
   const load=async()=>{await win.loadFile(path.join(root,'dist','index.html'));await until(()=>js(`document.querySelector('.settings-button')?.disabled===false`),'renderer loaded');};
-  const openSettings=async id=>{if(!await visible('.global-settings'))await clickSelector('.settings-button');await until(()=>visible(detail),'model settings visible');await clickSelector(`[data-model-id="${id}"]`);await click('默认参数',detail);};
+  const checkOutputFormat=async(scope,controlled)=>{
+    const field=await js(`(()=>{const label=[...document.querySelectorAll(${JSON.stringify(scope+' label')})].find(el=>el.textContent.startsWith('输出格式')||el.textContent.startsWith('默认输出格式'));const field=label?.querySelector('input,select');return field?{tag:field.tagName,value:field.value,readOnly:field.readOnly,options:field.options?[...field.options].map(option=>option.value):[]}:null;})()`);
+    assert.ok(field,'output format is explained');
+    if(controlled){assert.equal(field.tag,'SELECT');assert.deepEqual(field.options,['png','jpeg','webp']);}
+    else{assert.equal(field.tag,'INPUT');assert.equal(field.readOnly,true);assert.equal(field.value,'以实际输出为准');}
+  };
+  const openSettings=async id=>{if(!await visible('.global-settings'))await clickSelector('.settings-button');await until(()=>visible(detail),'model settings visible');await clickSelector(`[data-model-id="${id}"]`);await click('默认参数',detail);await checkOutputFormat(detail+' .model-parameter-form',model(id).adapter_id===gptAdapter);};
   const closeSettings=async()=>{await click('返回工作台','.settings-page-actions');await until(async()=>!await visible('.global-settings'),'settings closed');};
   const save=async(id,check)=>{await click('保存设置',detail);await until(()=>Promise.resolve(check(model(id))),'model settings persisted');await until(()=>js(`document.querySelector('.settings-model-detail .settings-status')?.textContent!=='未保存'`),'model draft clean');};
   const familyVariant=()=>js(`document.querySelector(${JSON.stringify(override)})?.value`);
@@ -119,6 +125,7 @@ app.whenReady().then(async()=>{
     await execute({type:'project:create',name:'家族型号参数本地验证'});await execute({type:'recipe:select-model',model_config_id:id});await execute({type:'recipe:reset-parameters'});
     const recipe=structuredClone(controller.workspace.project.recipe),prompt=recipe.modules.find(item=>item.reference_type==='prompt');prompt.user_instruction='拍摄一件商品，保持结构清晰，使用柔和光线。';prompt.auto_prompt=false;
     await execute({type:'recipe:save',recipe});
+    await checkOutputFormat('.workbench .parameter-section',model(id).adapter_id===gptAdapter);
     assert.equal(await js(`document.querySelectorAll('.workbench select[aria-label="推理强度"],.workbench select[aria-label="家族型号"]').length`),0,'Nano model defaults are absent from workbench controls');
     await until(()=>js(`!document.querySelector('.generate-button').disabled`),'generation ready');const before=executions.length;await clickSelector('.generate-button');
     await until(()=>Promise.resolve(executions.length===before+1),'isolated generation executor');

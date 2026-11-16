@@ -21,7 +21,7 @@ class GeminiStreamError extends Error {}
 export function geminiRoot(endpoint:string){const url=new URL(endpoint);if(url.protocol!=='https:'||url.username||url.password||url.search||url.hash)throw new Error('Google 连接须为无凭据和查询参数的 HTTPS 地址。');
   const p=url.pathname.replace(/\/$/,'');if(p.endsWith('/openai')||p==='/v1')throw new Error('请选择 Google 原生连接，不使用 /v1 或 /openai 兼容入口。');url.pathname=p.endsWith('/v1beta')?p:`${p}/v1beta`;return url.toString().replace(/\/$/,'');}
 export class GeminiGenerator {
-  readonly description:AdapterDescription={generation_contract:geminiProfile,geometry_support:'ratio',adapter_id:'gemini-generate-content',version:6,title:'Google 原生 GenerateContent',kind:'cloud',installed:true,purposes:['generation','understanding'],requires_credential:true,supports_probe:true,supports_system_instruction:true,interleaving:['native','separated'],operations:['generate','referenceEdit','guidedMaskEdit','understand'],parameters:[{key:'aspect_ratio',title:'比例'},{key:'quality',title:'分辨率',values:['1K','2K','4K']},{key:'output_format',title:'图片格式',values:['png']},{key:'count',title:'数量',maximum:1}]};
+  readonly description:AdapterDescription={generation_contract:geminiProfile,geometry_support:'ratio',adapter_id:'gemini-generate-content',version:7,title:'Google 原生 GenerateContent',kind:'cloud',installed:true,purposes:['generation','understanding'],requires_credential:true,supports_probe:true,supports_system_instruction:true,interleaving:['native','separated'],operations:['generate','referenceEdit','guidedMaskEdit','understand'],parameters:[{key:'aspect_ratio',title:'比例'},{key:'quality',title:'分辨率',values:['1K','2K','4K']},{key:'count',title:'数量',maximum:1}]};
   constructor(private request:typeof fetch=fetch){}
   private async response(url:string,key:string,body:string|undefined,signal:AbortSignal,diagnostics?:ExecutionDiagnostics,timeoutMs?:number){if(signal.aborted)throw new Error('请求已取消或超时，未发送请求。');if(diagnostics)diagnostics.stage='request';let response:Response;try{response=await this.request(url,{method:body?'POST':'GET',headers:{'x-goog-api-key':key,...(body?{'Content-Type':'application/json'}:{})},body,signal,redirect:'error'});}catch(error){recordExecutionError(diagnostics,error,signal);throw new Error(signal.aborted?requestAbortMessage('Gemini',signal,timeoutMs):'无法连接模型服务，上游是否收到请求未知；未自动重试。');}
     recordResponse(diagnostics,response);
@@ -83,7 +83,7 @@ export class GeminiGenerator {
     if(systemInstruction?.trim()&&(!understanding||job.mask_edit||job.execution_plan&&job.execution_plan.operation!=='understand'))throw new Error('生图请求不支持独立系统指令；未发送请求。');
     const defaultEditSize=job.mask_edit?.method==='guided'&&parameters.resolution?.mode==='default';
     const imageSize=defaultEditSize?undefined:parameters.resolution?.mode==='tier'?parameters.resolution.value:model.generation_contract?.tiers[0],options=extensionOptions(parameters,model);
-    if(!understanding&&(parameters.count!==1||!imageSize&&!defaultEditSize||parameters.output_format!=='png'))throw new Error('当前 Google 生图适配器支持单图、1K/2K/4K 和 PNG 请求；实际响应格式将如实保存。');
+    if(!understanding&&(parameters.count!==1||!imageSize&&!defaultEditSize))throw new Error('当前 Google 生图适配器支持单图与 1K/2K/4K 分辨率。');
     const parts:({text:string}|{inlineData:{mimeType:string;data:string};mediaResolution?:{level:string}})[]=[];
     const blocks=job.adapted_input.kind==='native_blocks'?job.adapted_input.blocks??[]:[{type:'text' as const,text:job.adapted_input.prompt??''},...(job.adapted_input.image_asset_ids??[]).map(asset_id=>({type:'image' as const,asset_id}))];
     if(job.mask_edit){
@@ -131,7 +131,22 @@ export class GeminiGenerator {
     const candidate=data.candidates?.[0];if(candidate?.finishReason&&candidate.finishReason!=='STOP')throw new Error('模型未正常完成本次生成，没有保存不完整结果。');
     const images:ExecutionResult['images']=[],texts:string[]=[];
     if(context.diagnostics)context.diagnostics.stage='image_decode';
-    for(const part of candidate?.content?.parts??[]){if(part.thought)continue;if(part.text)texts.push(part.text);if(part.inlineData){const {data:encoded,mimeType}=part.inlineData;if(!['image/png','image/jpeg','image/webp'].includes(mimeType)||!encoded||encoded.length%4===1||!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded))throw new Error('模型返回无效图片。');const bytes=Buffer.from(encoded,'base64');let meta;try{meta=await sharp(bytes,{limitInputPixels:40_000_000}).metadata();await sharp(bytes,{limitInputPixels:40_000_000}).stats();}catch{throw new Error('模型图片无法完整解码。');}if(!meta.width||!meta.height||!['png','jpeg','webp'].includes(meta.format??'')||`image/${meta.format}`!==mimeType)throw new Error('模型返回图片的格式或尺寸无效。');images.push({bytes,format:meta.format as 'png'|'jpeg'|'webp',width:meta.width,height:meta.height});}}
+    for(const part of candidate?.content?.parts??[]){
+      if(part.thought)continue;
+      if(part.text)texts.push(part.text);
+      if(!part.inlineData)continue;
+      const encoded=part.inlineData.data;
+      if(!encoded||encoded.length%4===1||!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded))throw new Error('模型返回无效图片。');
+      const bytes=Buffer.from(encoded,'base64');
+      let meta;
+      try{
+        meta=await sharp(bytes,{limitInputPixels:40_000_000}).metadata();
+        await sharp(bytes,{limitInputPixels:40_000_000}).stats();
+      }catch{throw new Error('模型图片无法完整解码。');}
+      // The provider's MIME label can be inaccurate; preserve the decoded image's real format and original bytes.
+      if(!meta.width||!meta.height||!['png','jpeg','webp'].includes(meta.format??''))throw new Error('模型返回图片的格式或尺寸无效。');
+      images.push({bytes,format:meta.format as 'png'|'jpeg'|'webp',width:meta.width,height:meta.height});
+    }
     if(!understanding&&!images.length)throw new Error('模型没有返回图片，可能被内容限制或模型不支持生图。');
     if(!understanding&&images.length!==1)throw new Error('模型返回数量与单图任务不一致。');
     if(understanding&&!texts.some(t=>t.trim()))throw new Error('理解模型没有返回文本结果。');

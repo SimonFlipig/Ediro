@@ -6,7 +6,7 @@ A Windows desktop workspace for e-commerce visuals. Combine product, composition
 
 Ediro runs independently and does not require Codex or another workspace application. Real generation requires your own model connection and API key. The free simulation engine lets you explore the workflow; it does not demonstrate real model quality.
 
-[Download the latest release](https://github.com/SimonFlipig/Ediro/releases/latest) · [v0.1.4 release notes (Chinese)](docs/RELEASE_NOTES_v0.1.4.md) · [Report an issue](https://github.com/SimonFlipig/Ediro/issues)
+[Download the latest release](https://github.com/SimonFlipig/Ediro/releases/latest) · [v0.1.5 release notes (Chinese)](docs/RELEASE_NOTES_v0.1.5.md) · [Report an issue](https://github.com/SimonFlipig/Ediro/issues)
 
 ![Ediro workspace with assets, reference modules, image preview, result versions, and generation settings](docs/screenshots/workspace.png)
 
